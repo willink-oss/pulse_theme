@@ -1,0 +1,13 @@
+{
+  "name": "pulse-theme-token-codegen",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build-time only: generates lib/src/tokens/pulse_tokens.dart from the @willink-labs/tokens DTCG contract. Not published to pub.dev (see ../.pubignore).",
+  "scripts": {
+    "generate": "node generate_tokens.mjs"
+  },
+  "devDependencies": {
+    "@willink-labs/tokens": "^1.9.0"
+  }
+}
