@@ -21,7 +21,7 @@ components and token codegen follow in later stages.
   the value is **not** hand-mirrored.
 - CI `flutter-gate` (`flutter pub get` → `flutter analyze` → `flutter test` →
   `dart pub publish --dry-run`).
-- `docs/adr/0001-pulse-mobile-first-architecture.md` recording the
+- `doc/adr/0001-pulse-mobile-first-architecture.md` recording the
   mobile-first stance, the `@willink-labs/tokens` SSOT + codegen contract, the
   clean-room (no-fit-ai-lift) rule, and independent versioning.
 

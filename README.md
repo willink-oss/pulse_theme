@@ -11,7 +11,7 @@ layer code-generated from the published `@willink-labs/tokens` contract, and
 > pub.dev — `pub.dev/packages/pulse_theme` is _coming soon_.**
 
 Architecture of record: [ADR-018] (i-willink-crew) and
-[`docs/adr/0001-pulse-mobile-first-architecture.md`](docs/adr/0001-pulse-mobile-first-architecture.md).
+[`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md).
 
 ---
 

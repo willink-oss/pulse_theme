@@ -9,7 +9,7 @@
 /// Stage 0 ships the package skeleton only — the [PulseTheme] factory returns a
 /// Material 3 baseline `ThemeData`. Component widgets (`Pulse*`) and
 /// codegen'd token classes land in subsequent stages; see the README and
-/// `docs/adr/0001-pulse-mobile-first-architecture.md`.
+/// `doc/adr/0001-pulse-mobile-first-architecture.md`.
 ///
 /// ```dart
 /// import 'package:flutter/material.dart';
