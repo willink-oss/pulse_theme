@@ -7,8 +7,10 @@
  * the published @willink-labs/tokens package — the same contract the web side
  * (`@willink-labs/*`) consumes — so web ↔ mobile stay at parity from one SSOT.
  * This emitter is the mobile analogue of the web's
- * `packages/css-tokens/scripts/generate.mjs`; `isLeaf` / `flatten` /
- * alias-resolution are ported from that file (both are i-Willink MIT code).
+ * `packages/css-tokens/scripts/generate.mjs`; the `isLeaf` predicate,
+ * leaf-walking, and alias resolution are ported/adapted from that file
+ * (`flatten` → the shallow `eachLeaf`/`eachColorGroup` walkers here; both repos
+ * are i-Willink MIT code).
  *
  * Inputs (default → the npm-resolved contract; the lockfile pins the version):
  *   node_modules/@willink-labs/tokens/src/primitive.json
@@ -325,10 +327,13 @@ const output = lines.join("\n") + "\n";
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, output);
 
-const count = (re) => (output.match(re) ?? []).length;
+const keyCount = (group) =>
+  Object.keys(group).filter((k) => !k.startsWith("$")).length;
+let primitiveColors = 0;
+eachColorGroup(primitive.color, () => primitiveColors++);
 console.log(
   `Generated ${outFile}\n` +
-    `  ${count(/static const Color (?!.*PulseSemantics)/g)} colors · ` +
-    `${Object.keys(primitive.spacing).filter((k) => !k.startsWith("$")).length} spacing · ` +
-    `${Object.keys(primitive["font-size"]).filter((k) => !k.startsWith("$")).length} font-size`,
+    `  ${primitiveColors} primitive colors · ` +
+    `${keyCount(primitive.spacing)} spacing · ` +
+    `${keyCount(primitive["font-size"])} font-size`,
 );
