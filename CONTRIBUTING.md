@@ -36,10 +36,13 @@ contract.
 - Do **not** hand-edit generated token files, and do not hand-mirror hex /
   radius / motion values into Dart.
 - A token change starts in `@willink-labs/tokens` (the web + mobile SSOT), then
-  flows into PULSE via the codegen step.
-- Note: `spacing` / `typography` are not yet in the `@willink-labs/tokens`
-  contract; adding them upstream is a prerequisite for the corresponding PULSE
-  codegen.
+  flows into PULSE via the codegen step (`node tool/generate_tokens.mjs`). CI's
+  `token-codegen-gate` regenerates from the published contract and fails on any
+  drift, so a stale regenerate (or hand-edit) breaks the build.
+- Covered by codegen today: `color` (primitive + semantic, incl. dark),
+  `radius`, `duration`, `easing`, `spacing`, `font-size`. The primitive
+  `shadow` group and the semantic `motion` / `easing` role groups are
+  intentionally deferred (see the header in `tool/generate_tokens.mjs`).
 
 ---
 

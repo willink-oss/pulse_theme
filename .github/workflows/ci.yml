@@ -38,3 +38,36 @@ jobs:
 
       - name: Dry-run publish (pub.dev compatibility sanity check)
         run: dart pub publish --dry-run
+
+  # ---------------------------------------------------------------------------
+  # token-codegen-gate — web ↔ mobile token parity.
+  # Regenerates lib/src/tokens/pulse_tokens.dart from the PUBLISHED
+  # @willink-labs/tokens DTCG contract (pinned by tool/package-lock.json) and
+  # fails on any drift from the committed output. This is the hard parity gate
+  # (no skip-when-JSON-unreachable escape hatch) that replaces the old Flutter
+  # hand-mirror + skippable sync test. Mirrors css-tokens' check-output-parity.
+  # ---------------------------------------------------------------------------
+  token-codegen-gate:
+    name: token-codegen-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install token contract (pinned @willink-labs/tokens)
+        run: npm --prefix tool ci
+
+      - name: Regenerate tokens from the published DTCG contract
+        run: node tool/generate_tokens.mjs
+
+      - name: Fail on drift (committed Dart must match the SSOT)
+        run: |
+          if ! git diff --exit-code -- lib/src/tokens/pulse_tokens.dart; then
+            echo "::error::lib/src/tokens/pulse_tokens.dart is stale vs @willink-labs/tokens. Run \`npm --prefix tool ci && node tool/generate_tokens.mjs\` and commit."
+            exit 1
+          fi

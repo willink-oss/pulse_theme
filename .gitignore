@@ -16,3 +16,7 @@ doc/api/
 .metadata
 .pub-cache/
 .pub/
+
+# Token codegen tool — npm deps are restored via `npm --prefix tool ci`
+# (package.json + package-lock.json ARE committed; node_modules is not).
+tool/node_modules/

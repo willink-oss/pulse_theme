@@ -1,0 +1,6 @@
+# Exclude the entire token-codegen tool from the published pub.dev package.
+# It is build-time only (committed to git, restored via `npm --prefix tool ci`);
+# the generated output lib/src/tokens/pulse_tokens.dart IS published. Scoping
+# the exclude here (rather than a root .pubignore) keeps the root .gitignore in
+# effect for build/, .dart_tool/, etc. — a root .pubignore would replace it.
+*
