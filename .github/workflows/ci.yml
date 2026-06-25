@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # flutter-gate — analyze + test + publish dry-run for pulse_theme.
+  # Mirrors the willink-design-system flutter-gate so a broken package is
+  # caught on every PR, not only at publish-tag time.
+  # ---------------------------------------------------------------------------
+  flutter-gate:
+    name: flutter-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Flutter 3.29+ ships Dart 3.7+ which matches pubspec sdk: ^3.7.0.
+          flutter-version: "3.29.0"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze (all severities)
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Dry-run publish (pub.dev compatibility sanity check)
+        run: dart pub publish --dry-run
