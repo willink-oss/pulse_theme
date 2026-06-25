@@ -200,7 +200,11 @@ class PulseTheme {
         space: 1,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceContainerHighest,
+        // surfaceContainerLow (not Highest): Highest maps to `track`, which
+        // equals `border`/`outline` in light (both neutral-200), so the outline
+        // would be invisible. Low (surfaceSubtle) stays distinct from outline in
+        // both modes.
+        backgroundColor: colorScheme.surfaceContainerLow,
         labelStyle: TextStyle(color: colorScheme.onSurface),
         side: BorderSide(color: colorScheme.outline),
         shape: RoundedRectangleBorder(

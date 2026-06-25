@@ -3,12 +3,14 @@
 **PULSE is i-Willink's mobile-first canonical design system for Flutter.** It is
 the single front door for app UI: a Material 3 `ThemeData` factory, a token
 layer code-generated from the published `@willink-labs/tokens` contract, and
-(from Stage 1) a set of `Pulse*` components built mobile-first.
+(from Stage 2) a set of `Pulse*` components built mobile-first.
 
-> **Status — Stage 0 (foundation).** The package skeleton compiles and is
-> analysis/test clean. `PulseTheme.light()` returns a Material 3 baseline.
-> Components and the token codegen land in the next stages. **Not yet on
-> pub.dev — `pub.dev/packages/pulse_theme` is _coming soon_.**
+> **Status — Stage 1b (token codegen + theme).** `PulseTheme.light()` /
+> `PulseTheme.dark()` are real Material 3 themes whose `ColorScheme`,
+> `TextTheme` and component themes project the code-generated token layer
+> (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` / `PulseFontSize`).
+> `Pulse*` components land next. **Not yet on pub.dev —
+> `pub.dev/packages/pulse_theme` is _coming soon_.**
 
 Architecture of record: [ADR-018] (i-willink-crew) and
 [`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md).
@@ -47,15 +49,17 @@ old "hand-written Dart mirror" approach (which could silently drift) with a
 codegen step driven by the published token contract — the same single source
 the web side reads.
 
-> Today `@willink-labs/tokens` `primitive.json` exposes
-> `color / radius / duration / easing / shadow`, and `semantic.json` exposes
-> `color / motion / easing`. `spacing` and `typography` are **not yet** in the
-> contract; adding them to `@willink-labs/tokens` is a prerequisite for the
-> PULSE spacing/typography codegen (tracked for Stage 1).
+> The codegen step is [`tool/generate_tokens.mjs`](tool/generate_tokens.mjs); CI
+> (`token-codegen-gate`) regenerates from the published contract and fails on
+> any drift. Covered today: `color` (primitive + semantic, incl. dark via the
+> `willink.dark` extension), `radius`, `duration`, `easing`, `spacing`,
+> `font-size`. The primitive `shadow` group and the semantic `motion` / `easing`
+> role groups are deferred to a later stage (they pair with the upcoming
+> `PulseBrandTokens` / component-animation layer).
 
 ---
 
-## Quick start (Stage 0)
+## Quick start
 
 ```dart
 import 'package:flutter/material.dart';
@@ -71,11 +75,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My App',
       theme: PulseTheme.light(),
+      darkTheme: PulseTheme.dark(),
+      themeMode: ThemeMode.system,
       home: const Scaffold(body: Center(child: Text('PULSE'))),
     );
   }
 }
 ```
+
+Token classes are exported for direct use, e.g. `PulseSpacing.md`,
+`PulseFontSize.fontSizeLg`, `PulseSemantics.brand`.
 
 ### Customizing the brand color
 
@@ -94,7 +103,7 @@ final theme = PulseTheme.light().copyWith(
 ```yaml
 # pubspec.yaml — coming soon to pub.dev
 dependencies:
-  pulse_theme: ^0.1.0
+  pulse_theme: ^0.2.0
 ```
 
 ---
@@ -127,8 +136,8 @@ i-Willink's own MIT-licensed `flutter_theme` code**. Private app code
 
 Strict [SemVer 2.0](https://semver.org/). PULSE versions **independently** of
 the `@willink-labs/*` npm group and of the legacy `willink_theme` package
-(per [ADR-018]). `0.1.0` is the Stage-0 foundation cut; the public API is not
-frozen until `1.0.0`.
+(per [ADR-018]). `0.2.0` is the Stage-1b cut (token codegen + light/dark
+theme); the public API is not frozen until `1.0.0`.
 
 ## License
 
