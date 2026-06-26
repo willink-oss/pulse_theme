@@ -1,0 +1,38 @@
+name: Generate goldens (Linux)
+
+# Manual tool. Golden snapshots must be generated in the SAME environment that
+# verifies them (Linux x64 + the pinned Flutter), because raster output is not
+# bit-identical across OS/CPU arch. Run this workflow, download the `ci-goldens`
+# artifact, and commit it under test/golden/goldens/ci/.
+#
+#   gh workflow run golden-update.yml --ref <branch>
+#   gh run download <run-id> -n ci-goldens -D test/golden/goldens/ci
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.44.2" # keep in sync with ci.yml
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Regenerate CI goldens
+        run: flutter test --update-goldens test/golden/
+
+      - name: Upload goldens
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-goldens
+          path: test/golden/goldens/ci/
+          if-no-files-found: error
