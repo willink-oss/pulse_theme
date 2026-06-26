@@ -24,8 +24,12 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Flutter 3.29+ ships Dart 3.7+ which matches pubspec sdk: ^3.7.0.
-          flutter-version: "3.29.0"
+          # Pinned exact: alchemist golden snapshots are Flutter-version
+          # sensitive (widget layout metrics), so the committed CI goldens must
+          # be generated + verified on ONE version. Bump this pin and rerun
+          # `flutter test --update-goldens` together. (Satisfies pubspec
+          # sdk: ^3.7.0 — 3.44.2 ships Dart 3.12.)
+          flutter-version: "3.44.2"
 
       - name: Install dependencies
         run: flutter pub get
@@ -33,7 +37,7 @@ jobs:
       - name: Analyze (all severities)
         run: flutter analyze
 
-      - name: Test
+      - name: Test (incl. alchemist CI goldens)
         run: flutter test
 
       - name: Dry-run publish (pub.dev compatibility sanity check)
