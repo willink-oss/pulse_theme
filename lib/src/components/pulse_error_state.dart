@@ -79,53 +79,73 @@ class PulseErrorState extends StatelessWidget {
     final textTheme = theme.textTheme;
     final hasDetail = message != null || error != null;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(PulseSpacing.xxl),
-        // liveRegion: announce the error (title + detail) to assistive tech
-        // when this state appears in place of content.
-        child: Semantics(
-          container: true,
-          liveRegion: true,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: colors.error),
-              const SizedBox(height: PulseSpacing.lg),
-              Text(
-                title,
-                style: textTheme.bodyLarge,
-                textAlign: TextAlign.center,
+    // Scroll-when-overflows / center-when-fits so the content degrades
+    // gracefully (scrolls) instead of clipping at large text scales (D4).
+    return LayoutBuilder(
+      builder:
+          (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    constraints.hasBoundedHeight ? constraints.maxHeight : 0,
               ),
-              if (hasDetail) ...[
-                const SizedBox(height: PulseSpacing.sm),
-                Text(
-                  message ?? error.toString(),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(PulseSpacing.xxl),
+                  // liveRegion: announce the error (title + detail) to assistive
+                  // tech when this state appears in place of content.
+                  child: Semantics(
+                    container: true,
+                    liveRegion: true,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: colors.error,
+                        ),
+                        const SizedBox(height: PulseSpacing.lg),
+                        Text(
+                          title,
+                          style: textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        if (hasDetail) ...[
+                          const SizedBox(height: PulseSpacing.sm),
+                          Text(
+                            message ?? error.toString(),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                        if (showCopyButton) ...[
+                          const SizedBox(height: PulseSpacing.md),
+                          TextButton.icon(
+                            onPressed: () => _copy(context),
+                            icon: const Icon(Icons.copy, size: 16),
+                            label: const Text('エラーをコピー'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        if (onRetry != null) ...[
+                          const SizedBox(height: PulseSpacing.xl),
+                          FilledButton(
+                            onPressed: onRetry,
+                            child: Text(retryLabel),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ],
-              if (showCopyButton) ...[
-                const SizedBox(height: PulseSpacing.md),
-                TextButton.icon(
-                  onPressed: () => _copy(context),
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('エラーをコピー'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (onRetry != null) ...[
-                const SizedBox(height: PulseSpacing.xl),
-                FilledButton(onPressed: onRetry, child: Text(retryLabel)),
-              ],
-            ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 }
