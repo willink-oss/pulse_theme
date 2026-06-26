@@ -11,40 +11,40 @@ import 'package:pulse_theme/pulse_theme.dart';
 void main() {
   /// Host app with an 'open' button that invokes [onTap] with a context
   /// below MaterialApp (required by showModalBottomSheet).
-  Widget host({
-    required void Function(BuildContext) onTap,
-    ThemeData? theme,
-  }) =>
+  Widget host({required void Function(BuildContext) onTap, ThemeData? theme}) =>
       MaterialApp(
         theme: theme ?? PulseTheme.light(),
         home: Scaffold(
           body: Builder(
-            builder: (context) => Center(
-              child: TextButton(
-                onPressed: () => onTap(context),
-                child: const Text('open'),
-              ),
-            ),
+            builder:
+                (context) => Center(
+                  child: TextButton(
+                    onPressed: () => onTap(context),
+                    child: const Text('open'),
+                  ),
+                ),
           ),
         ),
       );
 
   /// Finds the manual drag handle container (32×4) rendered by show().
   Finder dragHandleFinder() => find.byWidgetPredicate(
-        (widget) =>
-            widget is Container &&
-            widget.constraints == BoxConstraints.tight(const Size(32, 4)),
-      );
+    (widget) =>
+        widget is Container &&
+        widget.constraints == BoxConstraints.tight(const Size(32, 4)),
+  );
 
   group('PulseBottomSheet — rendering', () {
-    testWidgets('show() opens the sheet with builder content + drag handle',
-        (tester) async {
+    testWidgets('show() opens the sheet with builder content + drag handle', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(
-          onTap: (context) => PulseBottomSheet.show<void>(
-            context,
-            builder: (context) => const Text('シート本文'),
-          ),
+          onTap:
+              (context) => PulseBottomSheet.show<void>(
+                context,
+                builder: (context) => const Text('シート本文'),
+              ),
         ),
       );
 
@@ -59,13 +59,15 @@ void main() {
     testWidgets('content scaffold renders title above child', (tester) async {
       await tester.pumpWidget(
         host(
-          onTap: (context) => PulseBottomSheet.show<void>(
-            context,
-            builder: (context) => const PulseBottomSheet(
-              title: 'フィルター',
-              child: Text('Body'),
-            ),
-          ),
+          onTap:
+              (context) => PulseBottomSheet.show<void>(
+                context,
+                builder:
+                    (context) => const PulseBottomSheet(
+                      title: 'フィルター',
+                      child: Text('Body'),
+                    ),
+              ),
         ),
       );
 
@@ -83,16 +85,18 @@ void main() {
   });
 
   group('PulseBottomSheet — brand colors', () {
-    testWidgets('sheet surface uses colorScheme.surface + radiusXl top shape',
-        (tester) async {
+    testWidgets('sheet surface uses colorScheme.surface + radiusXl top shape', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await tester.pumpWidget(
         host(
           theme: theme,
-          onTap: (context) => PulseBottomSheet.show<void>(
-            context,
-            builder: (context) => const Text('Body'),
-          ),
+          onTap:
+              (context) => PulseBottomSheet.show<void>(
+                context,
+                builder: (context) => const Text('Body'),
+              ),
         ),
       );
 
@@ -125,10 +129,11 @@ void main() {
       await tester.pumpWidget(
         host(
           theme: theme,
-          onTap: (context) => PulseBottomSheet.show<void>(
-            context,
-            builder: (context) => const Text('Body'),
-          ),
+          onTap:
+              (context) => PulseBottomSheet.show<void>(
+                context,
+                builder: (context) => const Text('Body'),
+              ),
         ),
       );
 
@@ -142,18 +147,20 @@ void main() {
   });
 
   group('PulseBottomSheet — interaction', () {
-    testWidgets('resolves with the value passed to Navigator.pop',
-        (tester) async {
+    testWidgets('resolves with the value passed to Navigator.pop', (
+      tester,
+    ) async {
       late Future<String?> result;
       await tester.pumpWidget(
         host(
           onTap: (context) {
             result = PulseBottomSheet.show<String>(
               context,
-              builder: (context) => TextButton(
-                onPressed: () => Navigator.pop(context, 'saved'),
-                child: const Text('保存'),
-              ),
+              builder:
+                  (context) => TextButton(
+                    onPressed: () => Navigator.pop(context, 'saved'),
+                    child: const Text('保存'),
+                  ),
             );
           },
         ),
@@ -168,8 +175,9 @@ void main() {
       expect(await result, equals('saved'));
     });
 
-    testWidgets('barrier tap dismisses the sheet and resolves null',
-        (tester) async {
+    testWidgets('barrier tap dismisses the sheet and resolves null', (
+      tester,
+    ) async {
       late Future<String?> result;
       await tester.pumpWidget(
         host(
@@ -196,8 +204,7 @@ void main() {
   });
 
   group('PulseBottomSheet — ColorScheme override', () {
-    testWidgets('respects copyWith(colorScheme: ...) override',
-        (tester) async {
+    testWidgets('respects copyWith(colorScheme: ...) override', (tester) async {
       // Brand customization path: consumers override ColorScheme and the
       // sheet surface + drag handle follow automatically.
       final overridden = PulseTheme.light().copyWith(
@@ -207,10 +214,11 @@ void main() {
       await tester.pumpWidget(
         host(
           theme: overridden,
-          onTap: (context) => PulseBottomSheet.show<void>(
-            context,
-            builder: (context) => const Text('Body'),
-          ),
+          onTap:
+              (context) => PulseBottomSheet.show<void>(
+                context,
+                builder: (context) => const Text('Body'),
+              ),
         ),
       );
 
@@ -229,10 +237,7 @@ void main() {
 
       final handle = tester.widget<Container>(dragHandleFinder());
       final decoration = handle.decoration! as BoxDecoration;
-      expect(
-        decoration.color,
-        equals(overridden.colorScheme.outlineVariant),
-      );
+      expect(decoration.color, equals(overridden.colorScheme.outlineVariant));
     });
   });
 }

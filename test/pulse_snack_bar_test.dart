@@ -26,17 +26,19 @@ void main() {
         home: Scaffold(
           body: Center(
             child: Builder(
-              builder: (context) => FilledButton(
-                onPressed: () => PulseSnackBar.show(
-                  context,
-                  message: message,
-                  description: description,
-                  variant: variant,
-                  actionLabel: actionLabel,
-                  onAction: onAction,
-                ),
-                child: const Text('open'),
-              ),
+              builder:
+                  (context) => FilledButton(
+                    onPressed:
+                        () => PulseSnackBar.show(
+                          context,
+                          message: message,
+                          description: description,
+                          variant: variant,
+                          actionLabel: actionLabel,
+                          onAction: onAction,
+                        ),
+                    child: const Text('open'),
+                  ),
             ),
           ),
         ),
@@ -47,8 +49,9 @@ void main() {
   }
 
   group('PulseSnackBar — info variant (default)', () {
-    testWidgets('uses surface background + primary-tinted info icon',
-        (tester) async {
+    testWidgets('uses surface background + primary-tinted info icon', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await showSnackBar(tester, message: '通知', theme: theme);
 
@@ -61,16 +64,16 @@ void main() {
   });
 
   group('PulseSnackBar — success variant', () {
-    testWidgets('check icon uses PulseSemantics.success accent',
-        (tester) async {
+    testWidgets('check icon uses PulseSemantics.success accent', (
+      tester,
+    ) async {
       await showSnackBar(
         tester,
         message: '保存しました',
         variant: PulseSnackBarVariant.success,
       );
 
-      final icon =
-          tester.widget<Icon>(find.byIcon(Icons.check_circle_outline));
+      final icon = tester.widget<Icon>(find.byIcon(Icons.check_circle_outline));
       expect(icon.color, equals(PulseSemantics.success));
       expect(find.text('保存しました'), findsOneWidget);
     });
@@ -102,8 +105,7 @@ void main() {
         theme: theme,
       );
 
-      final description =
-          tester.widget<Text>(find.text('時間をおいて再試行してください'));
+      final description = tester.widget<Text>(find.text('時間をおいて再試行してください'));
       expect(
         description.style!.color,
         equals(theme.colorScheme.onSurfaceVariant),
@@ -111,8 +113,7 @@ void main() {
 
       // Description sits below the message.
       final messageRect = tester.getRect(find.text('保存に失敗しました'));
-      final descriptionRect =
-          tester.getRect(find.text('時間をおいて再試行してください'));
+      final descriptionRect = tester.getRect(find.text('時間をおいて再試行してください'));
       expect(descriptionRect.top, greaterThan(messageRect.bottom - 1));
     });
   });
@@ -145,10 +146,7 @@ void main() {
       await showSnackBar(tester, message: 'Done', theme: overridden);
 
       final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-      expect(
-        snackBar.backgroundColor,
-        equals(overridden.colorScheme.surface),
-      );
+      expect(snackBar.backgroundColor, equals(overridden.colorScheme.surface));
 
       final icon = tester.widget<Icon>(find.byIcon(Icons.info_outline));
       expect(icon.color, equals(overridden.colorScheme.primary));
@@ -157,32 +155,34 @@ void main() {
 
   group('PulseSnackBar — dark theme (dark)', () {
     testWidgets(
-        'surface flips to neutral-950 with neutral-800 border + light text',
-        (tester) async {
-      await showSnackBar(
-        tester,
-        message: '保存しました',
-        description: '同期が完了しました',
-        theme: PulseTheme.dark(),
-      );
+      'surface flips to neutral-950 with neutral-800 border + light text',
+      (tester) async {
+        await showSnackBar(
+          tester,
+          message: '保存しました',
+          description: '同期が完了しました',
+          theme: PulseTheme.dark(),
+        );
 
-      // ADR-0013 surface flips: bg → neutral-950, border → neutral-800.
-      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-      expect(snackBar.backgroundColor, equals(PulsePrimitives.neutral950));
-      final shape = snackBar.shape! as RoundedRectangleBorder;
-      expect(shape.side.color, equals(PulsePrimitives.neutral800));
+        // ADR-0013 surface flips: bg → neutral-950, border → neutral-800.
+        final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+        expect(snackBar.backgroundColor, equals(PulsePrimitives.neutral950));
+        final shape = snackBar.shape! as RoundedRectangleBorder;
+        expect(shape.side.color, equals(PulsePrimitives.neutral800));
 
-      // fg → neutral-50, muted (onSurfaceVariant) → neutral-400.
-      final message = tester.widget<Text>(find.text('保存しました'));
-      expect(message.style!.color, equals(PulsePrimitives.neutral50));
-      final description = tester.widget<Text>(find.text('同期が完了しました'));
-      expect(description.style!.color, equals(PulsePrimitives.neutral400));
-    });
+        // fg → neutral-50, muted (onSurfaceVariant) → neutral-400.
+        final message = tester.widget<Text>(find.text('保存しました'));
+        expect(message.style!.color, equals(PulsePrimitives.neutral50));
+        final description = tester.widget<Text>(find.text('同期が完了しました'));
+        expect(description.style!.color, equals(PulsePrimitives.neutral400));
+      },
+    );
   });
 
   group('PulseSnackBar — surface shape', () {
-    testWidgets('floating behavior + 12px radius + outline border',
-        (tester) async {
+    testWidgets('floating behavior + 12px radius + outline border', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await showSnackBar(tester, message: '通知', theme: theme);
 

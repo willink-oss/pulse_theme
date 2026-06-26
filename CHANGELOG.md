@@ -7,6 +7,33 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.4.0] — 2026-06-26
+
+### Changed — component harden (a11y / robustness)
+
+- **D1 (a11y fix)**: `PulseButton` no longer disables Material's tap-target
+  padding — every size/variant now meets the **48dp** minimum tap target
+  (`MaterialTapTargetSize.padded`) while the visual stays compact.
+- **D2 (Semantics)**: `PulseLoadingState` gains a `semanticsLabel` (spinner
+  screen-reader announcement, falling back to `message`); `PulseErrorState` is
+  a `liveRegion` (announced when it appears); `PulseSectionCard` and
+  `PulseBottomSheet` titles are marked as headers.
+- **D4 (TextScaler)**: text components render without overflow at 2.0× and 3.0×
+  text scale (regression tests added).
+
+Test suite: **87 passing**.
+
+### Added — release infrastructure
+
+- `.github/workflows/publish.yml` — publishes to pub.dev on a `v*` tag via OIDC
+  Trusted Publisher (analyze → test → dry-run → publish). The first publish
+  needs a one-time pub.dev "Automated publishing" setup (org admin).
+
+### Deferred
+
+- **D3 (golden / visual regression)** — needs cross-platform golden infra
+  (macOS-dev vs Linux-CI font rendering differ); tracked as a follow-up.
+
 ## [0.3.0] — 2026-06-26
 
 ### Added — Stage 2: component port (clean-room) + shadow codegen

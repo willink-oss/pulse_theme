@@ -1,7 +1,8 @@
-// Tests for PulseButton (0.4.0).
+// Tests for PulseButton.
 //
 // Cover variant color contracts (filled / outline / ghost), disabled state
-// behavior, brand axis switching, and leading-icon layout.
+// behavior, ColorScheme override, leading-icon layout, and the 48dp a11y
+// tap-target guideline.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,20 +10,18 @@ import 'package:pulse_theme/pulse_theme.dart';
 
 void main() {
   Widget wrap(Widget child, {ThemeData? theme}) => MaterialApp(
-        theme: theme ?? PulseTheme.light(),
-        home: Scaffold(body: Center(child: child)),
-      );
+    theme: theme ?? PulseTheme.light(),
+    home: Scaffold(body: Center(child: child)),
+  );
 
   group('PulseButton — filled variant', () {
-    testWidgets('uses primary background + onPrimary text color',
-        (tester) async {
+    testWidgets('uses primary background + onPrimary text color', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await tester.pumpWidget(
         wrap(
-          PulseButton(
-            onPressed: () {},
-            child: const Text('保存'),
-          ),
+          PulseButton(onPressed: () {}, child: const Text('保存')),
           theme: theme,
         ),
       );
@@ -39,10 +38,7 @@ void main() {
       var tapped = false;
       await tester.pumpWidget(
         wrap(
-          PulseButton(
-            onPressed: () => tapped = true,
-            child: const Text('OK'),
-          ),
+          PulseButton(onPressed: () => tapped = true, child: const Text('OK')),
         ),
       );
       await tester.tap(find.text('OK'));
@@ -64,8 +60,7 @@ void main() {
         ),
       );
 
-      final button =
-          tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+      final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
       final style = button.style!;
       final side = style.side!.resolve(<WidgetState>{});
       expect(side!.color, equals(theme.colorScheme.primary));
@@ -96,16 +91,12 @@ void main() {
   });
 
   group('PulseButton — disabled', () {
-    testWidgets('opacity 0.5 + tap does not fire when onPressed null',
-        (tester) async {
+    testWidgets('opacity 0.5 + tap does not fire when onPressed null', (
+      tester,
+    ) async {
       var tapped = false;
       await tester.pumpWidget(
-        wrap(
-          const PulseButton(
-            onPressed: null,
-            child: Text('Disabled'),
-          ),
-        ),
+        wrap(const PulseButton(onPressed: null, child: Text('Disabled'))),
       );
 
       final opacity = tester.widget<Opacity>(
@@ -132,10 +123,7 @@ void main() {
 
       await tester.pumpWidget(
         wrap(
-          PulseButton(
-            onPressed: () {},
-            child: const Text('Go'),
-          ),
+          PulseButton(onPressed: () {}, child: const Text('Go')),
           theme: overridden,
         ),
       );
@@ -147,16 +135,14 @@ void main() {
   });
 
   group('PulseButton — dark theme (dark)', () {
-    testWidgets('filled keeps mode-invariant brand-600 bg + white text',
-        (tester) async {
+    testWidgets('filled keeps mode-invariant brand-600 bg + white text', (
+      tester,
+    ) async {
       // ADR-0013: brand identity does not flip — a filled button is the
       // same violet on a neutral-950 surface.
       await tester.pumpWidget(
         wrap(
-          PulseButton(
-            onPressed: () {},
-            child: const Text('保存'),
-          ),
+          PulseButton(onPressed: () {}, child: const Text('保存')),
           theme: PulseTheme.dark(),
         ),
       );
@@ -169,8 +155,9 @@ void main() {
       expect(fg, equals(const Color(0xFFFFFFFF)));
     });
 
-    testWidgets('ghost overlay uses the dark brand-950 container',
-        (tester) async {
+    testWidgets('ghost overlay uses the dark brand-950 container', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           PulseButton(
@@ -183,11 +170,29 @@ void main() {
       );
 
       final button = tester.widget<TextButton>(find.byType(TextButton));
-      final overlay = button.style!.overlayColor!
-          .resolve(<WidgetState>{WidgetState.pressed});
+      final overlay = button.style!.overlayColor!.resolve(<WidgetState>{
+        WidgetState.pressed,
+      });
       // primaryContainer flips brand-100 → brand-950 under dark.
       expect(overlay, equals(PulsePrimitives.brand950));
     });
+  });
+
+  group('PulseButton — a11y (48dp tap target, D1)', () {
+    for (final size in PulseButtonSize.values) {
+      testWidgets('${size.name} meets the Android 48dp tap-target guideline', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(onPressed: () {}, size: size, child: const Text('OK')),
+          ),
+        );
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        handle.dispose();
+      });
+    }
   });
 
   group('PulseButton — icon layout', () {
@@ -203,9 +208,9 @@ void main() {
       );
 
       // 8px SizedBox spacer must exist between icon and label.
-      final spacers = tester.widgetList<SizedBox>(find.byType(SizedBox)).where(
-            (s) => s.width == 8 && s.height == null,
-          );
+      final spacers = tester
+          .widgetList<SizedBox>(find.byType(SizedBox))
+          .where((s) => s.width == 8 && s.height == null);
       expect(spacers, isNotEmpty);
 
       // Icon center x should be less than label center x (i.e. on the left).

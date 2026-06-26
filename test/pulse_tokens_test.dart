@@ -33,12 +33,15 @@ void main() {
   });
 
   group('Scale symbol mapping', () {
-    test('PulseSpacing — bare member; numeric-leading step spelled (2xl→xxl)', () {
-      expect(PulseSpacing.xs, 4.0);
-      expect(PulseSpacing.md, 16.0);
-      expect(PulseSpacing.xl, 32.0);
-      expect(PulseSpacing.xxl, 48.0); // 2xl → xxl, 3rem → 48px
-    });
+    test(
+      'PulseSpacing — bare member; numeric-leading step spelled (2xl→xxl)',
+      () {
+        expect(PulseSpacing.xs, 4.0);
+        expect(PulseSpacing.md, 16.0);
+        expect(PulseSpacing.xl, 32.0);
+        expect(PulseSpacing.xxl, 48.0); // 2xl → xxl, 3rem → 48px
+      },
+    );
 
     test('PulseFontSize — prefixed member; digit kept (2xl→fontSize2xl)', () {
       expect(PulseFontSize.fontSizeXs, 12.0); // 0.75rem

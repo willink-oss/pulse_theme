@@ -38,10 +38,10 @@ class PulseProgressIndicator extends StatelessWidget {
     this.borderRadius,
     this.semanticsLabel,
   }) : assert(
-          value == null || (value >= 0.0 && value <= 1.0),
-          'value must be null (indeterminate) or within 0.0–1.0; '
-          'note the React Progress uses 0–100 — divide by 100 when porting.',
-        );
+         value == null || (value >= 0.0 && value <= 1.0),
+         'value must be null (indeterminate) or within 0.0–1.0; '
+         'note the React Progress uses 0–100 — divide by 100 when porting.',
+       );
 
   /// Progress fraction in `0.0–1.0`. When `null`, the indicator is
   /// indeterminate (continuous sweep animation) — the same nullable-value

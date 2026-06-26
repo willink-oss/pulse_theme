@@ -18,15 +18,24 @@ import '../tokens/pulse_tokens.dart';
 /// )
 /// ```
 class PulseLoadingState extends StatelessWidget {
-  const PulseLoadingState({super.key, this.message, this.size = 40});
+  const PulseLoadingState({
+    super.key,
+    this.message,
+    this.size = 40,
+    this.semanticsLabel,
+  });
 
   /// Compact variant (24px) for use inside sections that already have a
   /// surrounding header / card.
-  const PulseLoadingState.compact({super.key, this.message}) : size = 24;
+  const PulseLoadingState.compact({
+    super.key,
+    this.message,
+    this.semanticsLabel,
+  }) : size = 24;
 
   /// Inline variant (16px) with no padding — fits inside buttons, list rows
   /// or dense layouts. Always has `message: null`.
-  const PulseLoadingState.inline({super.key})
+  const PulseLoadingState.inline({super.key, this.semanticsLabel})
     : message = null,
       size = 16;
 
@@ -35,6 +44,11 @@ class PulseLoadingState extends StatelessWidget {
 
   /// Spinner edge length in logical pixels.
   final double size;
+
+  /// Screen-reader announcement for the spinner. Falls back to [message]; set
+  /// this explicitly for the inline / message-less variants so assistive tech
+  /// still announces that work is in progress.
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +62,7 @@ class PulseLoadingState extends StatelessWidget {
         child: CircularProgressIndicator(
           strokeWidth: 2,
           color: theme.colorScheme.primary,
+          semanticsLabel: semanticsLabel ?? message,
         ),
       );
     }
@@ -62,6 +77,7 @@ class PulseLoadingState extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: size <= 24 ? 2.5 : 3,
               color: theme.colorScheme.primary,
+              semanticsLabel: semanticsLabel ?? message,
             ),
           ),
           if (message != null) ...[

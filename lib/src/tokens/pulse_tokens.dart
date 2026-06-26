@@ -111,17 +111,58 @@ class PulseFontSize {
 /// `willink.dark` extension (ADR-0013); brand-tinted `glow` is mode-invariant.
 class PulseShadows {
   const PulseShadows._();
-  static const List<BoxShadow> soft = [BoxShadow(color: Color(0x0D000000), offset: Offset(0, 4), blurRadius: 20, spreadRadius: -2)];
-  static const List<BoxShadow> softDark = [BoxShadow(color: Color(0x66000000), offset: Offset(0, 4), blurRadius: 20, spreadRadius: -2)];
+  static const List<BoxShadow> soft = [
+    BoxShadow(
+      color: Color(0x0D000000),
+      offset: Offset(0, 4),
+      blurRadius: 20,
+      spreadRadius: -2,
+    ),
+  ];
+  static const List<BoxShadow> softDark = [
+    BoxShadow(
+      color: Color(0x66000000),
+      offset: Offset(0, 4),
+      blurRadius: 20,
+      spreadRadius: -2,
+    ),
+  ];
   static const List<BoxShadow> md = [
-    BoxShadow(color: Color(0x1A000000), offset: Offset(0, 4), blurRadius: 6, spreadRadius: -1),
-    BoxShadow(color: Color(0x0D000000), offset: Offset(0, 2), blurRadius: 4, spreadRadius: -2),
+    BoxShadow(
+      color: Color(0x1A000000),
+      offset: Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: Color(0x0D000000),
+      offset: Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -2,
+    ),
   ];
   static const List<BoxShadow> mdDark = [
-    BoxShadow(color: Color(0x80000000), offset: Offset(0, 4), blurRadius: 6, spreadRadius: -1),
-    BoxShadow(color: Color(0x66000000), offset: Offset(0, 2), blurRadius: 4, spreadRadius: -2),
+    BoxShadow(
+      color: Color(0x80000000),
+      offset: Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: Color(0x66000000),
+      offset: Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -2,
+    ),
   ];
-  static const List<BoxShadow> glow = [BoxShadow(color: Color(0x4D7C3AED), offset: Offset(0, 0), blurRadius: 20, spreadRadius: -5)];
+  static const List<BoxShadow> glow = [
+    BoxShadow(
+      color: Color(0x4D7C3AED),
+      offset: Offset(0, 0),
+      blurRadius: 20,
+      spreadRadius: -5,
+    ),
+  ];
 }
 
 /// Semantic color roles (light) — named by role, not by hue. Aliases in
@@ -191,4 +232,3 @@ class PulseSemanticsDark {
   static const Color warning = PulsePrimitives.amber500;
   static const Color danger = PulsePrimitives.red500;
 }
-

@@ -105,7 +105,7 @@ final theme = PulseTheme.light().copyWith(
 ```yaml
 # pubspec.yaml — coming soon to pub.dev
 dependencies:
-  pulse_theme: ^0.3.0
+  pulse_theme: ^0.4.0
 ```
 
 ---
@@ -138,9 +138,10 @@ i-Willink's own MIT-licensed `flutter_theme` code**. Private app code
 
 Strict [SemVer 2.0](https://semver.org/). PULSE versions **independently** of
 the `@willink-labs/*` npm group and of the legacy `willink_theme` package
-(per [ADR-018]). `0.3.0` is the Stage-2 cut (9 `Pulse*` components +
-`PulseBrandTokens` + shadow codegen, on the `0.2.0` token-codegen foundation);
-the public API is not frozen until `1.0.0`.
+(per [ADR-018]). `0.4.0` is the component-harden cut (48dp tap target,
+Semantics, TextScaler robustness) on top of the `0.3.0` Stage-2 components and
+the `0.2.0` token-codegen foundation; the public API is not frozen until
+`1.0.0`.
 
 ## License
 

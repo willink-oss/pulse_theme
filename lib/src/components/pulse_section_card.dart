@@ -84,10 +84,13 @@ class PulseSectionCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      title!,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        title!,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

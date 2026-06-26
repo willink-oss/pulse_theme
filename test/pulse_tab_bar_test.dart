@@ -16,12 +16,9 @@ void main() {
   ];
 
   Widget wrap(Widget child, {ThemeData? theme, int length = 3}) => MaterialApp(
-        theme: theme ?? PulseTheme.light(),
-        home: DefaultTabController(
-          length: length,
-          child: Scaffold(body: child),
-        ),
-      );
+    theme: theme ?? PulseTheme.light(),
+    home: DefaultTabController(length: length, child: Scaffold(body: child)),
+  );
 
   group('PulseTabBar — rendering', () {
     testWidgets('renders all tab labels', (tester) async {
@@ -57,8 +54,7 @@ void main() {
   });
 
   group('PulseTabBar — brand colors', () {
-    testWidgets('indicator + selected label use primary color',
-        (tester) async {
+    testWidgets('indicator + selected label use primary color', (tester) async {
       final theme = PulseTheme.light();
       await tester.pumpWidget(
         wrap(const PulseTabBar(tabs: threeTabs), theme: theme),
@@ -69,8 +65,9 @@ void main() {
       expect(tabBar.labelColor, equals(theme.colorScheme.primary));
     });
 
-    testWidgets('unselected label + divider follow theme colors',
-        (tester) async {
+    testWidgets('unselected label + divider follow theme colors', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await tester.pumpWidget(
         wrap(const PulseTabBar(tabs: threeTabs), theme: theme),
@@ -86,8 +83,9 @@ void main() {
   });
 
   group('PulseTabBar — interaction', () {
-    testWidgets('tap switches the selected tab on the controller',
-        (tester) async {
+    testWidgets('tap switches the selected tab on the controller', (
+      tester,
+    ) async {
       final controller = TabController(length: 3, vsync: const TestVSync());
       addTearDown(controller.dispose);
 
@@ -105,10 +103,7 @@ void main() {
       int? tappedIndex;
       await tester.pumpWidget(
         wrap(
-          PulseTabBar(
-            tabs: threeTabs,
-            onTap: (index) => tappedIndex = index,
-          ),
+          PulseTabBar(tabs: threeTabs, onTap: (index) => tappedIndex = index),
         ),
       );
 
@@ -119,26 +114,22 @@ void main() {
   });
 
   group('PulseTabBar — dark theme (dark)', () {
-    testWidgets('labels/divider flip to dark roles; indicator stays brand-600',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const PulseTabBar(tabs: threeTabs),
-          theme: PulseTheme.dark(),
-        ),
-      );
+    testWidgets(
+      'labels/divider flip to dark roles; indicator stays brand-600',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(const PulseTabBar(tabs: threeTabs), theme: PulseTheme.dark()),
+        );
 
-      final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-      // brand is mode-invariant (ADR-0013) — same violet as light.
-      expect(tabBar.indicatorColor, equals(PulsePrimitives.brand600));
-      expect(tabBar.labelColor, equals(PulsePrimitives.brand600));
-      // muted → neutral-400, border → neutral-800 dark flips.
-      expect(
-        tabBar.unselectedLabelColor,
-        equals(PulsePrimitives.neutral400),
-      );
-      expect(tabBar.dividerColor, equals(PulsePrimitives.neutral800));
-    });
+        final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+        // brand is mode-invariant (ADR-0013) — same violet as light.
+        expect(tabBar.indicatorColor, equals(PulsePrimitives.brand600));
+        expect(tabBar.labelColor, equals(PulsePrimitives.brand600));
+        // muted → neutral-400, border → neutral-800 dark flips.
+        expect(tabBar.unselectedLabelColor, equals(PulsePrimitives.neutral400));
+        expect(tabBar.dividerColor, equals(PulsePrimitives.neutral800));
+      },
+    );
   });
 
   group('PulseTabBar — ColorScheme override', () {

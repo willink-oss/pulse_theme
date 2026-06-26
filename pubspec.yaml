@@ -1,6 +1,6 @@
 name: pulse_theme
 description: PULSE — i-Willink's mobile-first canonical design system for Flutter. Material 3 ThemeData factories generated from the @willink-labs/tokens DTCG contract, consumer-overridable via ColorScheme copyWith.
-version: 0.3.0
+version: 0.4.0
 homepage: https://github.com/willink-oss/pulse_theme
 repository: https://github.com/willink-oss/pulse_theme
 issue_tracker: https://github.com/willink-oss/pulse_theme/issues
