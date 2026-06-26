@@ -1,0 +1,5 @@
+# Declares the `golden` tag that alchemist applies to goldenTest(...), which
+# silences the "tag wasn't specified" warning on `flutter test` and enables
+# `flutter test --exclude-tags golden` for fast non-visual runs.
+tags:
+  golden:
