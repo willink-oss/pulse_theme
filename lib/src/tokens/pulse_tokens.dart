@@ -106,6 +106,24 @@ class PulseFontSize {
   static const double fontSize3xl = 30.0;
 }
 
+/// Elevation / glow shadows — the primitive `shadow` scale parsed from CSS
+/// box-shadow into `List<BoxShadow>`. `*Dark` variants come from the
+/// `willink.dark` extension (ADR-0013); brand-tinted `glow` is mode-invariant.
+class PulseShadows {
+  const PulseShadows._();
+  static const List<BoxShadow> soft = [BoxShadow(color: Color(0x0D000000), offset: Offset(0, 4), blurRadius: 20, spreadRadius: -2)];
+  static const List<BoxShadow> softDark = [BoxShadow(color: Color(0x66000000), offset: Offset(0, 4), blurRadius: 20, spreadRadius: -2)];
+  static const List<BoxShadow> md = [
+    BoxShadow(color: Color(0x1A000000), offset: Offset(0, 4), blurRadius: 6, spreadRadius: -1),
+    BoxShadow(color: Color(0x0D000000), offset: Offset(0, 2), blurRadius: 4, spreadRadius: -2),
+  ];
+  static const List<BoxShadow> mdDark = [
+    BoxShadow(color: Color(0x80000000), offset: Offset(0, 4), blurRadius: 6, spreadRadius: -1),
+    BoxShadow(color: Color(0x66000000), offset: Offset(0, 2), blurRadius: 4, spreadRadius: -2),
+  ];
+  static const List<BoxShadow> glow = [BoxShadow(color: Color(0x4D7C3AED), offset: Offset(0, 0), blurRadius: 20, spreadRadius: -5)];
+}
+
 /// Semantic color roles (light) — named by role, not by hue. Aliases in
 /// the DTCG source are folded to their [PulsePrimitives] reference so a
 /// value is never duplicated. This is the default i-Willink mapping.

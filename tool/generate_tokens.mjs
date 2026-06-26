@@ -24,21 +24,18 @@
  * Override with PULSE_TOKENS_OUT so the parity gate can emit to a temp path and
  * byte-compare without clobbering the committed file.
  *
- * Scope (PULSE Stage 1b-ii). This emits the token classes that map 1:1 from a
- * DTCG leaf:
+ * Scope. This emits the token classes that map 1:1 from a DTCG leaf:
  *   - PulsePrimitives    color scales + radius + duration + easing
  *   - PulseSemantics     light semantic color roles (aliases folded to primitives)
  *   - PulseSemanticsDark dark semantic color roles ($extensions["willink.dark"])
  *   - PulseSpacing       spacing scale (rem → logical px doubles)
  *   - PulseFontSize      font-size scale (rem → logical px doubles)
+ *   - PulseShadows       shadow scale (CSS box-shadow → List<BoxShadow>; light +
+ *                        `*Dark` for leaves carrying a willink.dark extension)
  *
  * Intentionally deferred (documented, not forgotten):
- *   - primitive `shadow`            → Stage 2 (ported into the PulseBrandTokens
- *                                     ThemeExtension alongside the composite
- *                                     gradients, which are not single tokens).
- *   - semantic `motion` / `easing`  → wired when component animations consume
- *     role groups                     role-based timing (primitive duration /
- *                                     easing ARE emitted and available now).
+ *   - semantic `motion` / `easing` role groups → wired when component animations
+ *     consume role-based timing (primitive duration / easing ARE emitted now).
  */
 
 import fs from "node:fs";
@@ -203,6 +200,62 @@ function colorExpr(value) {
   return `PulsePrimitives.${rest[0]}${rest[1]}`;
 }
 
+/** `rgba(124, 58, 237, 0.3)` / `rgb(...)` → Dart ARGB literal `0x4D7C3AED`. */
+function rgbaToArgb(rgba) {
+  const m = rgba.match(/^rgba?\(([^)]+)\)$/);
+  if (!m) throw new Error(`Unsupported color: ${rgba}`);
+  const parts = m[1].split(",").map((s) => s.trim());
+  const [r, g, b] = parts.slice(0, 3).map(Number);
+  const a = parts.length > 3 ? Number(parts[3]) : 1;
+  const hex = (n) => Math.round(n).toString(16).toUpperCase().padStart(2, "0");
+  return `0x${hex(a * 255)}${hex(r)}${hex(g)}${hex(b)}`;
+}
+
+/** One CSS shadow `0 4px 20px -2px rgba(..)` → `{x,y,blur,spread,argb}`. */
+function parseSingleShadow(s) {
+  const m = s
+    .trim()
+    .match(
+      /^(-?[\d.]+)(?:px)?\s+(-?[\d.]+)(?:px)?\s+(-?[\d.]+)(?:px)?\s+(-?[\d.]+)(?:px)?\s+(rgba?\([^)]+\))$/,
+    );
+  if (!m) throw new Error(`Unsupported shadow: ${s}`);
+  return {
+    x: Number(m[1]),
+    y: Number(m[2]),
+    blur: Number(m[3]),
+    spread: Number(m[4]),
+    argb: rgbaToArgb(m[5]),
+  };
+}
+
+/** A DTCG shadow `$value` (comma-separated layers) → array of parsed shadows. */
+function parseShadow(value) {
+  const layers = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of value) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    if (ch === "," && depth === 0) {
+      layers.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur.trim()) layers.push(cur);
+  return layers.map(parseSingleShadow);
+}
+
+/** Parsed shadow → a const `BoxShadow(...)` Dart expression. */
+function boxShadowDart(sh) {
+  return (
+    `BoxShadow(color: Color(${sh.argb}), ` +
+    `offset: Offset(${sh.x}, ${sh.y}), ` +
+    `blurRadius: ${sh.blur}, spreadRadius: ${sh.spread})`
+  );
+}
+
 // --- emit ---------------------------------------------------------------------
 
 const ind = "  ";
@@ -285,6 +338,32 @@ eachLeaf(primitive["font-size"], (key, leaf) => {
 push("}");
 push("");
 
+// ---- PulseShadows ----
+function emitShadowList(member, layers) {
+  if (layers.length === 1) {
+    push(
+      `${ind}static const List<BoxShadow> ${member} = [${boxShadowDart(layers[0])}];`,
+    );
+    return;
+  }
+  push(`${ind}static const List<BoxShadow> ${member} = [`);
+  for (const l of layers) push(`${ind}${ind}${boxShadowDart(l)},`);
+  push(`${ind}];`);
+}
+
+push("/// Elevation / glow shadows — the primitive `shadow` scale parsed from CSS");
+push("/// box-shadow into `List<BoxShadow>`. `*Dark` variants come from the");
+push("/// `willink.dark` extension (ADR-0013); brand-tinted `glow` is mode-invariant.");
+push("class PulseShadows {");
+push(`${ind}const PulseShadows._();`);
+eachLeaf(primitive.shadow, (key, leaf) => {
+  emitShadowList(camel(key), parseShadow(leaf.$value));
+  const dark = leaf.$extensions?.["willink.dark"];
+  if (dark) emitShadowList(`${camel(key)}Dark`, parseShadow(dark.$value));
+});
+push("}");
+push("");
+
 // ---- PulseSemantics (light) ----
 push("/// Semantic color roles (light) — named by role, not by hue. Aliases in");
 push("/// the DTCG source are folded to their [PulsePrimitives] reference so a");
@@ -335,5 +414,6 @@ console.log(
   `Generated ${outFile}\n` +
     `  ${primitiveColors} primitive colors · ` +
     `${keyCount(primitive.spacing)} spacing · ` +
-    `${keyCount(primitive["font-size"])} font-size`,
+    `${keyCount(primitive["font-size"])} font-size · ` +
+    `${keyCount(primitive.shadow)} shadow`,
 );

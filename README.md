@@ -2,14 +2,16 @@
 
 **PULSE is i-Willink's mobile-first canonical design system for Flutter.** It is
 the single front door for app UI: a Material 3 `ThemeData` factory, a token
-layer code-generated from the published `@willink-labs/tokens` contract, and
-(from Stage 2) a set of `Pulse*` components built mobile-first.
+layer code-generated from the published `@willink-labs/tokens` contract, and a
+set of `Pulse*` components built mobile-first.
 
-> **Status — Stage 1b (token codegen + theme).** `PulseTheme.light()` /
-> `PulseTheme.dark()` are real Material 3 themes whose `ColorScheme`,
-> `TextTheme` and component themes project the code-generated token layer
-> (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` / `PulseFontSize`).
-> `Pulse*` components land next. **Not yet on pub.dev —
+> **Status — Stage 2 (components).** `PulseTheme.light()` / `PulseTheme.dark()`
+> are real Material 3 themes projecting the code-generated token layer
+> (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` / `PulseFontSize` /
+> `PulseShadows`), and the first 9 `Pulse*` components ship on the violet
+> baseline: `PulseButton`, `PulseEmptyState`, `PulseErrorState`,
+> `PulseLoadingState`, `PulseSectionCard`, `PulseTabBar`, `PulseBottomSheet`,
+> `PulseSnackBar`, `PulseProgressIndicator`. **Not yet on pub.dev —
 > `pub.dev/packages/pulse_theme` is _coming soon_.**
 
 Architecture of record: [ADR-018] (i-willink-crew) and
@@ -53,9 +55,9 @@ the web side reads.
 > (`token-codegen-gate`) regenerates from the published contract and fails on
 > any drift. Covered today: `color` (primitive + semantic, incl. dark via the
 > `willink.dark` extension), `radius`, `duration`, `easing`, `spacing`,
-> `font-size`. The primitive `shadow` group and the semantic `motion` / `easing`
-> role groups are deferred to a later stage (they pair with the upcoming
-> `PulseBrandTokens` / component-animation layer).
+> `font-size`, `shadow` (→ `PulseShadows`). Only the semantic `motion` / `easing`
+> role groups remain deferred (they pair with the future component-animation
+> layer).
 
 ---
 
@@ -103,7 +105,7 @@ final theme = PulseTheme.light().copyWith(
 ```yaml
 # pubspec.yaml — coming soon to pub.dev
 dependencies:
-  pulse_theme: ^0.2.0
+  pulse_theme: ^0.3.0
 ```
 
 ---
@@ -136,8 +138,9 @@ i-Willink's own MIT-licensed `flutter_theme` code**. Private app code
 
 Strict [SemVer 2.0](https://semver.org/). PULSE versions **independently** of
 the `@willink-labs/*` npm group and of the legacy `willink_theme` package
-(per [ADR-018]). `0.2.0` is the Stage-1b cut (token codegen + light/dark
-theme); the public API is not frozen until `1.0.0`.
+(per [ADR-018]). `0.3.0` is the Stage-2 cut (9 `Pulse*` components +
+`PulseBrandTokens` + shadow codegen, on the `0.2.0` token-codegen foundation);
+the public API is not frozen until `1.0.0`.
 
 ## License
 

@@ -9,8 +9,10 @@
 ///
 /// [PulseTheme.light] / [PulseTheme.dark] return Material 3 `ThemeData` whose
 /// `ColorScheme`, `TextTheme` and component themes are a faithful projection of
-/// that token contract. Component widgets (`Pulse*`) land in subsequent stages;
-/// see the README and `doc/adr/0001-pulse-mobile-first-architecture.md`.
+/// that token contract. The first 9 `Pulse*` components ship on the violet
+/// baseline (see the exports below); each reads colors from
+/// `Theme.of(context).colorScheme`, so a `copyWith` brand override flows
+/// through. See the README and `doc/adr/0001-pulse-mobile-first-architecture.md`.
 ///
 /// ```dart
 /// import 'package:flutter/material.dart';
@@ -30,11 +32,25 @@
 /// ```
 library;
 
+export 'src/components/pulse_bottom_sheet.dart' show PulseBottomSheet;
+export 'src/components/pulse_button.dart'
+    show PulseButton, PulseButtonSize, PulseButtonVariant;
+export 'src/components/pulse_empty_state.dart' show PulseEmptyState;
+export 'src/components/pulse_error_state.dart' show PulseErrorState;
+export 'src/components/pulse_loading_state.dart' show PulseLoadingState;
+export 'src/components/pulse_progress_indicator.dart'
+    show PulseProgressIndicator;
+export 'src/components/pulse_section_card.dart' show PulseSectionCard;
+export 'src/components/pulse_snack_bar.dart'
+    show PulseSnackBar, PulseSnackBarVariant;
+export 'src/components/pulse_tab_bar.dart' show PulseTabBar;
 export 'src/pulse_theme.dart' show PulseTheme;
+export 'src/theme_extensions/pulse_brand_tokens.dart' show PulseBrandTokens;
 export 'src/tokens/pulse_tokens.dart'
     show
         PulsePrimitives,
         PulseSemantics,
         PulseSemanticsDark,
         PulseSpacing,
-        PulseFontSize;
+        PulseFontSize,
+        PulseShadows;
