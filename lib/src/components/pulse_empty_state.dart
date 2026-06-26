@@ -55,40 +55,56 @@ class PulseEmptyState extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(PulseSpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 80, color: colors.onSurfaceVariant),
-            const SizedBox(height: PulseSpacing.xl),
-            Text(
-              title,
-              style: textTheme.headlineSmall?.copyWith(
-                color: colors.onSurfaceVariant,
+    // Scroll-when-overflows / center-when-fits: at large accessibility text
+    // scales (e.g. iOS AX5 ~3x) the content scrolls instead of clipping with a
+    // RenderFlex overflow stripe on small phones (D4).
+    return LayoutBuilder(
+      builder:
+          (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    constraints.hasBoundedHeight ? constraints.maxHeight : 0,
               ),
-              textAlign: TextAlign.center,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(PulseSpacing.xxl),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 80, color: colors.onSurfaceVariant),
+                      const SizedBox(height: PulseSpacing.xl),
+                      Text(
+                        title,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (description != null) ...[
+                        const SizedBox(height: PulseSpacing.sm),
+                        Text(
+                          description!,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.outline,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      if (actionLabel != null && onAction != null) ...[
+                        const SizedBox(height: PulseSpacing.xxl),
+                        FilledButton.icon(
+                          onPressed: onAction,
+                          icon: Icon(actionIcon ?? Icons.add),
+                          label: Text(actionLabel!),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
-            if (description != null) ...[
-              const SizedBox(height: PulseSpacing.sm),
-              Text(
-                description!,
-                style: textTheme.bodyMedium?.copyWith(color: colors.outline),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: PulseSpacing.xxl),
-              FilledButton.icon(
-                onPressed: onAction,
-                icon: Icon(actionIcon ?? Icons.add),
-                label: Text(actionLabel!),
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
     );
   }
 }

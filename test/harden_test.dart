@@ -94,15 +94,19 @@ void main() {
     final cases = <String, Widget>{
       'PulseButton': PulseButton(onPressed: () {}, child: const Text('保存する')),
       'PulseLoadingState': const PulseLoadingState(message: '読み込んでいます…'),
-      'PulseEmptyState': const PulseEmptyState(
+      // Render EmptyState WITH its CTA (its primary documented usage) so the
+      // overflow-prone full layout is exercised.
+      'PulseEmptyState': PulseEmptyState(
         icon: Icons.inbox,
         title: 'まだ記録がありません',
         description: '最初のワークアウトを記録してみましょう',
         actionLabel: '記録を始める',
+        onAction: () {},
       ),
-      'PulseErrorState': const PulseErrorState(
+      'PulseErrorState': PulseErrorState(
         title: '読み込みに失敗しました',
         message: '時間をおいて再試行してください',
+        onRetry: () {},
       ),
       'PulseSectionCard': const PulseSectionCard(
         title: '今週のトレーニング実績',
@@ -115,6 +119,12 @@ void main() {
         testWidgets('$name has no overflow at TextScaler ${scale}x', (
           tester,
         ) async {
+          // Pin the smallest supported phone viewport so the no-overflow
+          // assertion reflects real small-screen + max-text-scale conditions
+          // (the 800x600 test default is desktop-shaped and hides overflow).
+          tester.view.physicalSize = const Size(360, 640);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
           // No pumpAndSettle: PulseLoadingState animates forever. Overflow is
           // a layout-time error already surfaced by pumpWidget's first frame.
           await tester.pumpWidget(scaled(widget, scale));

@@ -18,8 +18,11 @@ progress", not "minor bumps may break".
   screen-reader announcement, falling back to `message`); `PulseErrorState` is
   a `liveRegion` (announced when it appears); `PulseSectionCard` and
   `PulseBottomSheet` titles are marked as headers.
-- **D4 (TextScaler)**: text components render without overflow at 2.0× and 3.0×
-  text scale (regression tests added).
+- **D4 (TextScaler)**: `PulseEmptyState` and `PulseErrorState` now scroll
+  (center-when-fits / scroll-when-overflows) instead of clipping with a
+  RenderFlex overflow at large accessibility text scales. Regression tests
+  assert no overflow at 2.0× and 3.0× on a 360×640 phone viewport with the
+  full layouts (CTA / retry) rendered.
 
 Test suite: **87 passing**.
 
