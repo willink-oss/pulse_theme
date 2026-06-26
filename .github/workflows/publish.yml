@@ -27,8 +27,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Flutter 3.29+ ships Dart 3.7+ which matches pubspec sdk: ^3.7.0.
-          flutter-version: '3.29.0'
+          # Match ci.yml's pin (golden-snapshot stability). 3.44.2 ships Dart
+          # 3.12, satisfying pubspec sdk: ^3.7.0.
+          flutter-version: '3.44.2'
 
       # subosito/flutter-action ships Dart but does NOT configure the GitHub
       # OIDC token for pub.dev — dart-lang/setup-dart does that.

@@ -32,10 +32,15 @@ Test suite: **87 passing**.
   Trusted Publisher (analyze → test → dry-run → publish). The first publish
   needs a one-time pub.dev "Automated publishing" setup (org admin).
 
-### Deferred
+### Added — D3 visual regression (golden)
 
-- **D3 (golden / visual regression)** — needs cross-platform golden infra
-  (macOS-dev vs Linux-CI font rendering differ); tracked as a follow-up.
+- Golden tests via **alchemist** CI goldens — fonts are flattened so snapshots
+  are deterministic across macOS-dev and Linux-CI (`test/flutter_test_config.dart`
+  runs CI goldens only). Covers `PulseButton` (variants × sizes),
+  `PulseProgressIndicator`, and the empty / error / section-card states.
+- CI Flutter is pinned to **3.44.2** because golden snapshots are
+  Flutter-version sensitive; regenerate with `flutter test --update-goldens`
+  and bump the pin together.
 
 ## [0.3.0] — 2026-06-26
 
