@@ -117,7 +117,10 @@ class PulseTheme {
   /// [colorScheme], so light and dark stay structurally identical. The
   /// [brandTokens] non-Material extension (gradients / glow / shadows) is
   /// attached so `Pulse*` widgets can read it via `Theme.of(context)`.
-  static ThemeData _base(ColorScheme colorScheme, PulseBrandTokens brandTokens) {
+  static ThemeData _base(
+    ColorScheme colorScheme,
+    PulseBrandTokens brandTokens,
+  ) {
     return ThemeData(
       useMaterial3: true,
       brightness: colorScheme.brightness,
@@ -179,8 +182,10 @@ class PulseTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
           borderSide: BorderSide(color: colorScheme.outline),

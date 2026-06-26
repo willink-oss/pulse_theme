@@ -247,14 +247,6 @@ function parseShadow(value) {
   return layers.map(parseSingleShadow);
 }
 
-/** Parsed shadow → a const `BoxShadow(...)` Dart expression. */
-function boxShadowDart(sh) {
-  return (
-    `BoxShadow(color: Color(${sh.argb}), ` +
-    `offset: Offset(${sh.x}, ${sh.y}), ` +
-    `blurRadius: ${sh.blur}, spreadRadius: ${sh.spread})`
-  );
-}
 
 // --- emit ---------------------------------------------------------------------
 
@@ -339,15 +331,19 @@ push("}");
 push("");
 
 // ---- PulseShadows ----
+// Emitted in `dart format` style (every BoxShadow multi-line with trailing
+// commas) so `dart format` is a no-op on the generated file and the
+// token-codegen-gate byte-diff stays stable.
 function emitShadowList(member, layers) {
-  if (layers.length === 1) {
-    push(
-      `${ind}static const List<BoxShadow> ${member} = [${boxShadowDart(layers[0])}];`,
-    );
-    return;
-  }
   push(`${ind}static const List<BoxShadow> ${member} = [`);
-  for (const l of layers) push(`${ind}${ind}${boxShadowDart(l)},`);
+  for (const l of layers) {
+    push(`${ind}${ind}BoxShadow(`);
+    push(`${ind}${ind}${ind}color: Color(${l.argb}),`);
+    push(`${ind}${ind}${ind}offset: Offset(${l.x}, ${l.y}),`);
+    push(`${ind}${ind}${ind}blurRadius: ${l.blur},`);
+    push(`${ind}${ind}${ind}spreadRadius: ${l.spread},`);
+    push(`${ind}${ind}),`);
+  }
   push(`${ind}];`);
 }
 
@@ -402,7 +398,8 @@ function eachColorGroup(colorTree, fn) {
   }
 }
 
-const output = lines.join("\n") + "\n";
+// trimEnd + single trailing newline so the output matches `dart format`.
+const output = lines.join("\n").trimEnd() + "\n";
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, output);
 

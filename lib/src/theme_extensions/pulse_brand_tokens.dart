@@ -99,11 +99,7 @@ class PulseBrandTokens extends ThemeExtension<PulseBrandTokens> {
   static const LinearGradient _subtleGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFFFFFFF),
-      PulsePrimitives.brand50,
-      PulsePrimitives.sky50,
-    ],
+    colors: [Color(0xFFFFFFFF), PulsePrimitives.brand50, PulsePrimitives.sky50],
     stops: [0.0, 0.5, 1.0],
   );
 

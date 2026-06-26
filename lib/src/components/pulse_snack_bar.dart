@@ -74,9 +74,9 @@ class PulseSnackBar {
     final (IconData icon, Color accent) = switch (variant) {
       PulseSnackBarVariant.info => (Icons.info_outline, colors.primary),
       PulseSnackBarVariant.success => (
-          Icons.check_circle_outline,
-          PulseSemantics.success,
-        ),
+        Icons.check_circle_outline,
+        PulseSemantics.success,
+      ),
       PulseSnackBarVariant.error => (Icons.error_outline, colors.error),
     };
 
@@ -90,13 +90,14 @@ class PulseSnackBar {
           borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
           side: BorderSide(color: colors.outline),
         ),
-        action: actionLabel == null
-            ? null
-            : SnackBarAction(
-                label: actionLabel,
-                textColor: colors.primary,
-                onPressed: onAction!,
-              ),
+        action:
+            actionLabel == null
+                ? null
+                : SnackBarAction(
+                  label: actionLabel,
+                  textColor: colors.primary,
+                  onPressed: onAction!,
+                ),
         content: Row(
           children: [
             Icon(icon, size: 20, color: accent),

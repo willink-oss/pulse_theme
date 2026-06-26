@@ -50,22 +50,27 @@ void main() {
       });
     });
 
-    test('attaches the PulseBrandTokens extension (light=pulse, dark=pulseDark)',
-        () {
-      expect(
-        PulseTheme.light().extension<PulseBrandTokens>(),
-        same(PulseBrandTokens.pulse),
-      );
-      expect(
-        PulseTheme.dark().extension<PulseBrandTokens>(),
-        same(PulseBrandTokens.pulseDark),
-      );
-      // Brand glow shadow is the code-generated PulseShadows.glow.
-      expect(PulseBrandTokens.pulse.shadowGlow, same(PulseShadows.glow));
-      // Soft shadow flips between modes (ADR-0013).
-      expect(PulseBrandTokens.pulse.shadowSoft, same(PulseShadows.soft));
-      expect(PulseBrandTokens.pulseDark.shadowSoft, same(PulseShadows.softDark));
-    });
+    test(
+      'attaches the PulseBrandTokens extension (light=pulse, dark=pulseDark)',
+      () {
+        expect(
+          PulseTheme.light().extension<PulseBrandTokens>(),
+          same(PulseBrandTokens.pulse),
+        );
+        expect(
+          PulseTheme.dark().extension<PulseBrandTokens>(),
+          same(PulseBrandTokens.pulseDark),
+        );
+        // Brand glow shadow is the code-generated PulseShadows.glow.
+        expect(PulseBrandTokens.pulse.shadowGlow, same(PulseShadows.glow));
+        // Soft shadow flips between modes (ADR-0013).
+        expect(PulseBrandTokens.pulse.shadowSoft, same(PulseShadows.soft));
+        expect(
+          PulseBrandTokens.pulseDark.shadowSoft,
+          same(PulseShadows.softDark),
+        );
+      },
+    );
 
     test('TextTheme sizes come from PulseFontSize', () {
       final tt = PulseTheme.light().textTheme;

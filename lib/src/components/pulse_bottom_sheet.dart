@@ -36,11 +36,7 @@ import '../tokens/pulse_tokens.dart';
 /// use [PulsePrimitives.radiusXl] (16px — the DS radius feel, instead of
 /// the Material 3 default 28px).
 class PulseBottomSheet extends StatelessWidget {
-  const PulseBottomSheet({
-    required this.child,
-    super.key,
-    this.title,
-  });
+  const PulseBottomSheet({required this.child, super.key, this.title});
 
   /// Body content rendered inside the sheet. Required.
   final Widget child;
@@ -111,8 +107,9 @@ class PulseBottomSheet extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: handleColor,
-                  borderRadius:
-                      BorderRadius.circular(PulsePrimitives.radiusFull),
+                  borderRadius: BorderRadius.circular(
+                    PulsePrimitives.radiusFull,
+                  ),
                 ),
               ),
             ),
@@ -141,12 +138,15 @@ class PulseBottomSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (title != null) ...[
-              Text(
-                title!,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colors.onSurface,
+              Semantics(
+                header: true,
+                child: Text(
+                  title!,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
                 ),
               ),
               const SizedBox(height: PulseSpacing.md),

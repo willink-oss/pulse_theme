@@ -1,0 +1,67 @@
+name: Publish pulse_theme to pub.dev
+
+# Triggered by version tags `v*` (e.g. v0.4.0) or manual workflow_dispatch.
+#
+# ⚠️ One-time setup (CEO / org pub.dev admin): before the FIRST publish, enable
+# pub.dev "Automated publishing" for `pulse_theme` and trust this repo +
+# workflow (Trusted Publisher / OIDC). Until that is configured the final
+# publish step fails to authenticate — everything before it (analyze / test /
+# dry-run) still runs as a gate.
+# Ref: https://dart.dev/tools/pub/automated-publishing
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: dart pub publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for pub.dev OIDC Trusted Publisher
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Flutter 3.29+ ships Dart 3.7+ which matches pubspec sdk: ^3.7.0.
+          flutter-version: '3.29.0'
+
+      # subosito/flutter-action ships Dart but does NOT configure the GitHub
+      # OIDC token for pub.dev — dart-lang/setup-dart does that.
+      - uses: dart-lang/setup-dart@v1
+
+      # Tag/pubspec agreement + pre-release awareness. pub.dev has no dist-tags:
+      # a pre-release version (X.Y.Z-beta.N) is excluded from default
+      # ^-constraint resolution, so existing consumers never auto-upgrade to it.
+      - name: Verify tag/pubspec agreement
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PUBSPEC_VERSION="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::Tag/pubspec mismatch: tag '$TAG_VERSION' vs pubspec '$PUBSPEC_VERSION'. Refusing to publish."
+            exit 1
+          fi
+          if [[ "$TAG_VERSION" == *-* ]]; then
+            echo "Pre-release '$TAG_VERSION' — pub.dev excludes it from default ^-constraint resolution."
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Dry-run publish (sanity)
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev (OIDC Trusted Publisher)
+        run: dart pub publish --force

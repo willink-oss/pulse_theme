@@ -109,26 +109,22 @@ class PulseButton extends StatelessWidget {
     final textStyle = TextStyle(
       fontSize: _fontSize,
       fontWeight: FontWeight.w600,
-      color: variant == PulseButtonVariant.filled
-          ? colors.onPrimary
-          : colors.primary,
+      color:
+          variant == PulseButtonVariant.filled
+              ? colors.onPrimary
+              : colors.primary,
     );
 
     final children = <Widget>[
-      if (leadingIcon != null) ...[
-        leadingIcon!,
-        const SizedBox(width: 8),
-      ],
+      if (leadingIcon != null) ...[leadingIcon!, const SizedBox(width: 8)],
       DefaultTextStyle.merge(style: textStyle, child: child),
-      if (trailingIcon != null) ...[
-        const SizedBox(width: 8),
-        trailingIcon!,
-      ],
+      if (trailingIcon != null) ...[const SizedBox(width: 8), trailingIcon!],
     ];
 
-    final iconColor = variant == PulseButtonVariant.filled
-        ? colors.onPrimary
-        : colors.primary;
+    final iconColor =
+        variant == PulseButtonVariant.filled
+            ? colors.onPrimary
+            : colors.primary;
 
     Widget button;
     switch (variant) {
@@ -141,15 +137,16 @@ class PulseButton extends StatelessWidget {
             disabledBackgroundColor: colors.primary,
             disabledForegroundColor: colors.onPrimary,
             padding: _padding,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            // Keep the visual compact (minimumSize.zero) but let Material's
+            // default `padded` tap-target expand the gesture + semantics area to
+            // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
           child: Row(
-            mainAxisSize:
-                fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: children,
           ),
@@ -163,15 +160,16 @@ class PulseButton extends StatelessWidget {
             disabledForegroundColor: colors.primary,
             side: BorderSide(color: colors.primary, width: 1.5),
             padding: _padding,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            // Keep the visual compact (minimumSize.zero) but let Material's
+            // default `padded` tap-target expand the gesture + semantics area to
+            // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
           child: Row(
-            mainAxisSize:
-                fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: children,
           ),
@@ -185,7 +183,9 @@ class PulseButton extends StatelessWidget {
             disabledForegroundColor: colors.primary,
             backgroundColor: Colors.transparent,
             padding: _padding,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            // Keep the visual compact (minimumSize.zero) but let Material's
+            // default `padded` tap-target expand the gesture + semantics area to
+            // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -200,8 +200,7 @@ class PulseButton extends StatelessWidget {
             }),
           ),
           child: Row(
-            mainAxisSize:
-                fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: children,
           ),

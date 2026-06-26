@@ -11,16 +11,15 @@ import 'package:pulse_theme/pulse_theme.dart';
 
 void main() {
   Widget wrap(Widget child, {ThemeData? theme}) => MaterialApp(
-        theme: theme ?? PulseTheme.light(),
-        home: Scaffold(body: Center(child: child)),
-      );
+    theme: theme ?? PulseTheme.light(),
+    home: Scaffold(body: Center(child: child)),
+  );
 
   group('PulseProgressIndicator — determinate', () {
-    testWidgets('passes value through to LinearProgressIndicator',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(const PulseProgressIndicator(value: 0.65)),
-      );
+    testWidgets('passes value through to LinearProgressIndicator', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const PulseProgressIndicator(value: 0.65)));
 
       final bar = tester.widget<LinearProgressIndicator>(
         find.byType(LinearProgressIndicator),
@@ -28,8 +27,9 @@ void main() {
       expect(bar.value, equals(0.65));
     });
 
-    testWidgets('fill uses primary + track uses surfaceContainerHighest',
-        (tester) async {
+    testWidgets('fill uses primary + track uses surfaceContainerHighest', (
+      tester,
+    ) async {
       final theme = PulseTheme.light();
       await tester.pumpWidget(
         wrap(const PulseProgressIndicator(value: 0.4), theme: theme),
@@ -47,8 +47,9 @@ void main() {
   });
 
   group('PulseProgressIndicator — indeterminate', () {
-    testWidgets('null value renders an animating indeterminate bar',
-        (tester) async {
+    testWidgets('null value renders an animating indeterminate bar', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const PulseProgressIndicator()));
 
       final bar = tester.widget<LinearProgressIndicator>(
@@ -66,11 +67,10 @@ void main() {
   });
 
   group('PulseProgressIndicator — sizing', () {
-    testWidgets('defaults to 8dp height + fully rounded corners',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(const PulseProgressIndicator(value: 0.5)),
-      );
+    testWidgets('defaults to 8dp height + fully rounded corners', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const PulseProgressIndicator(value: 0.5)));
 
       final bar = tester.widget<LinearProgressIndicator>(
         find.byType(LinearProgressIndicator),
@@ -84,8 +84,9 @@ void main() {
       );
     });
 
-    testWidgets('custom minHeight + borderRadius are respected',
-        (tester) async {
+    testWidgets('custom minHeight + borderRadius are respected', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           PulseProgressIndicator(
@@ -105,8 +106,7 @@ void main() {
   });
 
   group('PulseProgressIndicator — ColorScheme override', () {
-    testWidgets('respects copyWith(colorScheme: ...) override',
-        (tester) async {
+    testWidgets('respects copyWith(colorScheme: ...) override', (tester) async {
       final overridden = PulseTheme.light().copyWith(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
       );
@@ -127,8 +127,7 @@ void main() {
   });
 
   group('PulseProgressIndicator — semantics', () {
-    testWidgets('semanticsLabel is exposed to assistive tech',
-        (tester) async {
+    testWidgets('semanticsLabel is exposed to assistive tech', (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         wrap(

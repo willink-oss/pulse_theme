@@ -103,17 +103,13 @@ void main() {
     });
 
     testWidgets('hides retry when onRetry null', (tester) async {
-      await tester.pumpWidget(
-        wrapWithTheme(const PulseErrorState(title: 'X')),
-      );
+      await tester.pumpWidget(wrapWithTheme(const PulseErrorState(title: 'X')));
       expect(find.byType(FilledButton), findsNothing);
     });
 
     testWidgets('hides copy button when showCopyButton false', (tester) async {
       await tester.pumpWidget(
-        wrapWithTheme(
-          const PulseErrorState(title: 'X', showCopyButton: false),
-        ),
+        wrapWithTheme(const PulseErrorState(title: 'X', showCopyButton: false)),
       );
       expect(find.text('エラーをコピー'), findsNothing);
     });
@@ -129,16 +125,12 @@ void main() {
     });
 
     testWidgets('compact variant renders 24px spinner', (tester) async {
-      await tester.pumpWidget(
-        wrapWithTheme(const PulseLoadingState.compact()),
-      );
+      await tester.pumpWidget(wrapWithTheme(const PulseLoadingState.compact()));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('inline variant renders bare 16px spinner', (tester) async {
-      await tester.pumpWidget(
-        wrapWithTheme(const PulseLoadingState.inline()),
-      );
+      await tester.pumpWidget(wrapWithTheme(const PulseLoadingState.inline()));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.byType(Center), findsNothing);
     });
