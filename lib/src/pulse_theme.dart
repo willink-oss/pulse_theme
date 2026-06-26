@@ -12,6 +12,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'theme_extensions/pulse_brand_tokens.dart';
 import 'tokens/pulse_tokens.dart';
 
 /// Material 3 [ThemeData] factory for the PULSE design system.
@@ -23,7 +24,7 @@ class PulseTheme {
   /// ```dart
   /// MaterialApp(theme: PulseTheme.light());
   /// ```
-  static ThemeData light() => _base(_lightScheme);
+  static ThemeData light() => _base(_lightScheme, PulseBrandTokens.pulse);
 
   /// PULSE dark theme — the semantic flip of [light] (ADR-0013). Brand identity
   /// is mode-invariant (`primary` stays the same brand violet); surfaces and
@@ -36,7 +37,7 @@ class PulseTheme {
   ///   themeMode: ThemeMode.system,
   /// );
   /// ```
-  static ThemeData dark() => _base(_darkScheme);
+  static ThemeData dark() => _base(_darkScheme, PulseBrandTokens.pulseDark);
 
   // === ColorSchemes ===
   // Every slot is a semantic role. Slots Material requires but the DTCG
@@ -113,14 +114,17 @@ class PulseTheme {
   );
 
   /// Shared [ThemeData] assembly — every component theme derives from
-  /// [colorScheme], so light and dark stay structurally identical.
-  static ThemeData _base(ColorScheme colorScheme) {
+  /// [colorScheme], so light and dark stay structurally identical. The
+  /// [brandTokens] non-Material extension (gradients / glow / shadows) is
+  /// attached so `Pulse*` widgets can read it via `Theme.of(context)`.
+  static ThemeData _base(ColorScheme colorScheme, PulseBrandTokens brandTokens) {
     return ThemeData(
       useMaterial3: true,
       brightness: colorScheme.brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       textTheme: _textTheme,
+      extensions: <ThemeExtension<dynamic>>[brandTokens],
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,

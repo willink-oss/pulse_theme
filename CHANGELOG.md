@@ -7,6 +7,36 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.3.0] — 2026-06-26
+
+### Added — Stage 2: component port (clean-room) + shadow codegen
+
+Ports i-Willink's own MIT-licensed Flutter components (`Willink*` → `Pulse*`)
+from `willink-design-system/packages/flutter_theme`. Visuals stay on the violet
+baseline; brand values remain consumer-overridable. No private (fit-ai) source
+consulted.
+
+- **9 components**: `PulseButton` (+ `PulseButtonSize` / `PulseButtonVariant`),
+  `PulseEmptyState`, `PulseErrorState`, `PulseLoadingState`, `PulseSectionCard`,
+  `PulseTabBar`, `PulseBottomSheet`, `PulseSnackBar` (+ `PulseSnackBarVariant`),
+  `PulseProgressIndicator`.
+- **`PulseBrandTokens`** `ThemeExtension` (gradients / glow / shadows), attached
+  to `PulseTheme.light()` (`pulse`) and `PulseTheme.dark()` (`pulseDark`). Read
+  it via `Theme.of(context).extension<PulseBrandTokens>()`.
+- **`PulseShadows`** added to codegen — the primitive `shadow` scale is now
+  parsed from the DTCG CSS box-shadow values into `List<BoxShadow>`
+  (`soft` / `softDark` / `md` / `mdDark` / `glow`); `PulseBrandTokens` consumes
+  it instead of hand-coded rgba.
+- Test suite expanded to **69 tests** (Stage-1b token/theme tests + ported
+  component tests).
+
+### Known follow-ups (tracked separately)
+
+The components are a faithful port and inherit the legacy `willink_theme`
+quality gaps — golden / Semantics / TextScaler coverage and the `PulseButton`
+48 dp tap-target issue are deferred to the component-harden step (not a Stage-2
+regression; the same state ships in `willink_theme` today).
+
 ## [0.2.0] — 2026-06-26
 
 ### Added — Stage 1b: Dart token codegen + real theme
