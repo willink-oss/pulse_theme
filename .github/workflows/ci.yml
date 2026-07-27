@@ -34,10 +34,54 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # example/ is a SEPARATE Flutter package (its own pubspec.yaml), shipped
+      # in the published archive so pub.dev renders an example tab. The root
+      # `flutter analyze` discovers it as its own analysis context, so unless it
+      # has been resolved first every `package:flutter` / `package:pulse_theme`
+      # import inside example/lib is reported as "Target of URI doesn't exist"
+      # and the root analyze fails. Resolving example/ BEFORE the root analyze
+      # is what keeps this gate green.
+      #
+      # The presence check keeps the workflow valid on refs without example/
+      # (older branches, or a revert) instead of failing on a missing directory.
+      - name: Detect example app
+        id: example
+        run: |
+          set -euo pipefail
+          if [ -f example/pubspec.yaml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No example/pubspec.yaml — skipping example resolution + analyze."
+          fi
+
+      - name: Install example dependencies
+        if: steps.example.outputs.present == 'true'
+        working-directory: example
+        run: flutter pub get
+
       - name: Analyze (all severities)
         run: flutter analyze
 
+      # Belt and braces: analyze example/ in its own right so its own
+      # analysis_options.yaml (app-level lints) is honoured, independent of how
+      # the root analyzer happens to treat nested packages.
+      - name: Analyze example (all severities)
+        if: steps.example.outputs.present == 'true'
+        working-directory: example
+        run: flutter analyze
+
       - name: Test (incl. alchemist CI goldens)
+        run: flutter test
+
+      # The example ships inside the published archive and is the first thing a
+      # consumer copies, so its smoke test is a gate, not decoration: it renders
+      # every tab and drives the bottom-sheet -> snack-bar round trip. Without
+      # this step an API change could leave a broken example on pub.dev while
+      # the root suite stays green.
+      - name: Test example (gallery smoke test)
+        if: steps.example.outputs.present == 'true'
+        working-directory: example
         run: flutter test
 
       - name: Dry-run publish (pub.dev compatibility sanity check)

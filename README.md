@@ -1,18 +1,24 @@
 # PULSE — `pulse_theme`
 
+[![pub package](https://img.shields.io/pub/v/pulse_theme.svg)](https://pub.dev/packages/pulse_theme)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **PULSE is i-Willink's mobile-first canonical design system for Flutter.** It is
 the single front door for app UI: a Material 3 `ThemeData` factory, a token
 layer code-generated from the published `@willink-labs/tokens` contract, and a
 set of `Pulse*` components built mobile-first.
 
-> **Status — Stage 2 (components).** `PulseTheme.light()` / `PulseTheme.dark()`
-> are real Material 3 themes projecting the code-generated token layer
-> (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` / `PulseFontSize` /
-> `PulseShadows`), and the first 9 `Pulse*` components ship on the violet
-> baseline: `PulseButton`, `PulseEmptyState`, `PulseErrorState`,
+> **Status — Stage 2 (components), on pub.dev.** `PulseTheme.light()` /
+> `PulseTheme.dark()` are real Material 3 themes projecting the code-generated
+> token layer (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` /
+> `PulseFontSize` / `PulseShadows`), and the first 9 `Pulse*` components ship on
+> the violet baseline: `PulseButton`, `PulseEmptyState`, `PulseErrorState`,
 > `PulseLoadingState`, `PulseSectionCard`, `PulseTabBar`, `PulseBottomSheet`,
-> `PulseSnackBar`, `PulseProgressIndicator`. **Not yet on pub.dev —
-> `pub.dev/packages/pulse_theme` is _coming soon_.**
+> `PulseSnackBar`, `PulseProgressIndicator`. **`0.5.0` is the first release
+> published to [pub.dev](https://pub.dev/packages/pulse_theme)** — components are
+> hardened (48dp tap targets, `Semantics`, `TextScaler` robustness) and covered
+> by golden / visual-regression tests in CI. The public API is not frozen until
+> `1.0.0`.
 
 Architecture of record: [ADR-018] (i-willink-crew) and
 [`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md).
@@ -90,7 +96,7 @@ Token classes are exported for direct use, e.g. `PulseSpacing.md`,
 
 ### Customizing the brand color
 
-Re-brand via standard Material 3 `copyWith` — future `Pulse*` widgets read
+Re-brand via standard Material 3 `copyWith` — every `Pulse*` widget reads
 colors from `Theme.of(context).colorScheme`, so overrides flow through
 automatically:
 
@@ -100,13 +106,82 @@ final theme = PulseTheme.light().copyWith(
 );
 ```
 
-### Install (once published)
+### Install
 
 ```yaml
-# pubspec.yaml — coming soon to pub.dev
+# pubspec.yaml
 dependencies:
-  pulse_theme: ^0.4.0
+  pulse_theme: ^0.5.0
 ```
+
+…or let pub add the current constraint for you:
+
+```sh
+flutter pub add pulse_theme
+```
+
+Published on [pub.dev](https://pub.dev/packages/pulse_theme) under the
+`i-willink.com` verified publisher.
+
+---
+
+## Adopting PULSE in your app
+
+PULSE is the default UI front door for i-Willink Flutter apps. Adoption is
+**additive**: one hosted dependency, one `MaterialApp` wiring change, then the
+`Pulse*` components. No app-side token table, no theme fork — a token change in
+`@willink-labs/tokens` reaches your app through a normal `pub upgrade`.
+
+### 3 steps
+
+**1. Add the dependency**
+
+```sh
+flutter pub add pulse_theme
+```
+
+**2. Wire the theme into `MaterialApp`**
+
+```dart
+import 'package:pulse_theme/pulse_theme.dart';
+
+MaterialApp(
+  theme: PulseTheme.light(),
+  darkTheme: PulseTheme.dark(),
+  themeMode: ThemeMode.system,
+  home: const HomePage(),
+);
+```
+
+**3. Use the `Pulse*` components and the token layer**
+
+```dart
+PulseSectionCard(
+  title: 'Today',
+  child: Padding(
+    padding: const EdgeInsets.symmetric(vertical: PulseSpacing.sm),
+    child: PulseButton(
+      onPressed: _save,
+      variant: PulseButtonVariant.filled,
+      size: PulseButtonSize.medium,
+      leadingIcon: const Icon(Icons.check),
+      child: const Text('Save'),
+    ),
+  ),
+);
+```
+
+App-local wrappers (`AppTheme` / `AppSpacing`) keep working — point them at
+`PulseTheme.light()` and `PulseSpacing.*` and every existing call site stays
+untouched.
+
+### Where to go next
+
+- **Adoption guide** (per-app checklist, `willink_theme` symbol mapping, theme
+  override recipes): [doc/adoption.md](doc/adoption.md)
+- **Runnable sample app**: [example/](example/)
+- **Architecture of record**:
+  [`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md)
 
 ---
 
@@ -128,6 +203,21 @@ is now **discontinued**. The only real consumer of `willink_theme` is
 happens after that Phase 0 ship**, not before. fit-ai (mobile) already left
 `willink_theme` and is unaffected. No consumer needs to act on PULSE today.
 
+When an app is ready, the dependency swap is:
+
+```yaml
+dependencies:
+  # willink_theme: ^1.5.0   ← remove
+  pulse_theme: ^0.5.0
+```
+
+The symbol port is a 1:1 rename with identical argument shapes —
+`WillinkTheme.willink()` → `PulseTheme.light()`,
+`WillinkTheme.willinkDark()` → `PulseTheme.dark()`,
+`WillinkSpacing.*` → `PulseSpacing.*` (same `xs`/`sm`/`md`/`lg`/`xl`/`xxl`
+values), `Willink<Component>` → `Pulse<Component>`. The full table lives in
+[doc/adoption.md](doc/adoption.md).
+
 The component port (`Willink*` → `Pulse*`) is a **clean-room re-brand of
 i-Willink's own MIT-licensed `flutter_theme` code**. Private app code
 (notably fit-ai) is never lifted — see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -138,10 +228,15 @@ i-Willink's own MIT-licensed `flutter_theme` code**. Private app code
 
 Strict [SemVer 2.0](https://semver.org/). PULSE versions **independently** of
 the `@willink-labs/*` npm group and of the legacy `willink_theme` package
-(per [ADR-018]). `0.4.0` is the component-harden cut (48dp tap target,
-Semantics, TextScaler robustness) on top of the `0.3.0` Stage-2 components and
-the `0.2.0` token-codegen foundation; the public API is not frozen until
-`1.0.0`.
+(per [ADR-018]). `0.5.0` is the **first version published to pub.dev** (`0.4.0`
+and earlier were repo-only cuts and never shipped to the registry, but stay in
+[CHANGELOG.md](CHANGELOG.md) as history). `0.4.0` was the component-harden cut
+(48dp tap target, Semantics, TextScaler robustness) on top of the `0.3.0`
+Stage-2 components and the `0.2.0` token-codegen foundation; the public API is
+not frozen until `1.0.0`.
+
+Releases are cut from a `v<version>` git tag — see
+[CHANGELOG.md](CHANGELOG.md) for the per-version history.
 
 ## License
 

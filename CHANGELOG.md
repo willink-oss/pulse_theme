@@ -7,6 +7,71 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.5.0] — 2026-07-28
+
+### Added — first pub.dev release
+
+`0.5.0` is the **first published release of `pulse_theme` on pub.dev**, under
+the verified publisher **`i-willink.com`**. Everything up to and including
+`0.4.0` was developed in-repo and consumed via a git ref — those versions were
+never published and remain here purely as history.
+
+Install:
+
+```yaml
+dependencies:
+  pulse_theme: ^0.5.0
+```
+
+### Added
+
+- **`example/`** — a runnable gallery app covering all 9 components
+  (`PulseButton`, `PulseEmptyState`, `PulseErrorState`, `PulseLoadingState`,
+  `PulseSectionCard`, `PulseTabBar`, `PulseBottomSheet`, `PulseSnackBar`,
+  `PulseProgressIndicator`) in both `PulseTheme.light()` and
+  `PulseTheme.dark()`. Also surfaces as the **Example** tab on pub.dev. Its
+  smoke test (render every tab, drive the bottom-sheet → snack-bar round trip)
+  runs in CI, so a published example cannot silently rot.
+- **`doc/adoption.md`** — adoption guide for i-Willink apps (install, the
+  `AppTheme` / `AppSpacing` wiring pattern, and the `willink_theme` →
+  `pulse_theme` symbol mapping).
+- **`doc/releasing.md`** — the release procedure (version bump → changelog →
+  tag → automated publish) and the manual first-publish exception.
+- **`topics`** and **`platforms`** declared in `pubspec.yaml`. Platform support
+  is the full set (Android, iOS, Linux, macOS, Web, Windows) — the package is
+  pure Dart/Flutter with no platform channels and no `dart:io` / `dart:ffi` /
+  `dart:html` usage.
+
+### Changed
+
+- **README** rewritten for a published package — pub.dev version badge,
+  `pub add` install instructions, and an adoption section replacing the
+  git-ref-based setup notes.
+- **`.github/workflows/publish.yml`** is now **idempotent**: it skips the
+  publish step when the version already exists on pub.dev, so re-running a
+  release (or tagging a version that was published manually) no longer fails
+  the workflow.
+
+### Fixed — packaging
+
+- `test/golden/failures/` is now `.gitignore`d. `dart pub publish` bundles every
+  file under the package root except what `.gitignore` / `.pubignore` excludes —
+  *untracked is not excluded* — so a local failing golden run (which alchemist
+  always produces on macOS, where the Linux-generated goldens cannot match
+  bit-for-bit) would otherwise have baked four diff PNGs into the published
+  archive permanently. `--dry-run` does not warn about this.
+
+### Note — no API change
+
+There is **no change to the public API** in this release; `0.5.0` is
+source-compatible with `0.4.0`. The bump reflects the packaging and
+distribution milestone, not a code change.
+
+Be aware that in Dart's pre-1.0 caret semantics, **`^0.5.0` means
+`>=0.5.0 <0.6.0`** — a `0.6.0` release will *not* be picked up automatically.
+Per the SemVer policy above, the public API is not frozen until `1.0.0`, so
+pin with the caret and read this changelog before bumping the minor.
+
 ## [0.4.0] — 2026-06-26
 
 ### Changed — component harden (a11y / robustness)
