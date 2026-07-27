@@ -314,14 +314,14 @@ Container(
 
 | コンポーネント | 用途 |
 |---|---|
-| `PulseButton` | ブランド対応ボタン（filled / outline / ghost） |
+| `PulseButton` | ブランド対応ボタン（filled / outline / ghost / danger）+ `isLoading` |
 | `PulseEmptyState` | データが無い画面の空状態 + CTA |
 | `PulseErrorState` | エラー表示（コピー / 再試行つき） |
 | `PulseLoadingState` | ローディング（全画面 / セクション内 / インライン） |
 | `PulseSectionCard` | タイトル付きのセクション面 |
 | `PulseTabBar` | Material 3 タブバー（`AppBar.bottom` に挿せる） |
 | `PulseBottomSheet` | モーダルボトムシート |
-| `PulseSnackBar` | スナックバー（info / success / error） |
+| `PulseSnackBar` | スナックバー（info / success / warning / error） |
 | `PulseProgressIndicator` | 横棒の進捗バー |
 
 ### 5.1 `PulseButton`
@@ -335,8 +335,10 @@ Container(
 | `leadingIcon` | `Widget?` | `null`（ラベルの左に 8px ギャップで配置） |
 | `trailingIcon` | `Widget?` | `null`（右に 8px ギャップ） |
 | `fullWidth` | `bool` | `false` |
+| `isLoading` | `bool` | `false`（`true` でスピナー表示＋タップ不可。**減光はしない**） |
+| `loadingSemanticsLabel` | `String?` | `null`（`isLoading` 中のスクリーンリーダー読み上げ） |
 
-- `PulseButtonVariant` = `filled` / `outline` / `ghost`
+- `PulseButtonVariant` = `filled` / `outline` / `ghost` / `danger`
 - `PulseButtonSize` = `small`（padding 12×6・14px）/ `medium`（16×10・16px）/ `large`（24×14・18px）
 
 ```dart
@@ -348,6 +350,57 @@ PulseButton(
   child: const Text('保存'),
 )
 ```
+
+#### `danger` — 破壊的操作
+
+削除 / 取り消し / 解約などに使う。実体は `filled` と同じ `FilledButton`（同じ shape・padding・角丸 8・同じグロー影）で、色だけが違う。
+
+色は **`colorScheme.error` / `colorScheme.onError`** から取る。固定トークンの `PulseSemantics.danger` は使っていないので、[6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` でブランドを差し替えると `filled` と同じように追従する。
+
+> **ライト / ダークで文字色が違う**。ライトは赤 600 の上に白（4.83:1）。ダークの `error` は明るい赤 500（`#EF4444`）なので、白だと 3.76:1 で WCAG AA（4.5:1）を割る。そのためダークの `onError` だけは白ではなく背景インク `#020617` を使っている（5.36:1）。`copyWith` で `error` を差し替えるときは `onError` も一緒に見直すこと（[7.2](#72-アプリ側がやること) の 3）。
+
+```dart
+PulseButton(
+  onPressed: () => deleteAccount(),
+  variant: PulseButtonVariant.danger,
+  leadingIcon: const Icon(Icons.delete_outline),
+  child: const Text('削除する'),
+)
+```
+
+> `danger` があるのは **solid の 1 種類だけ**。`outline` / `ghost` の danger 版（枠線だけ赤・文字だけ赤）は**無い**。
+> 「破壊的だが弱い見せ方をしたい」場合は、`ghost` にアプリ側で `Text(style: TextStyle(color: colors.error))` を渡すなど、呼び出し側で作ること。
+
+#### `isLoading` — 送信中
+
+**disabled とは別の状態**。`onPressed: null`（disabled）が「今は押せない」を意味するのに対し、`isLoading` は「押した結果を待っている」を意味する。
+
+| | 見た目 | タップ |
+|---|---|---|
+| `onPressed: null`（disabled） | 不透明度 0.5 に減光・グロー無し | 不可 |
+| `isLoading: true` | **減光しない**（`filled` / `danger` はグローも出たまま）。ラベルの代わりに中央にスピナー | 不可 |
+
+- スピナーは `CircularProgressIndicator(strokeWidth: 2)` で、サイズは size に対応するフォントサイズ（small 14 / medium 16 / large 18）、色は前景色。
+- **ボタンの幅は変わらない**。ラベルは `Opacity(opacity: 0, alwaysIncludeSemantics: true)` でレイアウトだけ残しているため、フォーム送信の瞬間にレイアウトが跳ねない。
+- **ボタン名（accessible name）は失われない**。上記の `alwaysIncludeSemantics: true` により、見えないラベルもセマンティクスツリーに残る。`loadingSemanticsLabel` を渡さなくてもボタン自身のテキスト（例: `保存`）は読み上げられ、渡した場合は「`保存` + `保存中`」の両方が読まれる。
+- `isLoading: true` のあいだ Material ボタンには `onPressed: null` が渡る。つまり**支援技術には disabled として報告される**。`loadingSemanticsLabel` が伝えるのはこの**状態**の方で、渡さないと「処理中である」ことが無音になる（名前が無音になるのではない）。送信ボタンには必ず渡すこと（`PulseLoadingState.semanticsLabel` が `semanticsLabel ?? message` でフォールバックするのと同じ発想）。
+
+```dart
+PulseButton(
+  onPressed: _submit,          // isLoading 中は無視される（null が渡る）
+  isLoading: _isSubmitting,
+  loadingSemanticsLabel: '保存中',
+  fullWidth: true,
+  child: const Text('保存'),
+)
+```
+
+#### 無いもの（設計判断）
+
+`PulseButton` に **任意色を渡す口は無い**。`backgroundColor` / `foregroundColor` / `style` といった引数は存在しない。
+
+色は必ず `colorScheme`（`primary` / `onPrimary`、`danger` なら `error` / `onError`）から実行時に読む。DS として色を呼び出し側に開放しないのは意図的な設計で、再ブランドの正道は [6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` 一本。
+どうしても DS 外の色が要る 1 箇所は、`PulseButton` を使わず素の `FilledButton` を書く方が正直（DS のボタンに見えて DS に従わないものを増やさない）。
 
 ### 5.2 `PulseEmptyState`
 
@@ -525,12 +578,28 @@ final applied = await PulseBottomSheet.show<bool>(
 | `onAction` | `VoidCallback?` | `null` |
 | `duration` | `Duration` | `Duration(milliseconds: 4000)` |
 
-- `PulseSnackBarVariant` = `info`（`colorScheme.primary`）/ `success`（`PulseSemantics.success`）/ `error`（`colorScheme.error`）
+- `PulseSnackBarVariant` = `info`（`colorScheme.primary`）/ `success`（`PulseSemantics.success`）/ `warning`（`PulseSemantics.warning` = amber600 `#D97706`）/ `error`（`colorScheme.error`）
 - `actionLabel` と `onAction` は **必ず両方セットで渡す**（片方だけだと `assert` で落ちる）
 - 戻り値は `ScaffoldFeatureController<SnackBar, SnackBarClosedReason>`
 
+**`warning` と `error` の使い分け**（ここを混ぜると通知の意味が死ぬ）:
+
+| variant | 意味 | 例 |
+|---|---|---|
+| `warning` | **処理は通った**が要注意 | 一部だけ同期できた / 上限に近い / 表示中のデータが古い |
+| `error` | **処理されなかった** | 保存失敗 / 通信エラー / バリデーション不合格 |
+
+`success` と同じ流儀で、`warning` の色は固定トークン `PulseSemantics.warning` を使う（`colorScheme` に warning スロットが無いため）。したがってダークモードでも同じ amber600 が出る。アイコンは `Icons.warning_amber_rounded`。
+
 ```dart
 PulseSnackBar.show(context, message: '保存しました', variant: PulseSnackBarVariant.success);
+
+PulseSnackBar.show(
+  context,
+  message: '10 件中 8 件を同期しました',
+  description: '2 件は後で再試行してください',
+  variant: PulseSnackBarVariant.warning,
+);
 
 PulseSnackBar.show(
   context,
@@ -641,12 +710,20 @@ PulseTheme.light().copyWith(
 | ライブリージョン | `PulseErrorState` が `Semantics(container: true, liveRegion: true)`。エラーが表示された瞬間に読み上げられる | `test/harden_test.dart` D2 |
 | 見出しロール | `PulseSectionCard.title` / `PulseBottomSheet.title` が `Semantics(header: true)` | `test/harden_test.dart` D2 |
 | スピナーのラベル | `PulseLoadingState` が `semanticsLabel ?? message` を `CircularProgressIndicator.semanticsLabel` に渡す | `test/harden_test.dart` D2 |
+| 送信中ボタンの名前 | `PulseButton(isLoading: true)` は `loadingSemanticsLabel` 無しでもボタン名（`child` のテキスト）を失わない | `test/pulse_button_test.dart` — 「keeps an accessible name when loadingSemanticsLabel is null」 |
+| 塗りバリアントのコントラスト | `filled` / `danger` の (塗り, 文字) が light / dark とも WCAG AA 4.5:1 以上。実測: filled light 5.70 / danger light 4.83 / filled dark 5.70 / danger dark 5.36 | `test/a11y_contrast_test.dart` |
 | 文字拡大耐性 | `PulseButton` / `PulseLoadingState` / `PulseEmptyState` / `PulseErrorState` / `PulseSectionCard` が **360×640 の画面 × TextScaler 2.0× / 3.0×** でオーバーフローしない（`PulseEmptyState` / `PulseErrorState` は収まらない場合スクロールする） | `test/harden_test.dart` D4 |
 | 進捗の読み上げ | `PulseProgressIndicator` は `semanticsLabel` を受け取り、determinate 時は Flutter が％も読む | `lib/src/components/pulse_progress_indicator.dart` |
 
 **未確認 / 保証範囲外**:
 `PulseTabBar` / `PulseSnackBar` / `PulseBottomSheet` / `PulseProgressIndicator` は上記の TextScaler 無オーバーフロー試験の対象に**含まれていない**（D4 のケース一覧が 5 コンポーネントのみ）。
-また、コントラスト比の自動検証は PULSE のテストには入っていない（既定のバイオレット基調で目視確認された、という以上の保証はない）。
+
+コントラストの自動検証は**塗りバリアントの (塗り, 文字) ペアだけ**に入っている（上表）。**面（surface）の上に載る文字色は対象外**で、既知の未達がある:
+
+- **ダークの `outline` / `ghost` のラベル**（`primary` = brand600 `#7C3AED` を `surface` = `#020617` の上に描く）は **3.54:1** で、通常サイズ文字の AA（4.5:1）に届かない。ライトは 5.70:1 で問題ない。ダークで `outline` / `ghost` を主要導線に使うなら、アプリ側で `copyWith(colorScheme:)` の `primary` を明るくするか `filled` を使うこと。
+- スナックバー / タブバー / 各種 muted テキストのコントラストは未測定。
+
+これらは 0.5.0 時点の既知の状態であり、直近の変更で悪化したものではない（`danger` のダークだけは 0.5.0 で導入と同時に修正済み）。
 
 ### 7.2 アプリ側がやること
 
@@ -666,6 +743,8 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
    - PULSE のコンポーネント単体は 3.0× まで検証済みだが、**画面全体の合成レイアウトは未検証**。`MediaQuery` の `textScaler` を上げた状態で主要画面を通しで確認する。
 5. **フォーム要素のラベル / 状態**
    - `TextField` などは PULSE のスコープ外（`inputDecorationTheme` の見た目のみ提供）。`labelText` / エラー状態の読み上げはアプリ側で担保する。
+6. **`isLoading` の読み上げラベル**
+   - `PulseButton(isLoading: true)` は内部で `onPressed: null` になるため、**支援技術には disabled として報告される**。ボタン名は残る（見えないラベルがセマンティクスツリーに残るので「保存 / disabled」までは伝わる）が、`loadingSemanticsLabel` を渡さないと**処理中であること**が無音になる。送信ボタンには必ず付けること（例: `loadingSemanticsLabel: '保存中'`）。
 
 ---
 
@@ -703,7 +782,9 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
 **PULSE でのみ使える追加 API**（移行による非破壊的な upside）:
 `PulseSemanticsDark` / `PulseFontSize` / `PulseShadows` の公開 export、
 `PulseBrandTokens.pulse` / `.pulseDark` の static プリセット、
-`PulseLoadingState` の `semanticsLabel` 引数と `.compact` / `.inline` コンストラクタ。
+`PulseLoadingState` の `semanticsLabel` 引数と `.compact` / `.inline` コンストラクタ、
+`PulseButtonVariant.danger`、`PulseButton` の `isLoading` / `loadingSemanticsLabel`、
+`PulseSnackBarVariant.warning`。
 
 **PULSE で消えた willink API は無い**（`WillinkBrand` enum / `WillinkTheme.clublink()` は `willink_theme` 0.5.0 の時点で既に削除済み）。
 
@@ -745,6 +826,9 @@ flutter pub get   # pubspec.lock を再生成
   影響範囲は `lib/theme/app_theme.dart` と `lib/theme/app_spacing.dart` の **2 ファイル 5 箇所**だけで、`Willink*` ウィジェットは 1 つも使われていない。アプリ内の 113 箇所の呼び出しは `AppTheme` / `AppSpacing` 経由なので無変更。
 - 他の Flutter アプリ（tsuu / nami / willink-chess）は theme 系依存ゼロの greenfield。`pulse_theme: ^0.5.0` を追加するだけで採用できる。
 - fit-ai（`apps/mobile`）は最大規模。独自 theme 実装との衝突有無は**未調査**なので、採用前に個別調査が必要。
+  ただし独自ウィジェットの監査は済んでおり、その結果が `PulseButtonVariant.danger` / `PulseButton.isLoading` /
+  `PulseSnackBarVariant.warning` の追加動機になっている（この 3 つが無いと、既存の `AppButton` /
+  warning 系スナックバーを PULSE に置き換えた瞬間に機能後退する）。→ [8.6](#86-アプリ独自ウィジェットからの移行)
 - SDK 制約は全アプリで互換（PULSE の `sdk: ^3.7.0` / `flutter: >=3.22.0` が、clubhouse `^3.11.4` / tsuu `^3.7.0` / nami・willink-chess `^3.11.4` / fit-ai `>=3.8.0 <4.0.0` / fit-ai-frontend `^3.8.1` のすべてと交差する）。
 
 ### 8.5 移行時に見た目が動く箇所
@@ -752,6 +836,62 @@ flutter pub get   # pubspec.lock を再生成
 `PulseTheme.light()` は `TextTheme` を設定する（[3 章](#3-テーマ配線)の表）。
 `willink_theme` が Material デフォルトのまま残していた title / headline サイズが **1〜2px 動く**。
 許容するか、アプリ側 `AppTheme` で `textTheme` を上書きするかを判断すること。
+
+### 8.6 アプリ独自ウィジェットからの移行
+
+`willink_theme` を経由せず、自前の `AppButton` / `FeedbackSnackBar` を持っているアプリ（fit-ai がこの形）向け。
+以下の 3 つは **PULSE 側に対応物があるので 1:1 で置き換えられる**。
+
+| アプリ側によくある形 | PULSE |
+|---|---|
+| `AppButton(isLoading: true, ...)` | `PulseButton(isLoading: true, loadingSemanticsLabel: '...', ...)` |
+| `AppButton(variant: destructive)` / `DangerButton` | `PulseButton(variant: PulseButtonVariant.danger, ...)` |
+| `FeedbackSnackBar.showWarning(context, '...')` | `PulseSnackBar.show(context, message: '...', variant: PulseSnackBarVariant.warning)` |
+
+**引数名は 1:1 ではない。** fit-ai の `AppButton`（`apps/mobile/lib/core/widgets/atoms/app_button.dart`）を例に、実際に書き換わるところ:
+
+| `AppButton` | `PulseButton` | 注意 |
+|---|---|---|
+| `label: '保存'`（`String`・必須） | `child: const Text('保存')`（`Widget`・必須） | **型が変わる**。単純な引数リネームでは通らない |
+| `icon: Icons.check`（`IconData?`） | `leadingIcon: const Icon(Icons.check)`（`Widget?`） | こちらも `IconData` → `Widget` |
+| `isExpanded: true` | `fullWidth: true` | 名前のみ |
+| `isLoading: _isSubmitting` | `isLoading: _isSubmitting` + `loadingSemanticsLabel: '保存中'` | 読み上げラベルは PULSE 側の追加引数（[7.2](#72-アプリ側がやること) の 6） |
+| `variant: AppButtonVariant.danger` / `.destructive` | `variant: PulseButtonVariant.danger` | |
+| `backgroundColor:` / `foregroundColor:` | **無い** | 色は `colorScheme` からのみ（[5.1 の「無いもの」](#無いもの設計判断)） |
+
+`isLoading` の**見た目には 1 点だけ差がある**（同義ではない）:
+
+- `AppButton._buildChild()` は `isLoading` のときスピナーの `SizedBox` だけを返し**ラベルを捨てる**ので、送信した瞬間にボタンがスピナーの幅まで縮む。
+- `PulseButton` はラベルを `Opacity(opacity: 0)` で残すので**幅が変わらない**。
+
+PULSE 側が改善である（フォームのレイアウトが跳ねなくなる）が、移行後に「ボタンが縮まなくなった」という**目に見える変化**として出るので、デザインレビューがあるなら先に伝えておくこと。タップ不可になる点（`isLoading` 中は `onPressed: null` が渡る）は両者同じ。
+
+```diff
+-AppButton(
++PulseButton(
+   onPressed: _submit,
+   isLoading: _isSubmitting,
+-  label: '保存',
+-  icon: Icons.check,
+-  isExpanded: true,
++  loadingSemanticsLabel: '保存中',
++  child: const Text('保存'),
++  leadingIcon: const Icon(Icons.check),
++  fullWidth: true,
+ )
+```
+
+#### まだ PULSE に無いもの（移行前に確認すること）
+
+自前ウィジェットが以下に依存していると 1:1 では移せない。**回避策込みで先に洗い出すこと。**
+
+| 無いもの | 状況 | 回避策 |
+|---|---|---|
+| `PulseButton` の任意色上書き（`backgroundColor` / `foregroundColor` / `style`） | **無い。設計判断として開けていない** | 再ブランドは `copyWith(colorScheme: ...)`（[6 章](#6-ブランド色の上書き)）。DS 外の色が必須の 1 箇所は素の `FilledButton` を書く |
+| `outline` / `ghost` の danger 版 | **無い**（danger は solid のみ） | `ghost` + `Text(style: TextStyle(color: colors.error))` を呼び出し側で組む |
+| アイコンのみのボタン（`IconButton` 相当） | **無い** | `Semantics(label: ...)` を巻いた素の `IconButton` |
+| ボタン内の成功アニメーション / チェックマーク遷移 | **無い**（`isLoading` はスピナーのみ） | 呼び出し側で状態を持つ |
+| snack bar の任意色 / 任意アイコン | **無い**（4 variant 固定） | 4 つのどれかに寄せる。寄らないものは素の `SnackBar` |
 
 ---
 
