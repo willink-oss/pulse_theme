@@ -1,8 +1,8 @@
 // Tests for PulseSnackBar (1.3.0).
 //
-// Cover variant icon/accent contracts (info / success / error), description
-// rendering, action callback, ColorScheme override flow-through, and the
-// floating + rounded-border surface shape.
+// Cover variant icon/accent contracts (info / success / warning / error),
+// description rendering, action callback, ColorScheme override flow-through,
+// and the floating + rounded-border surface shape.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +77,126 @@ void main() {
       expect(icon.color, equals(PulseSemantics.success));
       expect(find.text('保存しました'), findsOneWidget);
     });
+  });
+
+  group('PulseSnackBar — warning variant', () {
+    testWidgets('warning icon uses PulseSemantics.warning (amber-600) accent', (
+      tester,
+    ) async {
+      await showSnackBar(
+        tester,
+        message: '一部だけ同期しました',
+        variant: PulseSnackBarVariant.warning,
+      );
+
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      final icon = tester.widget<Icon>(
+        find.byIcon(Icons.warning_amber_rounded),
+      );
+      // Fixed semantic token — same flavour as success (not colorScheme).
+      expect(icon.color, equals(PulseSemantics.warning));
+      expect(icon.color, equals(PulsePrimitives.amber600));
+      expect(icon.color, equals(const Color(0xFFD97706)));
+      expect(find.text('一部だけ同期しました'), findsOneWidget);
+    });
+
+    testWidgets('accent stays the fixed token under a ColorScheme override', (
+      tester,
+    ) async {
+      // Unlike info/error (colorScheme-driven), warning is a fixed token, so
+      // re-branding must not move it.
+      final overridden = PulseTheme.light().copyWith(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+      );
+
+      await showSnackBar(
+        tester,
+        message: 'Almost at the limit',
+        variant: PulseSnackBarVariant.warning,
+        theme: overridden,
+      );
+
+      final icon = tester.widget<Icon>(
+        find.byIcon(Icons.warning_amber_rounded),
+      );
+      expect(icon.color, equals(PulseSemantics.warning));
+    });
+
+    testWidgets('renders description and fires the action callback', (
+      tester,
+    ) async {
+      var reviewed = false;
+      final theme = PulseTheme.light();
+      await showSnackBar(
+        tester,
+        message: '一部だけ同期しました',
+        description: '未同期の項目を確認してください',
+        variant: PulseSnackBarVariant.warning,
+        actionLabel: '確認',
+        onAction: () => reviewed = true,
+        theme: theme,
+      );
+
+      final description = tester.widget<Text>(find.text('未同期の項目を確認してください'));
+      expect(
+        description.style!.color,
+        equals(theme.colorScheme.onSurfaceVariant),
+      );
+
+      // Description sits below the message, as with the other variants.
+      final messageRect = tester.getRect(find.text('一部だけ同期しました'));
+      final descriptionRect = tester.getRect(find.text('未同期の項目を確認してください'));
+      expect(descriptionRect.top, greaterThan(messageRect.bottom - 1));
+
+      await tester.tap(find.text('確認'));
+      await tester.pumpAndSettle();
+      expect(reviewed, isTrue);
+    });
+
+    testWidgets('keeps the neutral surface shape of the other variants', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light();
+      await showSnackBar(
+        tester,
+        message: '一部だけ同期しました',
+        variant: PulseSnackBarVariant.warning,
+        theme: theme,
+      );
+
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snackBar.backgroundColor, equals(theme.colorScheme.surface));
+      expect(snackBar.behavior, equals(SnackBarBehavior.floating));
+      final shape = snackBar.shape! as RoundedRectangleBorder;
+      expect(shape.side.color, equals(theme.colorScheme.outline));
+    });
+  });
+
+  group('PulseSnackBar — variant distinction', () {
+    // One icon per variant: warning must never leak into (or be shadowed by)
+    // info / success / error.
+    const iconOf = <PulseSnackBarVariant, IconData>{
+      PulseSnackBarVariant.info: Icons.info_outline,
+      PulseSnackBarVariant.success: Icons.check_circle_outline,
+      PulseSnackBarVariant.warning: Icons.warning_amber_rounded,
+      PulseSnackBarVariant.error: Icons.error_outline,
+    };
+
+    for (final variant in PulseSnackBarVariant.values) {
+      testWidgets('${variant.name} renders only its own icon', (tester) async {
+        await showSnackBar(tester, message: 'msg', variant: variant);
+
+        for (final entry in iconOf.entries) {
+          expect(
+            find.byIcon(entry.value),
+            entry.key == variant ? findsOneWidget : findsNothing,
+            reason:
+                '${variant.name} should render ${iconOf[variant]} only, '
+                'but ${entry.value} did not match.',
+          );
+        }
+      });
+    }
   });
 
   group('PulseSnackBar — error variant', () {
@@ -195,6 +315,20 @@ void main() {
         equals(BorderRadius.circular(PulsePrimitives.radiusLg)),
       );
       expect(shape.side.color, equals(theme.colorScheme.outline));
+    });
+  });
+
+  group('PulseSnackBarVariant — enum contract', () {
+    test('declares info, success, warning, error in severity order', () {
+      // Order is part of the public API (index is used by switch tables and
+      // serialized payloads): warning sits between success and error.
+      expect(PulseSnackBarVariant.values, <PulseSnackBarVariant>[
+        PulseSnackBarVariant.info,
+        PulseSnackBarVariant.success,
+        PulseSnackBarVariant.warning,
+        PulseSnackBarVariant.error,
+      ]);
+      expect(PulseSnackBarVariant.warning.index, 2);
     });
   });
 }

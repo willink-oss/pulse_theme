@@ -17,8 +17,10 @@ set of `Pulse*` components built mobile-first.
 > `PulseSnackBar`, `PulseProgressIndicator`. **`0.5.0` is the first release
 > published to [pub.dev](https://pub.dev/packages/pulse_theme)** — components are
 > hardened (48dp tap targets, `Semantics`, `TextScaler` robustness) and covered
-> by golden / visual-regression tests in CI. The public API is not frozen until
-> `1.0.0`.
+> by golden / visual-regression tests in CI. `PulseButton` covers `filled` /
+> `outline` / `ghost` / `danger` plus a non-dimming `isLoading` state, and
+> `PulseSnackBar` covers `info` / `success` / `warning` / `error`. The public API
+> is not frozen until `1.0.0`.
 
 Architecture of record: [ADR-018] (i-willink-crew) and
 [`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md).
@@ -106,6 +108,10 @@ final theme = PulseTheme.light().copyWith(
 );
 ```
 
+That is why `PulseButtonVariant.danger` is built from `colorScheme.error` (and
+not from the fixed `PulseSemantics.danger` token): an overridden scheme re-tints
+the destructive button the same way it re-tints the primary one.
+
 ### Install
 
 ```yaml
@@ -165,11 +171,43 @@ PulseSectionCard(
       variant: PulseButtonVariant.filled,
       size: PulseButtonSize.medium,
       leadingIcon: const Icon(Icons.check),
+      isLoading: _saving,
+      loadingSemanticsLabel: 'Saving',
       child: const Text('Save'),
     ),
   ),
 );
 ```
+
+`isLoading` is its own state, not a flavour of disabled: the button keeps full
+opacity, refuses taps, and stays exactly as wide as it was with its label, so a
+form submit never makes the layout jump. It does report as disabled to assistive
+tech, which is why `loadingSemanticsLabel` exists — it names the *state*
+("Saving"). The button's own label stays in the semantics tree either way, so a
+busy button is never nameless: without the argument a screen reader still
+announces "Save", with it "Save, Saving".
+
+Destructive actions get their own variant, and "it went through, but look at it"
+gets its own snack bar:
+
+```dart
+PulseButton(
+  onPressed: _delete,
+  variant: PulseButtonVariant.danger,
+  leadingIcon: const Icon(Icons.delete_outline),
+  child: const Text('Delete'),
+);
+
+PulseSnackBar.show(
+  context,
+  message: 'Synced 8 of 10 items',
+  description: 'Two records were skipped — retry when you are back online.',
+  variant: PulseSnackBarVariant.warning,
+);
+```
+
+Use `warning` when the action happened but needs attention, and `error` when it
+did not happen at all.
 
 App-local wrappers (`AppTheme` / `AppSpacing`) keep working — point them at
 `PulseTheme.light()` and `PulseSpacing.*` and every existing call site stays

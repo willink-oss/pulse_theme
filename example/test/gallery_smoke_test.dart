@@ -89,4 +89,106 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets('the button matrix covers the danger variant', (tester) async {
+    await tester.pumpWidget(const PulseExampleApp());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // The matrix labels each row with `variant.name`, so this row existing is
+    // the proof it iterates `PulseButtonVariant.values` rather than a hardcoded
+    // list. The card is a single list child, so its whole subtree is built even
+    // where it is clipped — no scrolling needed to find it.
+    expect(find.text('danger'), findsOneWidget);
+
+    // …plus one realistic destructive action.
+    final destructive = find.widgetWithText(PulseButton, '削除');
+    expect(destructive, findsOneWidget);
+    expect(
+      tester.widget<PulseButton>(destructive).variant,
+      PulseButtonVariant.danger,
+    );
+  });
+
+  testWidgets('isLoading swaps the label for a spinner, same width', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const PulseExampleApp());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Unique text, so the finder is empty-then-exactly-one (see the note above).
+    //
+    // This card is close enough to the top that it is already *built* (just
+    // clipped), so `scrollUntilVisible` skips its drag loop entirely and only
+    // runs the closing `ensureVisible`, which jumps the scroll position without
+    // pumping. Without the pump below, the layout is a frame stale and `tap`
+    // computes an off-screen offset that hit-tests nothing.
+    await tester.scrollUntilVisible(
+      find.text('プロフィールを保存'),
+      300,
+      scrollable: _list,
+    );
+    await tester.pump();
+
+    // The label stays in the tree while loading (invisible, but laid out), so
+    // this finder resolves in both states — which is the point of the test.
+    final button = find.widgetWithText(PulseButton, 'プロフィールを保存');
+    final idleWidth = tester.getSize(button).width;
+
+    await tester.tap(button);
+    await tester.pump();
+
+    final spinner = find.descendant(
+      of: button,
+      matching: find.byType(CircularProgressIndicator),
+    );
+    expect(spinner, findsOneWidget);
+    expect(
+      tester.widget<CircularProgressIndicator>(spinner).semanticsLabel,
+      '保存中',
+      reason: 'the spinner is what assistive tech announces while loading',
+    );
+    expect(
+      tester.getSize(button).width,
+      idleWidth,
+      reason: 'the button must not resize when it starts loading',
+    );
+
+    // The demo's fake request resolves after 3s and reports via a snack bar.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(spinner, findsNothing);
+    expect(find.text('プロフィールを保存しました'), findsOneWidget);
+    expect(tester.getSize(button).width, idleWidth);
+
+    // Let the snack bar's auto-dismiss timer fire so no timer outlives the test.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('the warning snack bar launches from the gallery', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const PulseExampleApp());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.scrollUntilVisible(
+      find.text('SnackBar: warning'),
+      300,
+      scrollable: _list,
+    );
+    // `scrollUntilVisible` ends on an unpumped `ensureVisible` jump — pump so
+    // the tap below is computed against the settled layout.
+    await tester.pump();
+
+    await tester.tap(find.text('SnackBar: warning'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.text('一部の項目を同期できませんでした'), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+
+    // Let the snack bar's auto-dismiss timer fire so no timer outlives the test.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 1));
+  });
 }

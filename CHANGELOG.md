@@ -23,6 +23,40 @@ dependencies:
   pulse_theme: ^0.5.0
 ```
 
+### Added — component API
+
+Three additive component capabilities, folded into `0.5.0` so the first
+published version already carries them (see *why* below).
+
+- **`PulseButtonVariant.danger`** — solid destructive variant for delete /
+  revoke / cancel-subscription actions. Same shape, padding, radius and accent
+  glow as `filled`, so the two read as peers; only the accent differs. It is
+  built from `colorScheme.error` / `colorScheme.onError` rather than the fixed
+  `PulseSemantics.danger` token, so a consumer's
+  `PulseTheme.light().copyWith(colorScheme: ...)` re-tints it exactly the way it
+  already re-tints `filled` — a re-branded app does not get a stranded red
+  button.
+- **`PulseButton.isLoading`** (`bool`, default `false`) and
+  **`PulseButton.loadingSemanticsLabel`** (`String?`) — an in-flight state that
+  is **distinct from disabled**. The button stays at full opacity (it is still
+  the live affordance; only `onPressed: null` dims to 0.5) but stops accepting
+  taps and swaps its label for a centered `CircularProgressIndicator` sized to
+  the variant's font size. **The label is still laid out, invisibly, so the
+  button keeps its width** — submitting a form no longer makes the layout jump
+  under the user's finger. A loading button reports as *disabled* to assistive
+  tech (it cannot be activated), so pass `loadingSemanticsLabel` to name the
+  in-flight state. The invisible label stays in the semantics tree, so the
+  button keeps its accessible name regardless — without the argument a screen
+  reader announces just the button's own text, with it the text plus the state.
+  Same fallback spirit as `PulseLoadingState.semanticsLabel`, which falls back
+  to its `message`.
+- **`PulseSnackBarVariant.warning`** — sits between `success` and `error`, using
+  `Icons.warning_amber_rounded` tinted with the `PulseSemantics.warning` token
+  (amber `#D97706`), the same fixed-token convention `success` already follows.
+  Reach for `warning` when the action **went through but needs attention**
+  (partial sync, approaching a limit, stale data) and for `error` when the
+  action **did not happen**.
+
 ### Added
 
 - **`example/`** — a runnable gallery app covering all 9 components
@@ -52,6 +86,22 @@ dependencies:
   release (or tagging a version that was published manually) no longer fails
   the workflow.
 
+### Fixed — accessibility
+
+- **Dark-mode `onError` is now the dark background ink (`#020617`), not white.**
+  `PulseButtonVariant.danger` is the first and only consumer of the
+  (`error`, `onError`) pair, and in dark mode `error` is the lighter red-500
+  (`#EF4444`): white on it is **3.76:1**, below WCAG AA 4.5:1 for the button's
+  `w600` 14/16/18px label (none of those sizes reaches the 18.66px "large bold
+  text" threshold that would allow 3:1). Inking it with `PulseSemanticsDark.bg`
+  gives **5.36:1** and matches Material 3's own dark convention. Light mode is
+  unchanged (white on red-600 = 4.83:1). `PulseSemanticsDark.brandFg` itself is
+  untouched — only the `ColorScheme` slot in the hand-written
+  `lib/src/pulse_theme.dart` changed. Consumers who prefer white on a darker
+  red can still do `copyWith(colorScheme: cs.copyWith(error: ..., onError: ...))`.
+  New `test/a11y_contrast_test.dart` locks every (accent, on-accent) pair the
+  solid button variants paint, in both modes.
+
 ### Fixed — packaging
 
 - `test/golden/failures/` is now `.gitignore`d. `dart pub publish` bundles every
@@ -61,11 +111,26 @@ dependencies:
   bit-for-bit) would otherwise have baked four diff PNGs into the published
   archive permanently. `--dry-run` does not warn about this.
 
-### Note — no API change
+### Note — why the component API lands in `0.5.0`
 
-There is **no change to the public API** in this release; `0.5.0` is
-source-compatible with `0.4.0`. The bump reflects the packaging and
-distribution milestone, not a code change.
+An audit of PULSE's largest internal consumer (**fit-ai**) found that swapping
+its existing widgets for `Pulse*` without these three would be a **feature
+regression**: its `AppButton` uses `isLoading` at ~30 call sites, its feedback
+helper exposes a `showWarning(...)` severity PULSE could not express, and it has
+a destructive button style with no PULSE equivalent. Since `0.5.0` is the first
+version to reach pub.dev and nothing is published yet, they are folded into it
+rather than deferred to a `0.6.0` — a design system whose first release still
+forces every app to keep its own button wrapper has not actually replaced
+anything.
+
+### Note — API surface
+
+Everything above is **additive**: no symbol was renamed or removed, and both new
+`PulseButton` parameters default to the `0.4.0` behaviour, so existing call
+sites compile unchanged. The one caveat is `PulseSnackBarVariant.warning` —
+adding an enum value makes an *exhaustive* `switch` over `PulseSnackBarVariant`
+non-exhaustive. No published version ever exposed the three-value enum, so no
+pub.dev consumer can be affected by it.
 
 Be aware that in Dart's pre-1.0 caret semantics, **`^0.5.0` means
 `>=0.5.0 <0.6.0`** — a `0.6.0` release will *not* be picked up automatically.

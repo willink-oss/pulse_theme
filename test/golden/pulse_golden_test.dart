@@ -31,6 +31,42 @@ void main() {
         ),
   );
 
+  // `isLoading` is a *layout* contract as much as a visual one: the label stays
+  // laid out (invisible) behind the spinner so the button keeps the width it had
+  // before submit. Each variant is rendered twice with the identical label —
+  // idle next to loading — so a regression that shrinks the busy button to the
+  // spinner's size shows up as two boxes of different widths in one row.
+  goldenTest(
+    'PulseButton — isLoading (width is preserved)',
+    fileName: 'pulse_button_loading',
+    // The spinner never settles, so alchemist's default `onlyPumpAndSettle`
+    // would time out. Pump a single frame at a fixed offset instead: fake-async
+    // time is deterministic, so every run captures the same arc. 400ms is past
+    // the 200ms button/theme implicit animations (everything else is at rest)
+    // and lands mid-sweep of the 1333ms indeterminate cycle — at t=0 the arc is
+    // zero-length and the spinner would be invisible in the snapshot.
+    pumpBeforeTest: pumpNTimes(1, const Duration(milliseconds: 400)),
+    builder:
+        () => GoldenTestGroup(
+          // Two columns => one variant per row, idle | loading side by side.
+          columns: 2,
+          children: [
+            for (final variant in PulseButtonVariant.values)
+              for (final isLoading in [false, true])
+                GoldenTestScenario(
+                  name: '${variant.name}/${isLoading ? 'loading' : 'idle'}',
+                  child: PulseButton(
+                    variant: variant,
+                    onPressed: () {},
+                    isLoading: isLoading,
+                    loadingSemanticsLabel: 'Submitting',
+                    child: const Text('Submit'),
+                  ),
+                ),
+          ],
+        ),
+  );
+
   goldenTest(
     'PulseProgressIndicator — determinate',
     fileName: 'pulse_progress',

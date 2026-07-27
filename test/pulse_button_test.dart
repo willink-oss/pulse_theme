@@ -1,8 +1,8 @@
 // Tests for PulseButton.
 //
-// Cover variant color contracts (filled / outline / ghost), disabled state
-// behavior, ColorScheme override, leading-icon layout, and the 48dp a11y
-// tap-target guideline.
+// Cover variant color contracts (filled / outline / ghost / danger), disabled
+// vs. loading state behavior, ColorScheme override, leading-icon layout, and
+// the 48dp a11y tap-target guideline.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -191,6 +191,421 @@ void main() {
         );
         await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
         handle.dispose();
+      });
+    }
+  });
+
+  group('PulseButton — danger variant', () {
+    /// Every accent glow painted above [scope] (the button subtree is wrapped
+    /// in a DecoratedBox when the variant is solid and not dimmed).
+    Iterable<BoxShadow> glowsAround(WidgetTester tester, Finder scope) => tester
+        .widgetList<DecoratedBox>(
+          find.ancestor(of: scope, matching: find.byType(DecoratedBox)),
+        )
+        .map((d) => d.decoration)
+        .whereType<BoxDecoration>()
+        .expand((d) => d.boxShadow ?? const <BoxShadow>[]);
+
+    testWidgets('renders a FilledButton with error / onError colors', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.danger,
+            onPressed: () {},
+            child: const Text('削除'),
+          ),
+          theme: theme,
+        ),
+      );
+
+      // danger is a peer of filled — same Material button, different accent.
+      expect(find.byType(FilledButton), findsOneWidget);
+      final style =
+          tester.widget<FilledButton>(find.byType(FilledButton)).style!;
+      final bg = style.backgroundColor!.resolve(<WidgetState>{});
+      final fg = style.foregroundColor!.resolve(<WidgetState>{});
+      expect(bg, equals(theme.colorScheme.error));
+      expect(fg, equals(theme.colorScheme.onError));
+      // …and NOT the filled accent, otherwise the assertion above would pass
+      // for a variant that silently fell back to primary.
+      expect(bg, isNot(equals(theme.colorScheme.primary)));
+    });
+
+    testWidgets('glow tracks the error accent at 30% alpha', (tester) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.danger,
+            onPressed: () {},
+            child: const Text('削除'),
+          ),
+          theme: theme,
+        ),
+      );
+
+      final glows = glowsAround(tester, find.byType(FilledButton));
+      expect(
+        glows.any(
+          (s) =>
+              s.color == theme.colorScheme.error.withValues(alpha: 0.3) &&
+              s.blurRadius == 16 &&
+              s.offset == const Offset(0, 4) &&
+              s.spreadRadius == -2,
+        ),
+        isTrue,
+        reason: 'danger should glow like filled, with the error accent',
+      );
+    });
+
+    testWidgets('follows copyWith(colorScheme:) — not a fixed token', (
+      tester,
+    ) async {
+      // Proof that danger reads colorScheme.error rather than the frozen
+      // PulseSemantics.danger token: re-branding the scheme re-tints it.
+      const brandError = Color(0xFF9F1239);
+      const brandOnError = Color(0xFFFFF1F2);
+      expect(brandError, isNot(equals(PulseSemantics.danger)));
+
+      final base = PulseTheme.light();
+      final rebranded = base.copyWith(
+        colorScheme: base.colorScheme.copyWith(
+          error: brandError,
+          onError: brandOnError,
+        ),
+      );
+
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.danger,
+            onPressed: () {},
+            child: const Text('削除'),
+          ),
+          theme: rebranded,
+        ),
+      );
+
+      final style =
+          tester.widget<FilledButton>(find.byType(FilledButton)).style!;
+      expect(
+        style.backgroundColor!.resolve(<WidgetState>{}),
+        equals(brandError),
+      );
+      expect(
+        style.foregroundColor!.resolve(<WidgetState>{}),
+        equals(brandOnError),
+      );
+    });
+
+    testWidgets('tap fires handler', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.danger,
+            onPressed: () => tapped = true,
+            child: const Text('削除'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('削除'));
+      expect(tapped, isTrue);
+    });
+  });
+
+  group('PulseButton — isLoading', () {
+    testWidgets('shows exactly one spinner in place of the label', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () {},
+            isLoading: true,
+            child: const Text('保存する'),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      // The label is still laid out (that is what preserves the width) but is
+      // painted at opacity 0 — while staying in the semantics tree, so the
+      // busy button keeps its accessible name.
+      expect(find.text('保存する'), findsOneWidget);
+      final labelOpacity = tester.widget<Opacity>(
+        find.ancestor(of: find.text('保存する'), matching: find.byType(Opacity)),
+      );
+      expect(labelOpacity.opacity, equals(0));
+      expect(
+        labelOpacity.alwaysIncludeSemantics,
+        isTrue,
+        reason:
+            'RenderOpacity drops its child semantics at alpha 0; without '
+            'alwaysIncludeSemantics the loading button would have no name',
+      );
+    });
+
+    testWidgets('swallows taps even though onPressed is non-null', (
+      tester,
+    ) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () => tapped = true,
+            isLoading: true,
+            child: const Text('保存する'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(PulseButton), warnIfMissed: false);
+      await tester.pump();
+      expect(
+        tapped,
+        isFalse,
+        reason: 'a loading button must not re-submit the in-flight action',
+      );
+    });
+
+    testWidgets('is NOT dimmed — loading and disabled are distinct states', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () {},
+            isLoading: true,
+            child: const Text('保存する'),
+          ),
+        ),
+      );
+
+      // No dimming wrapper above the Material button (the Opacity(0) that
+      // hides the label lives *inside* it).
+      expect(
+        find.ancestor(
+          of: find.byType(FilledButton),
+          matching: find.byType(Opacity),
+        ),
+        findsNothing,
+      );
+
+      // Contrast: a genuinely disabled button (no loading) does dim to 0.5.
+      await tester.pumpWidget(
+        wrap(const PulseButton(onPressed: null, child: Text('保存する'))),
+      );
+      final dim = tester.widget<Opacity>(
+        find.ancestor(
+          of: find.byType(FilledButton),
+          matching: find.byType(Opacity),
+        ),
+      );
+      expect(dim.opacity, equals(0.5));
+    });
+
+    testWidgets('keeps the glow while loading', (tester) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () {},
+            isLoading: true,
+            child: const Text('保存する'),
+          ),
+          theme: theme,
+        ),
+      );
+
+      final glows = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.byType(FilledButton),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .expand((d) => d.boxShadow ?? const <BoxShadow>[]);
+      expect(
+        glows.any(
+          (s) => s.color == theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+        isTrue,
+      );
+    });
+
+    for (final size in PulseButtonSize.values) {
+      testWidgets('${size.name} keeps its width when the spinner appears', (
+        tester,
+      ) async {
+        // The headline guarantee: submitting a form must not resize the button
+        // under the user's finger.
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              onPressed: () {},
+              size: size,
+              child: const Text('保存する'),
+            ),
+          ),
+        );
+        final idle = tester.getSize(find.byType(PulseButton));
+
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              onPressed: () {},
+              size: size,
+              isLoading: true,
+              child: const Text('保存する'),
+            ),
+          ),
+        );
+        final busy = tester.getSize(find.byType(PulseButton));
+
+        expect(
+          busy.width,
+          equals(idle.width),
+          reason: '${size.name} button width jumped when isLoading flipped',
+        );
+      });
+    }
+
+    testWidgets('spinner is sized to the label font size', (tester) async {
+      // small=14 / medium=16 / large=18 — the spinner occupies the space the
+      // text glyphs would have.
+      const expected = <PulseButtonSize, double>{
+        PulseButtonSize.small: 14,
+        PulseButtonSize.medium: 16,
+        PulseButtonSize.large: 18,
+      };
+      for (final entry in expected.entries) {
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              onPressed: () {},
+              size: entry.key,
+              isLoading: true,
+              child: const Text('保存する'),
+            ),
+          ),
+        );
+        expect(
+          tester.getSize(find.byType(CircularProgressIndicator)),
+          equals(Size(entry.value, entry.value)),
+          reason: '${entry.key.name} spinner box',
+        );
+      }
+    });
+
+    testWidgets('loadingSemanticsLabel reaches the spinner', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () {},
+            isLoading: true,
+            loadingSemanticsLabel: '保存中',
+            child: const Text('保存する'),
+          ),
+        ),
+      );
+
+      final indicator = tester.widget<CircularProgressIndicator>(
+        find.byType(CircularProgressIndicator),
+      );
+      expect(indicator.semanticsLabel, equals('保存中'));
+      // …and it is announced *in addition to* the button's own name, not
+      // instead of it.
+      final data =
+          tester.getSemantics(find.byType(FilledButton)).getSemanticsData();
+      expect(data.label, contains('保存中'));
+      expect(data.label, contains('保存する'));
+      handle.dispose();
+    });
+
+    testWidgets('keeps an accessible name when loadingSemanticsLabel is null', (
+      tester,
+    ) async {
+      // Regression: hiding the label from assistive tech left the busy button
+      // with label="" — an interactive element with no accessible name, so a
+      // screen-reader user could not tell which control had gone quiet.
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            onPressed: () {},
+            isLoading: true,
+            child: const Text('保存する'),
+          ),
+        ),
+      );
+
+      final data =
+          tester.getSemantics(find.byType(FilledButton)).getSemanticsData();
+      expect(
+        data.label,
+        isNot(isEmpty),
+        reason: 'a loading button must never be nameless',
+      );
+      expect(data.label, contains('保存する'));
+      // It still reports as a *disabled button* — that part of the contract is
+      // unchanged; only the name was being lost.
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.flagsCollection.isEnabled.toBoolOrNull(), isFalse);
+      handle.dispose();
+    });
+  });
+
+  group('PulseButton — a11y regression (D1) for danger / loading', () {
+    for (final size in PulseButtonSize.values) {
+      testWidgets('danger ${size.name} meets the 48dp tap-target guideline', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              variant: PulseButtonVariant.danger,
+              onPressed: () {},
+              size: size,
+              child: const Text('削除'),
+            ),
+          ),
+        );
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        handle.dispose();
+      });
+    }
+
+    for (final size in PulseButtonSize.values) {
+      testWidgets('loading ${size.name} still reserves a 48dp target', (
+        tester,
+      ) async {
+        // androidTapTargetGuideline only inspects nodes that expose a tap
+        // action, and a loading button reports as disabled — so it would pass
+        // vacuously. Measure the laid-out Material tap target instead.
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              onPressed: () {},
+              size: size,
+              isLoading: true,
+              child: const Text('保存する'),
+            ),
+          ),
+        );
+
+        final target = tester.getSize(find.byType(FilledButton));
+        expect(target.height, greaterThanOrEqualTo(48.0));
+        expect(target.width, greaterThanOrEqualTo(48.0));
       });
     }
   });

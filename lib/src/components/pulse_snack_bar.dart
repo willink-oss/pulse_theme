@@ -13,6 +13,13 @@ enum PulseSnackBarVariant {
   /// Positive confirmation. Check icon tinted [PulseSemantics.success].
   success,
 
+  /// Non-blocking caution — the action went through but something needs
+  /// attention (partial sync, approaching a limit, stale data). Warning icon
+  /// tinted [PulseSemantics.warning].
+  ///
+  /// Use [error] instead when the action did **not** happen.
+  warning,
+
   /// Failure feedback. Error icon tinted `colorScheme.error`.
   error,
 }
@@ -40,9 +47,9 @@ enum PulseSnackBarVariant {
 ///
 /// Like the React toast, the surface stays neutral (`colorScheme.surface`
 /// background, `outline` border, 12px radius, floating) and the semantics are
-/// carried by the leading icon color — `primary` / [PulseSemantics.success]
-/// / `error` — so the snack bar follows any brand the consumer configures via
-/// `copyWith(colorScheme: ...)` automatically.
+/// carried by the leading icon color — `primary` / [PulseSemantics.success] /
+/// [PulseSemantics.warning] / `error` — so the snack bar follows any brand the
+/// consumer configures via `copyWith(colorScheme: ...)` automatically.
 ///
 /// Reuses Material 3 SnackBar timing and queueing — no custom queue logic.
 class PulseSnackBar {
@@ -76,6 +83,10 @@ class PulseSnackBar {
       PulseSnackBarVariant.success => (
         Icons.check_circle_outline,
         PulseSemantics.success,
+      ),
+      PulseSnackBarVariant.warning => (
+        Icons.warning_amber_rounded,
+        PulseSemantics.warning,
       ),
       PulseSnackBarVariant.error => (Icons.error_outline, colors.error),
     };

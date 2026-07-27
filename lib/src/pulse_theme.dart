@@ -42,7 +42,9 @@ class PulseTheme {
   // === ColorSchemes ===
   // Every slot is a semantic role. Slots Material requires but the DTCG
   // contract has no dedicated role for (text on a saturated fill) reuse
-  // `brandFg` — the DS's "foreground on a saturated color" token (#ffffff).
+  // `brandFg` — the DS's "foreground on a saturated color" token (#ffffff) —
+  // except where that would fail WCAG AA against the fill it sits on; see
+  // dark `onError` below.
 
   static const ColorScheme _lightScheme = ColorScheme(
     brightness: Brightness.light,
@@ -83,7 +85,15 @@ class PulseTheme {
     tertiary: PulseSemanticsDark.accentCyan,
     onTertiary: PulseSemanticsDark.brandFg,
     error: PulseSemanticsDark.danger,
-    onError: PulseSemanticsDark.brandFg,
+    // The one slot that does NOT reuse `brandFg`. Dark `danger` is red-500
+    // (#EF4444), a *lighter* red than the light-mode red-600, so white on it
+    // is only 3.76:1 — below WCAG AA 4.5:1 for the w600 14/16/18px label
+    // `PulseButton(variant: danger)` paints (none of those sizes reaches the
+    // 18.66px "large text" threshold that would allow 3:1). Inking it with the
+    // dark background instead gives 5.36:1, which is also Material 3's own
+    // dark convention (dark on-color over a light error tone).
+    // Locked by `test/a11y_contrast_test.dart`.
+    onError: PulseSemanticsDark.bg,
     surface: PulseSemanticsDark.bg,
     onSurface: PulseSemanticsDark.fg,
     onSurfaceVariant: PulseSemanticsDark.muted,
