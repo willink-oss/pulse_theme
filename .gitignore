@@ -20,3 +20,10 @@ doc/api/
 # Token codegen tool — npm deps are restored via `npm --prefix tool ci`
 # (package.json + package-lock.json ARE committed; node_modules is not).
 tool/node_modules/
+
+# alchemist writes diff artifacts here on every failing golden run. They are
+# untracked build output — but `dart pub publish` bundles *everything* under the
+# package root except what .gitignore/.pubignore excludes, so without this entry
+# a local failing run silently bakes 4 PNGs into the published tarball forever.
+# (Expected locally: committed goldens are Linux-generated, so macOS reruns fail.)
+test/golden/failures/
