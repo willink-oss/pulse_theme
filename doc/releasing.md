@@ -10,6 +10,34 @@
 
 ---
 
+## 現在の状態（2026-07-30 時点）
+
+**セットアップは完了している。通常のリリースは [2. 通常のリリース](#2-通常のリリース051-以降) だけを読めばよい。**
+
+| 項目 | 状態 |
+|---|---|
+| pub.dev 公開 | ✅ `0.5.0`（手動）→ `0.5.1`（**タグ駆動・OIDC で実走確認済み**） |
+| publisher | ✅ `i-willink.com`（移管済み・不可逆） |
+| Automated publishing | ✅ 有効（repo `willink-oss/pulse_theme` / tag pattern `v{{version}}` / `push` のみ） |
+| **Manual publishing** | 🚫 **無効化済み** |
+
+> ### 🚫 `dart pub publish` はもう使えない
+>
+> pub.dev 側で **Manual publishing を無効化した**（`0.5.1` でタグ駆動公開が実際に成功したのを確認してから切った）。
+> ローカルから `dart pub publish` を実行すると**サーバに拒否される**。
+> これはコマンドラインからの誤公開を防ぐための意図的な設定で、pub.dev 自身が推奨している。
+>
+> **`dart pub publish --dry-run` は引き続き使える**（サーバに送らないため）。検証用途では今後もこれを使う。
+>
+> 公開は**タグ push だけ**が経路。どうしても手動公開が必要になったら、
+> https://pub.dev/packages/pulse_theme/admin の「Manual publishing」を一時的に有効化する
+> （publisher `i-willink.com` の admin 権限が必要）。
+
+以下の [0. 全体像](#0-全体像) と [1. 初回公開](#1-初回公開050--一度きり) は、**次に新しいパッケージを
+pub.dev に出すとき**のための記録として残している。`pulse_theme` の運用では読む必要がない。
+
+---
+
 ## 0. 全体像
 
 pub.dev には「新規パッケージの初回公開だけは人間が手で行う」という仕様上の制約がある。
@@ -166,14 +194,23 @@ git push origin v0.5.0
 
 を打っても安全（`Publish skipped` の notice が出る）。
 
+**実際に打って検証済み**: `v0.5.0` タグの run（30354811908）は green で、
+`pulse_theme 0.5.0 is already published on pub.dev — skipping the publish step` の notice を出して
+publish ステップを skip した。冪等ガードは本番で期待どおり動く。
+
 ---
 
 ## 2. 通常のリリース（0.5.1 以降）
 
+> **この経路は実走で検証済み。** `0.5.1` が OIDC Trusted Publisher 経由で公開された初のバージョン
+> （run 30509673730: ガードが `pulse_theme 0.5.1 is not among the 1 published versions — will publish` と
+> 判定 → `Uploading...` → `Successfully uploaded ... version 0.5.1`）。
+> **これが唯一の公開経路**（Manual publishing は無効化済み）。
+
 ```bash
 # 1. リリースブランチ
 git switch main && git pull
-git switch -c release/v0.5.1
+git switch -c release/v0.5.2
 
 # 2. pubspec.yaml の version を更新
 #    3. CHANGELOG.md に新セクションを追加（append-only。既存セクションは書き換えない）
@@ -190,8 +227,8 @@ gh pr create --fill
 
 ```bash
 git switch main && git pull
-git tag -a v0.5.1 -m "pulse_theme 0.5.1"
-git push origin v0.5.1
+git tag -a v0.5.2 -m "pulse_theme 0.5.2"
+git push origin v0.5.2
 ```
 
 `publish.yml` が発火し、以下の順で走る:
