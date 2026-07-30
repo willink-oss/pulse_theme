@@ -1,6 +1,6 @@
 /// PULSE — i-Willink's mobile-first canonical design system for Flutter.
 ///
-/// PULSE is the [ADR-018] mobile-first source of truth for i-Willink app UI.
+/// PULSE is the `ADR-018` mobile-first source of truth for i-Willink app UI.
 /// Design tokens are **not** hand-mirrored here: [PulsePrimitives],
 /// [PulseSemantics] / [PulseSemanticsDark], [PulseSpacing] and [PulseFontSize]
 /// are code-generated from the published `@willink-labs/tokens` DTCG JSON
