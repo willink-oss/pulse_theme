@@ -7,6 +7,32 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.5.1] — 2026-07-30
+
+### Fixed — documentation
+
+Two dartdoc references did not resolve, so they rendered as broken links in the
+API reference published on pub.dev rather than as the text they were meant to be.
+`dart doc` now reports **0 warnings and 0 errors** (was 2 warnings).
+
+- `lib/pulse_theme.dart` — `[ADR-018]` was written as a doc reference, but
+  ADR-018 is an architecture document in the private crew repo, not a Dart
+  symbol. It is now plain code text (`` `ADR-018` ``).
+- `lib/src/components/pulse_snack_bar.dart` — `[ScaffoldMessenger.showSnackBar]`
+  named the wrong type. `showSnackBar` lives on `ScaffoldMessengerState`, not on
+  `ScaffoldMessenger`; the same file already referenced it correctly further
+  down. Now `[ScaffoldMessengerState.showSnackBar]`.
+
+No code, no API and no behaviour changed — doc comments only. `^0.5.0` consumers
+pick this up on `pub upgrade`.
+
+### Note — first tag-driven release
+
+`0.5.0` was published by hand, because pub.dev cannot enable automated
+publishing for a package that does not exist yet. `0.5.1` is therefore the first
+version published by `.github/workflows/publish.yml` through the pub.dev Trusted
+Publisher (GitHub Actions OIDC) — the path every release from here on uses.
+
 ## [0.5.0] — 2026-07-28
 
 ### Added — first pub.dev release

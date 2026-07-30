@@ -27,7 +27,7 @@ enum PulseSnackBarVariant {
 /// Material 3 brand-aware snack bar helper.
 ///
 /// Mirrors the React DS `Toast` (a brand-styled wrapper over sonner) as a
-/// thin wrapper over [ScaffoldMessenger.showSnackBar]:
+/// thin wrapper over [ScaffoldMessengerState.showSnackBar]:
 /// ```dart
 /// PulseSnackBar.show(
 ///   context,
