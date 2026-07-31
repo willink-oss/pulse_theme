@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 
 import 'theme_extensions/pulse_brand_tokens.dart';
 import 'theme_extensions/pulse_strings.dart';
+import 'tokens/pulse_radius.dart';
 import 'tokens/pulse_tokens.dart';
 
 /// Material 3 [ThemeData] factory for the PULSE design system.
@@ -217,13 +218,13 @@ abstract final class PulseTheme {
 
   /// Corner shape for every themed Material button.
   ///
-  /// Matches `PulseButton`, which paints `PulsePrimitives.radiusMd` directly.
+  /// Matches `PulseButton`, which paints `PulseRadius.control` directly.
   /// Before `0.6.0` these were `StadiumBorder`, so the DS rendered two button
   /// shapes: pills for plain Material buttons and 8px rounded rectangles for
   /// `Pulse*` ones — including inside `PulseEmptyState` / `PulseErrorState`,
   /// whose CTAs are plain Material buttons.
   static final RoundedRectangleBorder _buttonShape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+    borderRadius: BorderRadius.circular(PulseRadius.control),
   );
 
   /// Shared [ThemeData] assembly — every component theme derives from
@@ -253,7 +254,7 @@ abstract final class PulseTheme {
         color: colorScheme.surface,
         elevation: 1,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
+          borderRadius: BorderRadius.circular(PulseRadius.surface),
         ),
         clipBehavior: Clip.antiAlias,
       ),
@@ -300,7 +301,7 @@ abstract final class PulseTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
+          borderRadius: BorderRadius.circular(PulseRadius.surface),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -311,19 +312,19 @@ abstract final class PulseTheme {
           vertical: 14,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+          borderRadius: BorderRadius.circular(PulseRadius.control),
           borderSide: BorderSide(color: colorScheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+          borderRadius: BorderRadius.circular(PulseRadius.control),
           borderSide: BorderSide(color: colorScheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+          borderRadius: BorderRadius.circular(PulseRadius.control),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+          borderRadius: BorderRadius.circular(PulseRadius.control),
           borderSide: BorderSide(color: colorScheme.error),
         ),
       ),
@@ -341,7 +342,7 @@ abstract final class PulseTheme {
         labelStyle: TextStyle(color: colorScheme.onSurface),
         side: BorderSide(color: colorScheme.outline),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusFull),
+          borderRadius: BorderRadius.circular(PulseRadius.pill),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(

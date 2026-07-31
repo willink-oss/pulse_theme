@@ -88,4 +88,25 @@ void main() {
       expect(PulseSemanticsDark.ring, PulseSemantics.ring);
     });
   });
+
+  group('PulseRadius — semantic roles over the primitive scale', () {
+    // The roles must reference the scale, never restate a value. Asserting
+    // identity with the primitive is what makes drift impossible: if the SSOT
+    // moves radius.lg, `surface` moves with it and this still passes.
+    test('every role is a primitive, not a copy of its number', () {
+      expect(PulseRadius.control, PulsePrimitives.radiusMd);
+      expect(PulseRadius.surface, PulsePrimitives.radiusLg);
+      expect(PulseRadius.sheet, PulsePrimitives.radiusXl);
+      expect(PulseRadius.pill, PulsePrimitives.radiusFull);
+      expect(PulseRadius.inset, PulsePrimitives.radiusSm);
+    });
+
+    test('the roles are ordered as their names imply', () {
+      // inset < control < surface < sheet, and pill is off the scale.
+      expect(PulseRadius.inset, lessThan(PulseRadius.control));
+      expect(PulseRadius.control, lessThan(PulseRadius.surface));
+      expect(PulseRadius.surface, lessThan(PulseRadius.sheet));
+      expect(PulseRadius.pill, greaterThan(PulseRadius.sheet));
+    });
+  });
 }

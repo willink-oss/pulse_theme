@@ -7,7 +7,57 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
-## [0.8.0] — unreleased
+## [0.9.0] — unreleased
+
+_Generated from `@willink-labs/tokens` 1.9.0._
+
+### Added — `PulseRadius`, a semantic layer over the radius scale
+
+`PulsePrimitives` holds the raw scale (`radiusSm` … `radiusFull`); `PulseRadius`
+holds the decisions made with it — *what kind of thing* is being rounded.
+
+```dart
+PulseRadius.control  //  8 — buttons, text fields
+PulseRadius.surface  // 12 — cards, dialogs, snack bars
+PulseRadius.sheet    // 16 — bottom sheets (edge-anchored, so a step larger)
+PulseRadius.pill     //      chips, drag handles
+PulseRadius.inset    //  4 — small affordances inside another surface
+```
+
+Two things about it are deliberate:
+
+- **Every role is one PULSE actually paints.** None was invented to round out
+  the set — a role nothing uses is a guess frozen into the public API, the same
+  mistake as freezing a partial primitive ladder.
+- **It references the primitives rather than restating their numbers**, so it
+  cannot drift from the scale. If the SSOT moves `radius.lg`, `surface` moves
+  with it. Locked by a test asserting identity, not equality of literals.
+
+Every radius the DS paints now goes through these roles, so the names are
+proven by use rather than asserted. Purely a rename — the goldens came back
+unchanged.
+
+Hand-written rather than generated, because the DTCG contract has a
+`primitive.radius` scale but no semantic radius group. If it gains one, this
+file is replaced by generated output and these member names are the contract
+that generation has to satisfy.
+
+### Added — the `PulsePrimitives` policy is now written down
+
+`doc/stability.md` states that the raw palette is **append-only**: its colour
+ladders are deliberately incomplete (`neutral`/`brand`/`blue` have 11 steps,
+`green` 5, `red`/`amber` 2, `cyan`/`pink` 1 — exactly the steps the semantic
+roles reference), steps are added as the SSOT grows, and none is removed or
+renamed without a major. A gap in a ladder is not a promise that the step is
+coming.
+
+### Fixed
+
+- The `0.8.0` heading in this file still read "unreleased" when `0.8.0` was
+  published, so the shipped archive documented itself as unreleased. Dated, and
+  `doc/releasing.md` now has the step.
+
+## [0.8.0] — 2026-07-31
 
 ### Added — a written stability policy
 

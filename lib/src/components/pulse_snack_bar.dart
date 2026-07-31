@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../tokens/pulse_radius.dart';
 import '../tokens/pulse_tokens.dart';
 
 /// Semantic variant of [PulseSnackBar].
@@ -108,7 +109,7 @@ abstract final class PulseSnackBar {
         elevation: 3,
         duration: duration,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
+          borderRadius: BorderRadius.circular(PulseRadius.surface),
           side: BorderSide(color: colors.outline),
         ),
         action:

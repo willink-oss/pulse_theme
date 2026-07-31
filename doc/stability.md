@@ -132,6 +132,26 @@ That means the generated Dart member names *are* public API, and they come
 | Value changed, key unchanged | Rendering changes; API does not | **minor**, with the visual delta in the CHANGELOG and regenerated goldens |
 | New token *category* (icon sizes, z-index, …) | The generator **fails** until the category is either projected or explicitly deferred — it will not drop it silently | minor when projected |
 
+### `PulsePrimitives` is append-only
+
+The raw palette is exported, and its colour ladders are **deliberately
+incomplete**: `neutral`, `brand` and `blue` have all 11 steps, but `green` has
+5, `red` and `amber` have 2, `cyan` and `pink` have 1. That is not an
+oversight and not a design — it is what the generator emits, which is exactly
+the steps the semantic roles reference.
+
+Since `1.0.0` those members are frozen like any other export:
+
+- **Steps are added** as the SSOT grows (minor).
+- **Steps are never removed or renamed** without a major.
+- A gap in a ladder is not a promise that the step will arrive.
+
+Prefer the semantic layers — [`PulseSemantics`](../lib/src/tokens/pulse_tokens.dart),
+`PulseRadius`, `PulseSpacing` — and reach for a primitive only when you
+deliberately want a value the DS has no role for. `PulseRadius.control` will
+follow the DS's decision about what a button's corner should be;
+`PulsePrimitives.radiusMd` will only ever be 8.
+
 Every release records the `@willink-labs/tokens` version it was generated from,
 so "which token contract is inside this release" is answerable from the
 CHANGELOG alone.
