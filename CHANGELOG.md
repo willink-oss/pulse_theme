@@ -7,6 +7,57 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.7.0] — 2026-07-31
+
+Quality infrastructure, so that "no visual or behavioural regressions within
+`1.x`" is a claim the repository can actually back.
+
+### Added — visual coverage for dark mode and three uncovered components
+
+Dark mode had **no** golden coverage at all, which is where every colour bug
+this package has shipped actually lived: white-on-red `onError` (`0.5.0`), the
+invisible `inversePrimary` and the snack bar that never flipped its
+success/warning tokens (`0.6.0`), and a section-card shadow that stayed at 5%
+black on a surface the same colour as the scaffold behind it.
+
+- `pulse_button_dark` — every variant × tone under `PulseTheme.dark()`.
+- `pulse_states_dark` — empty / error / section card in dark.
+- `pulse_tab_bar` — light and dark.
+- `pulse_loading` — all three `PulseLoadingState` variants.
+- `pulse_progress` now covers 0%, 65%, 100% **and** indeterminate, which is a
+  different paint path entirely (no `value`).
+
+`PulseSnackBar` and `PulseBottomSheet` remain uncovered **on purpose**, and the
+golden file says so: both are overlay/route-driven, so snapshotting them means
+leaving an auto-dismiss timer and an entrance route in flight at teardown.
+Their colours and structure are asserted directly by their widget tests. A
+named gap beats a test that fails for reasons unrelated to its subject.
+
+### Fixed — the golden suite was red on checkout
+
+Running `flutter test` on an Apple-silicon machine failed two golden files
+against the Linux-generated PNGs, which teaches contributors to ignore a red
+suite — the opposite of what a regression net is for.
+
+Measured rather than guessed (2026-07-31, arm64 vs the x64 goldens):
+
+| golden              | pixels differing | of those, >32/255 | max delta |
+|---------------------|------------------|-------------------|-----------|
+| `pulse_button_dark` | 0.70%            | 22 px (0.014%)    | 119/255   |
+| `pulse_loading`     | 0.78%            | 0 px              | 3/255     |
+
+That is edge noise, not a rendering difference — the spinner's arc never
+exceeds 3/255, and the dark button's large deltas are 22 pixels on the boundary
+between a near-black surface and a saturated fill, where half a pixel of
+coverage is worth ~119.
+
+The threshold is now **conditional on where the test runs**: `0.005` on CI,
+which compares the goldens against the architecture that produced them and so
+has no host variation to absorb, and `0.01` off CI. The local run is advisory,
+CI is authoritative — the honest division, since only CI shares the generating
+architecture. `PULSE_SKIP_GOLDENS=1` skips the comparison for a host that
+diverges further; it cannot silence CI.
+
 ## [0.6.0] — 2026-07-31
 
 API decisions being taken deliberately **before** the `1.0.0` freeze —
