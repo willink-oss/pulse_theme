@@ -380,11 +380,11 @@ class _EmptyStateTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PulseEmptyState(
-      icon: Icons.inbox_outlined,
+      icon: const Icon(Icons.inbox_outlined),
       title: 'まだデータがありません',
       description: '最初の項目を追加すると、ここに一覧が表示されます。',
       actionLabel: '項目を追加',
-      actionIcon: Icons.add,
+      actionIcon: const Icon(Icons.add),
       onAction:
           () => PulseSnackBar.show(
             context,

@@ -97,7 +97,7 @@ void main() {
       // Render EmptyState WITH its CTA (its primary documented usage) so the
       // overflow-prone full layout is exercised.
       'PulseEmptyState': PulseEmptyState(
-        icon: Icons.inbox,
+        icon: const Icon(Icons.inbox),
         title: 'まだ記録がありません',
         description: '最初のワークアウトを記録してみましょう',
         actionLabel: '記録を始める',

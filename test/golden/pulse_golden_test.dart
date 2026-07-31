@@ -112,7 +112,7 @@ void main() {
                 width: 320,
                 height: 380,
                 child: PulseEmptyState(
-                  icon: Icons.inbox,
+                  icon: Icon(Icons.inbox),
                   title: 'まだ記録がありません',
                   description: '最初のワークアウトを記録してみましょう',
                 ),

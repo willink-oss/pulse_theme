@@ -48,8 +48,12 @@ enum PulseSnackBarVariant {
 /// Like the React toast, the surface stays neutral (`colorScheme.surface`
 /// background, `outline` border, 12px radius, floating) and the semantics are
 /// carried by the leading icon color — `primary` / [PulseSemantics.success] /
-/// [PulseSemantics.warning] / `error` — so the snack bar follows any brand the
-/// consumer configures via `copyWith(colorScheme: ...)` automatically.
+/// [PulseSemantics.warning] / `error`.
+///
+/// `info` and `error` read the `ColorScheme`, so they follow a consumer's
+/// re-brand. `success` and `warning` do **not**: they are DS-owned status
+/// colors with no `ColorScheme` slot, and green meaning "succeeded" should not
+/// change because an app's brand did. They do flip between light and dark.
 ///
 /// Reuses Material 3 SnackBar timing and queueing — no custom queue logic.
 class PulseSnackBar {
@@ -76,17 +80,23 @@ class PulseSnackBar {
       'actionLabel and onAction must be provided together.',
     );
 
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    // `success` and `warning` have no ColorScheme slot, so they read the
+    // semantic tokens directly — which means this is the one place that has to
+    // pick the mode itself. Until 0.6.0 both branches used the light tokens, so
+    // a dark snack bar showed the light green/amber.
+    final isDark = theme.brightness == Brightness.dark;
 
     final (IconData icon, Color accent) = switch (variant) {
       PulseSnackBarVariant.info => (Icons.info_outline, colors.primary),
       PulseSnackBarVariant.success => (
         Icons.check_circle_outline,
-        PulseSemantics.success,
+        isDark ? PulseSemanticsDark.success : PulseSemantics.success,
       ),
       PulseSnackBarVariant.warning => (
         Icons.warning_amber_rounded,
-        PulseSemantics.warning,
+        isDark ? PulseSemanticsDark.warning : PulseSemantics.warning,
       ),
       PulseSnackBarVariant.error => (Icons.error_outline, colors.error),
     };

@@ -27,7 +27,10 @@ platforms:
 
 environment:
   sdk: ^3.7.0
-  flutter: ">=3.22.0"
+  # Color.withValues (used across lib/) shipped in Flutter 3.27 / Dart 3.6.
+  # The Dart bound above already forces a newer Flutter, but this stated the
+  # wrong minimum, which is misleading metadata to freeze into 1.0.
+  flutter: ">=3.27.0"
 
 dependencies:
   flutter:

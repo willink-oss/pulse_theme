@@ -54,6 +54,7 @@ export 'src/components/pulse_snack_bar.dart'
 export 'src/components/pulse_tab_bar.dart' show PulseTabBar;
 export 'src/pulse_theme.dart' show PulseTheme;
 export 'src/theme_extensions/pulse_brand_tokens.dart' show PulseBrandTokens;
+export 'src/theme_extensions/pulse_strings.dart' show PulseStrings;
 export 'src/tokens/pulse_tokens.dart'
     show
         PulsePrimitives,

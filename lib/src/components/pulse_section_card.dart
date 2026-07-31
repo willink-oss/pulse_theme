@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../theme_extensions/pulse_brand_tokens.dart';
 import '../tokens/pulse_tokens.dart';
 
 /// Section-shaped surface that hosts grouped content under an optional title.
 ///
 /// Mirrors the React DS `Card` compound (`<Card><CardHeader>...</Card>`)
 /// but in a single Flutter widget that takes `title` + optional `trailing`.
-/// Background is `Theme.of(context).colorScheme.surface`; corner radius uses
-/// [PulsePrimitives.radiusLg]; shadow follows Material 3 elevation tint.
+/// Background is `Theme.of(context).colorScheme.surface`, corner radius is
+/// [PulsePrimitives.radiusLg], and the shadow comes from the theme's
+/// [PulseBrandTokens.shadowSoft] so it darkens in dark mode.
 ///
 /// ```dart
 /// PulseSectionCard(
@@ -38,8 +40,9 @@ class PulseSectionCard extends StatelessWidget {
   /// Ignored when [title] is null.
   final Widget? trailing;
 
-  /// Tap handler for [trailing]. Wrapped in [GestureDetector] so the trailing
-  /// area is fully tappable.
+  /// Tap handler for [trailing]. When set, the trailing area becomes a real
+  /// button: it reports as one to assistive tech and is padded out to the 48dp
+  /// minimum tap target. When null, [trailing] is rendered as inert decoration.
   final VoidCallback? onTrailingTap;
 
   /// Inner content padding. Defaults to [PulseSpacing.lg] on all sides
@@ -60,14 +63,17 @@ class PulseSectionCard extends StatelessWidget {
       margin: margin ?? const EdgeInsets.all(PulseSpacing.lg),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        // radiusLg, matching `cardTheme` and this widget's own documentation.
+        // The code said radiusMd until 0.6.0, so the DS drew section cards at a
+        // different radius than the Material Card it is the sibling of.
+        borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
+        // The shadow used to be a hand-coded 5%-black, which never darkened in
+        // dark mode — where the card and the scaffold are both `surface`, so
+        // the shadow is the *only* thing separating them. PulseShadows.softDark
+        // (carried per-mode by the brand tokens) is the token for exactly this.
+        boxShadow:
+            theme.extension<PulseBrandTokens>()?.shadowSoft ??
+            PulseShadows.soft,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +101,29 @@ class PulseSectionCard extends StatelessWidget {
                     ),
                   ),
                   if (trailing != null)
-                    GestureDetector(onTap: onTrailingTap, child: trailing),
+                    if (onTrailingTap == null)
+                      trailing!
+                    else
+                      Semantics(
+                        button: true,
+                        child: InkWell(
+                          onTap: onTrailingTap,
+                          borderRadius: BorderRadius.circular(
+                            PulsePrimitives.radiusSm,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
+                            child: Center(
+                              widthFactor: 1,
+                              heightFactor: 1,
+                              child: trailing,
+                            ),
+                          ),
+                        ),
+                      ),
                 ],
               ),
             ),
