@@ -76,11 +76,12 @@ Dart / pub の caret は **メジャーが 0 のときだけ挙動が変わる**
 import 'package:pulse_theme/pulse_theme.dart';
 ```
 
-barrel が export しているシンボルは以下の 20 個で全部（`lib/pulse_theme.dart` の実体）。
+barrel が export しているシンボルは以下の 22 個で全部（`lib/pulse_theme.dart` の実体）。
 
 `PulseTheme` / `PulseBrandTokens` /
 `PulsePrimitives` / `PulseSemantics` / `PulseSemanticsDark` / `PulseSpacing` / `PulseFontSize` / `PulseShadows` /
 `PulseButton` / `PulseButtonVariant` / `PulseButtonTone` / `PulseButtonSize` /
+`PulseStrings` /
 `PulseEmptyState` / `PulseErrorState` / `PulseLoadingState` /
 `PulseSectionCard` / `PulseTabBar` / `PulseBottomSheet` /
 `PulseSnackBar` / `PulseSnackBarVariant` / `PulseProgressIndicator`
@@ -90,7 +91,7 @@ barrel が export しているシンボルは以下の 20 個で全部（`lib/pu
 ## 3. テーマ配線
 
 `PulseTheme` は `ThemeData` のファクトリ。実在するメンバーは **`light()` / `dark()` の 2 つの static メソッド**と、その既定 scheme を公開する **`lightColorScheme` / `darkColorScheme`** の 2 定数。
-`light()` / `dark()` はどちらも省略可能な `colorScheme` / `brandTokens` を取る（無指定なら PULSE の既定値 → [6 章](#6-ブランド色の上書き)）。コンストラクタは private（`const PulseTheme._()`）なのでインスタンス化はできない。
+`light()` / `dark()` はどちらも省略可能な `colorScheme` / `brandTokens` / `strings` を取る（無指定なら PULSE の既定値 → [6 章](#6-ブランド色の上書き)）。コンストラクタは private（`const PulseTheme._()`）なのでインスタンス化はできない。
 
 ```dart
 import 'package:flutter/material.dart';
@@ -117,7 +118,7 @@ class MyApp extends StatelessWidget {
 - `useMaterial3: true` / `brightness` / `colorScheme`
 - `scaffoldBackgroundColor`（= `colorScheme.surface`）
 - `textTheme`（後述）
-- `extensions: [PulseBrandTokens.pulse]`（dark は `PulseBrandTokens.pulseDark`）
+- `extensions: [PulseBrandTokens.pulse, PulseStrings.en]`（dark は `PulseBrandTokens.pulseDark`）
 - `appBarTheme` / `cardTheme` / `filledButtonTheme` / `elevatedButtonTheme` / `outlinedButtonTheme` / `textButtonTheme` / `dialogTheme` / `inputDecorationTheme` / `dividerTheme` / `chipTheme` / `progressIndicatorTheme`
 
 これらの投影内容は `test/theme_contract_test.dart` が 1 プロパティずつ固定している（`Pulse*` を 1 つも使わず素の Material を載せるアプリが依存しているのはこの面なので、変更が差分に必ず現れるようにしてある）。
@@ -316,6 +317,8 @@ Container(
 | コンポーネント | 用途 |
 |---|---|
 | `PulseButton` | ブランド対応ボタン（variant: filled / outline / ghost × tone: brand / danger）+ `isLoading` |
+
+> **`0.6.0` の重要な変更**: DS 内で 2 種類あったボタンの形を **8px 角丸に統一**した。`filledButtonTheme` などが `StadiumBorder`（ピル）だったのを `PulsePrimitives.radiusMd` に変更している。**素の Material ボタンを `PulseTheme` の下で使っているアプリは、ボタンがピル形から角丸に変わる**（`Pulse*` コンポーネント側は元から 8px なので変化しない）。
 | `PulseEmptyState` | データが無い画面の空状態 + CTA |
 | `PulseErrorState` | エラー表示（コピー / 再試行つき） |
 | `PulseLoadingState` | ローディング（全画面 / セクション内 / インライン） |
@@ -425,7 +428,7 @@ PulseButton(
 
 | 引数 | 型 | 既定値 |
 |---|---|---|
-| `icon` | `IconData` | **必須**（80px で表示） |
+| `icon` | `Widget` | **必須**（80px・`onSurfaceVariant` で表示。`0.6.0` で `IconData` から変更） |
 | `title` | `String` | **必須** |
 | `description` | `String?` | `null` |
 | `actionLabel` | `String?` | `null` |
@@ -704,6 +707,29 @@ PulseTheme.light(
 `ColorScheme.fromSeed` から `lightColorScheme.copyWith` に変えている点に注意。`fromSeed` は 30 以上のスロットを**すべて**seed から作り直すので、PULSE のトークン（`surface` / `fg` / `border` など）がまるごと Material の生成値に置き換わる。`copyWith` なら変えたいスロットだけが変わる。
 
 </details>
+
+
+### 6.1 コンポーネントが出す文言（`PulseStrings`）
+
+`0.6.0` から、PULSE 自身が描くテキスト（現状は `PulseErrorState` のみ）の**既定は英語**。日本語アプリはテーマで 1 回指定すれば全体に効く。
+
+```dart
+MaterialApp(
+  theme: PulseTheme.light(strings: PulseStrings.ja),
+  darkTheme: PulseTheme.dark(strings: PulseStrings.ja),
+);
+```
+
+| メンバー | `en`（既定） | `ja` |
+|---|---|---|
+| `errorTitle` | Something went wrong | エラーが発生しました |
+| `errorRetryLabel` | Retry | 再試行 |
+| `errorCopyLabel` | Copy error | エラーをコピー |
+| `errorCopiedMessage` | Error details copied | エラー内容をコピーしました |
+
+- **呼び出し側で明示的に渡した引数が常に勝つ**。`PulseStrings` はフォールバックであって上書きではない。
+- PULSE のテーマを使っていない場合（素の `ThemeData` の下）は `PulseStrings.en` に落ちる。
+- 他言語は自分で `const PulseStrings(...)` を組む。これは本格的な l10n の仕組みではなく、「引数を渡さなかったときに 1 言語が焼き込まれない」ためだけのもの。アプリに `intl` などがあるなら、各呼び出し側で翻訳済み文字列を渡す方が正道。
 
 ---
 

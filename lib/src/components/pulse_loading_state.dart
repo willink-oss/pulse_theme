@@ -23,7 +23,7 @@ class PulseLoadingState extends StatelessWidget {
     this.message,
     this.size = 40,
     this.semanticsLabel,
-  });
+  }) : _inline = false;
 
   /// Compact variant (24px) for use inside sections that already have a
   /// surrounding header / card.
@@ -31,19 +31,29 @@ class PulseLoadingState extends StatelessWidget {
     super.key,
     this.message,
     this.semanticsLabel,
-  }) : size = 24;
+  }) : size = 24,
+       _inline = false;
 
   /// Inline variant (16px) with no padding — fits inside buttons, list rows
   /// or dense layouts. Always has `message: null`.
   const PulseLoadingState.inline({super.key, this.semanticsLabel})
     : message = null,
-      size = 16;
+      size = 16,
+      _inline = true;
 
   /// Optional caption shown below the spinner. Ignored in [inline].
   final String? message;
 
-  /// Spinner edge length in logical pixels.
+  /// Spinner edge length in logical pixels. Purely a size — it no longer
+  /// selects the layout.
   final double size;
+
+  /// Whether to render the bare, padding-less layout. Set only by [inline].
+  ///
+  /// The layout used to be chosen by `size <= 16`, so
+  /// `PulseLoadingState(message: '...', size: 16)` dropped its caption with no
+  /// error — and that threshold would have frozen into the 1.0 contract.
+  final bool _inline;
 
   /// Screen-reader announcement for the spinner. Falls back to [message]; set
   /// this explicitly for the inline / message-less variants so assistive tech
@@ -54,7 +64,7 @@ class PulseLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (size <= 16) {
+    if (_inline) {
       // Inline: no padding, no message — just the spinner.
       return SizedBox(
         width: size,

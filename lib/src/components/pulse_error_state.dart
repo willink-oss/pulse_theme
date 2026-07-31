@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme_extensions/pulse_strings.dart';
 import '../tokens/pulse_tokens.dart';
 
 /// Centered error display with optional copy-to-clipboard and retry.
@@ -22,21 +23,28 @@ import '../tokens/pulse_tokens.dart';
 /// ```
 ///
 /// Colors come from `Theme.of(context).colorScheme` — icon = error.
+///
+/// Every string this widget renders can be passed in. What is *not* passed
+/// falls back to the [PulseStrings] on the theme (English by default):
+///
+/// ```dart
+/// MaterialApp(theme: PulseTheme.light(strings: PulseStrings.ja));
+/// ```
 class PulseErrorState extends StatelessWidget {
   const PulseErrorState({
     super.key,
-    this.title = 'エラーが発生しました',
+    this.title,
     this.message,
     this.error,
     this.onRetry,
-    this.retryLabel = '再試行',
+    this.retryLabel,
     this.showCopyButton = true,
-    this.copySuccessMessage = 'エラー内容をコピーしました',
+    this.copyLabel,
+    this.copySuccessMessage,
   });
 
-  /// Headline. Defaults to a generic Japanese error string; pass a
-  /// localized value for production use.
-  final String title;
+  /// Headline. Falls back to [PulseStrings.errorTitle].
+  final String? title;
 
   /// Optional explanation. If null, falls back to `error.toString()`.
   /// Pass a user-friendly message when [error] would be too technical.
@@ -48,27 +56,35 @@ class PulseErrorState extends StatelessWidget {
   /// Tap handler for the retry button. If null, the button is hidden.
   final VoidCallback? onRetry;
 
-  /// Localized retry label.
-  final String retryLabel;
+  /// Retry button label. Falls back to [PulseStrings.errorRetryLabel].
+  final String? retryLabel;
 
   /// When true (default), shows a TextButton that copies `title + message`
   /// to the system clipboard.
   final bool showCopyButton;
 
-  /// SnackBar copy-success message.
-  final String copySuccessMessage;
+  /// Copy button label. Falls back to [PulseStrings.errorCopyLabel].
+  final String? copyLabel;
 
-  String get _errorText {
+  /// SnackBar shown after copying. Falls back to
+  /// [PulseStrings.errorCopiedMessage].
+  final String? copySuccessMessage;
+
+  String _errorText(String resolvedTitle) {
     final detail = message ?? error?.toString() ?? '';
-    return detail.isEmpty ? title : '$title\n$detail';
+    return detail.isEmpty ? resolvedTitle : '$resolvedTitle\n$detail';
   }
 
-  Future<void> _copy(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: _errorText));
+  Future<void> _copy(
+    BuildContext context,
+    String resolvedTitle,
+    String copiedMessage,
+  ) async {
+    await Clipboard.setData(ClipboardData(text: _errorText(resolvedTitle)));
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(copySuccessMessage)));
+      ).showSnackBar(SnackBar(content: Text(copiedMessage)));
     }
   }
 
@@ -78,6 +94,9 @@ class PulseErrorState extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final hasDetail = message != null || error != null;
+
+    final strings = PulseStrings.of(context);
+    final resolvedTitle = title ?? strings.errorTitle;
 
     // Scroll-when-overflows / center-when-fits so the content degrades
     // gracefully (scrolls) instead of clipping at large text scales (D4).
@@ -107,7 +126,7 @@ class PulseErrorState extends StatelessWidget {
                         ),
                         const SizedBox(height: PulseSpacing.lg),
                         Text(
-                          title,
+                          resolvedTitle,
                           style: textTheme.bodyLarge,
                           textAlign: TextAlign.center,
                         ),
@@ -124,9 +143,15 @@ class PulseErrorState extends StatelessWidget {
                         if (showCopyButton) ...[
                           const SizedBox(height: PulseSpacing.md),
                           TextButton.icon(
-                            onPressed: () => _copy(context),
+                            onPressed:
+                                () => _copy(
+                                  context,
+                                  resolvedTitle,
+                                  copySuccessMessage ??
+                                      strings.errorCopiedMessage,
+                                ),
                             icon: const Icon(Icons.copy, size: 16),
-                            label: const Text('エラーをコピー'),
+                            label: Text(copyLabel ?? strings.errorCopyLabel),
                             style: TextButton.styleFrom(
                               foregroundColor: colors.onSurfaceVariant,
                             ),
@@ -136,7 +161,9 @@ class PulseErrorState extends StatelessWidget {
                           const SizedBox(height: PulseSpacing.xl),
                           FilledButton(
                             onPressed: onRetry,
-                            child: Text(retryLabel),
+                            child: Text(
+                              retryLabel ?? strings.errorRetryLabel,
+                            ),
                           ),
                         ],
                       ],

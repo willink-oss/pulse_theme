@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 
 import 'theme_extensions/pulse_brand_tokens.dart';
+import 'theme_extensions/pulse_strings.dart';
 import 'tokens/pulse_tokens.dart';
 
 /// Material 3 [ThemeData] factory for the PULSE design system.
@@ -65,9 +66,11 @@ class PulseTheme {
   static ThemeData light({
     ColorScheme? colorScheme,
     PulseBrandTokens? brandTokens,
+    PulseStrings? strings,
   }) => _base(
     colorScheme ?? lightColorScheme,
     brandTokens ?? PulseBrandTokens.pulse,
+    strings ?? PulseStrings.en,
   );
 
   /// PULSE dark theme — the semantic flip of [light] (ADR-0013). Brand identity
@@ -90,9 +93,11 @@ class PulseTheme {
   static ThemeData dark({
     ColorScheme? colorScheme,
     PulseBrandTokens? brandTokens,
+    PulseStrings? strings,
   }) => _base(
     colorScheme ?? darkColorScheme,
     brandTokens ?? PulseBrandTokens.pulseDark,
+    strings ?? PulseStrings.en,
   );
 
   // === ColorSchemes ===
@@ -210,6 +215,17 @@ class PulseTheme {
     bodySmall: TextStyle(fontSize: PulseFontSize.fontSizeXs),
   );
 
+  /// Corner shape for every themed Material button.
+  ///
+  /// Matches `PulseButton`, which paints `PulsePrimitives.radiusMd` directly.
+  /// Before `0.6.0` these were `StadiumBorder`, so the DS rendered two button
+  /// shapes: pills for plain Material buttons and 8px rounded rectangles for
+  /// `Pulse*` ones — including inside `PulseEmptyState` / `PulseErrorState`,
+  /// whose CTAs are plain Material buttons.
+  static final RoundedRectangleBorder _buttonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+  );
+
   /// Shared [ThemeData] assembly — every component theme derives from
   /// [colorScheme], so light and dark stay structurally identical. The
   /// [brandTokens] non-Material extension (gradients / glow / shadows) is
@@ -217,6 +233,7 @@ class PulseTheme {
   static ThemeData _base(
     ColorScheme colorScheme,
     PulseBrandTokens brandTokens,
+    PulseStrings strings,
   ) {
     return ThemeData(
       useMaterial3: true,
@@ -224,7 +241,7 @@ class PulseTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       textTheme: _textTheme,
-      extensions: <ThemeExtension<dynamic>>[brandTokens],
+      extensions: <ThemeExtension<dynamic>>[brandTokens, strings],
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
@@ -244,7 +261,7 @@ class PulseTheme {
         style: FilledButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          shape: const StadiumBorder(),
+          shape: _buttonShape,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           elevation: 0,
@@ -254,7 +271,7 @@ class PulseTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          shape: const StadiumBorder(),
+          shape: _buttonShape,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           elevation: 0,
@@ -264,7 +281,7 @@ class PulseTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.onSurface,
           side: BorderSide(color: colorScheme.outline),
-          shape: const StadiumBorder(),
+          shape: _buttonShape,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),

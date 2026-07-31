@@ -63,6 +63,84 @@ consumer uses **zero** `Pulse*` components — it installs the theme and renders
 raw Material widgets under it — and that surface had no assertions anywhere.
 The goldens do not cover it either, since they only render `Pulse*` components.
 
+### Changed — BREAKING: one button shape across the DS
+
+`PulseButton` painted 8px rounded rectangles while `PulseTheme`'s button themes
+painted `StadiumBorder` pills — so the DS rendered two different buttons, and
+which one an app got depended on whether it reached for `PulseButton` or a
+plain `FilledButton`. `PulseEmptyState` and `PulseErrorState` made the split
+visible *inside* PULSE, since their CTAs are plain Material buttons.
+
+`filledButtonTheme`, `elevatedButtonTheme` and `outlinedButtonTheme` now use
+`PulsePrimitives.radiusMd`, matching `PulseButton` and the web DS. Apps that
+render raw Material buttons under `PulseTheme` will see their buttons change
+from pills to 8px rounded rectangles.
+
+### Changed — BREAKING: component copy is English by default, with presets
+
+`PulseErrorState`'s defaults were hard-coded Japanese, which is a surprising
+thing for a package published in English to render. All of its strings are now
+nullable and fall back to a `PulseStrings` theme extension:
+
+```dart
+MaterialApp(theme: PulseTheme.light(strings: PulseStrings.ja));
+```
+
+- **Added** `PulseStrings` with `en` (the default) and `ja` presets, plus
+  `PulseStrings.of(context)`. Construct your own for another language.
+- **Added** `PulseErrorState.copyLabel`. The copy button's label was the one
+  string that was not a parameter at all, so it could not be localized without
+  forking.
+- An explicitly passed argument always wins; under a non-PULSE theme the
+  widget falls back to `PulseStrings.en`.
+
+### Changed — BREAKING: `PulseEmptyState` icon slots take a `Widget`
+
+`icon` and `actionIcon` were `IconData`, which locked empty states out of
+illustrations and brand marks — the exact thing empty states tend to want — and
+disagreed with `PulseButton`, whose icon slots are already `Widget?`.
+
+```diff
+-PulseEmptyState(icon: Icons.inbox, ...)
++PulseEmptyState(icon: const Icon(Icons.inbox), ...)
+```
+
+A bare `Icon(...)` still inherits the 80px size and `onSurfaceVariant` color
+from the widget's `IconTheme`, so rendering is unchanged.
+
+### Fixed — components
+
+- **`PulseSnackBar` ignored dark mode for `success` and `warning`.** Both read
+  the light `PulseSemantics` tokens unconditionally, so a dark snack bar showed
+  light-mode green/amber; `PulseSemanticsDark.success` / `.warning` had zero
+  references anywhere. They now flip with the theme. `info` and `error` read
+  the `ColorScheme` and follow a re-brand; `success` and `warning`
+  deliberately do not — green meaning "succeeded" should not change with an
+  app's brand.
+
+- **`PulseLoadingState` silently dropped its caption below 17px.** The layout
+  was chosen by `size <= 16`, so `PulseLoadingState(message: '…', size: 16)`
+  rendered no message and no error. `size` is now only the spinner's edge
+  length; the bare layout belongs to the `.inline` constructor. This also stops
+  that threshold from freezing into the 1.0 contract.
+
+- **`PulseSectionCard`** drew `radiusMd` while its own dartdoc and the sibling
+  `cardTheme` said `radiusLg` — now `radiusLg`. Its shadow was a hand-coded
+  5%-black that never darkened in dark mode, where the card and the scaffold
+  are both `surface` and the shadow is the only thing separating them; it now
+  uses the theme's `PulseBrandTokens.shadowSoft`, which carries a dark variant.
+
+- **`PulseSectionCard`'s tappable trailing area was not a button.** A bare
+  `GestureDetector` gave it no button role for assistive tech and no 48dp
+  minimum target, contradicting the D1/D2 hardening the rest of the package
+  passes. It is now a real `InkWell` under `Semantics(button: true)` with the
+  48dp minimum, and stays inert when `onTrailingTap` is null.
+
+- The declared Flutter lower bound was `>=3.22.0`, but `lib/` uses
+  `Color.withValues`, which shipped in 3.27. The Dart bound already forced a
+  newer Flutter, so nothing was broken — but it was wrong metadata to freeze
+  into 1.0. Now `>=3.27.0`.
+
 ### Changed — BREAKING: `PulseButton` styles on two axes
 
 `PulseButtonVariant` described *structure* (`filled` / `outline` / `ghost`) but

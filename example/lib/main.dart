@@ -20,8 +20,11 @@ class PulseExampleApp extends StatelessWidget {
     return MaterialApp(
       title: 'PULSE — pulse_theme example',
       debugShowCheckedModeBanner: false,
-      theme: PulseTheme.light(),
-      darkTheme: PulseTheme.dark(),
+      // strings: コンポーネント自身が描く文言（現状は PulseErrorState）の既定。
+      // 無指定だと PulseStrings.en（英語）になるので、この日本語ギャラリーでは
+      // ja を渡している。呼び出し側で明示的に渡した引数の方が常に優先される。
+      theme: PulseTheme.light(strings: PulseStrings.ja),
+      darkTheme: PulseTheme.dark(strings: PulseStrings.ja),
       // OS の外観設定に追従（ライト / ダークを自動で切り替える）。
       themeMode: ThemeMode.system,
       home: const GalleryPage(),
@@ -380,11 +383,11 @@ class _EmptyStateTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PulseEmptyState(
-      icon: Icons.inbox_outlined,
+      icon: const Icon(Icons.inbox_outlined),
       title: 'まだデータがありません',
       description: '最初の項目を追加すると、ここに一覧が表示されます。',
       actionLabel: '項目を追加',
-      actionIcon: Icons.add,
+      actionIcon: const Icon(Icons.add),
       onAction:
           () => PulseSnackBar.show(
             context,

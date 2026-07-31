@@ -48,19 +48,14 @@ void main() {
       // Filled and elevated are intentionally identical: the DS has one solid
       // button, and an app reaching for ElevatedButton should not get a
       // different one by accident.
-      for (final (name, style) in <(String, ButtonStyle?)>[
-        ('filledButtonTheme', null),
-        ('elevatedButtonTheme', null),
-      ]) {
-        test('$name is the solid stadium button', () {
-          final s =
-              name == 'filledButtonTheme'
-                  ? theme.filledButtonTheme.style!
-                  : theme.elevatedButtonTheme.style!;
-          expect(style, isNull); // placeholder tuple slot, kept for readability
+      final solidButtons = <String, ButtonStyle>{
+        'filledButtonTheme': theme.filledButtonTheme.style!,
+        'elevatedButtonTheme': theme.elevatedButtonTheme.style!,
+      };
+      solidButtons.forEach((name, s) {
+        test('$name is the solid button', () {
           expect(s.backgroundColor!.resolve({}), colors.primary);
           expect(s.foregroundColor!.resolve({}), colors.onPrimary);
-          expect(s.shape!.resolve({}), isA<StadiumBorder>());
           expect(
             s.padding!.resolve({}),
             const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -68,18 +63,38 @@ void main() {
           expect(s.textStyle!.resolve({})!.fontWeight, FontWeight.w700);
           expect(s.elevation!.resolve({}), 0);
         });
-      }
+      });
 
       test('outlinedButtonTheme inks with onSurface, not the brand', () {
         final s = theme.outlinedButtonTheme.style!;
         expect(s.foregroundColor!.resolve({}), colors.onSurface);
         expect(s.side!.resolve({})!.color, colors.outline);
-        expect(s.shape!.resolve({}), isA<StadiumBorder>());
         expect(
           s.padding!.resolve({}),
           const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         );
         expect(s.textStyle!.resolve({})!.fontWeight, FontWeight.w700);
+      });
+
+      // One button shape across the DS. These were StadiumBorder until 0.6.0,
+      // which meant a plain FilledButton was a pill while PulseButton — and
+      // therefore the same app — drew 8px rounded rectangles.
+      test('every themed button uses radiusMd, matching PulseButton', () {
+        final expected = BorderRadius.circular(PulsePrimitives.radiusMd);
+        final styles = <String, ButtonStyle>{
+          'filled': theme.filledButtonTheme.style!,
+          'elevated': theme.elevatedButtonTheme.style!,
+          'outlined': theme.outlinedButtonTheme.style!,
+        };
+        styles.forEach((name, s) {
+          final shape = s.shape!.resolve({})!;
+          expect(shape, isA<RoundedRectangleBorder>(), reason: name);
+          expect(
+            (shape as RoundedRectangleBorder).borderRadius,
+            expected,
+            reason: '$name should match PulseButton',
+          );
+        });
       });
 
       // The one that renders a DS-violet cancel button inside a re-branded app

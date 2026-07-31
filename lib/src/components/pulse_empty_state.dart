@@ -9,7 +9,7 @@ import '../tokens/pulse_tokens.dart';
 ///
 /// ```dart
 /// PulseEmptyState(
-///   icon: Icons.fitness_center,
+///   icon: const Icon(Icons.fitness_center),
 ///   title: 'まだトレーニング記録がありません',
 ///   description: '最初のワークアウトを記録してみましょう',
 ///   actionLabel: '記録を始める',
@@ -31,8 +31,13 @@ class PulseEmptyState extends StatelessWidget {
     this.actionIcon,
   });
 
-  /// Symbol shown above the title. Defaults to 80px size.
-  final IconData icon;
+  /// Symbol shown above the title, rendered at 80px in
+  /// `colorScheme.onSurfaceVariant`.
+  ///
+  /// A `Widget` rather than an `IconData` — matching `PulseButton`'s icon
+  /// slots — so an empty state can show an illustration or a brand mark, not
+  /// only a Material glyph. A bare `Icon(...)` inherits the size and color.
+  final Widget icon;
 
   /// Primary message explaining what's missing.
   final String title;
@@ -46,8 +51,8 @@ class PulseEmptyState extends StatelessWidget {
   /// Tap handler for the CTA. Required if [actionLabel] is set.
   final VoidCallback? onAction;
 
-  /// Optional leading icon for the CTA. Defaults to [Icons.add].
-  final IconData? actionIcon;
+  /// Optional leading icon for the CTA. Defaults to `Icon(Icons.add)`.
+  final Widget? actionIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +77,13 @@ class PulseEmptyState extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(icon, size: 80, color: colors.onSurfaceVariant),
+                      IconTheme.merge(
+                        data: IconThemeData(
+                          size: 80,
+                          color: colors.onSurfaceVariant,
+                        ),
+                        child: icon,
+                      ),
                       const SizedBox(height: PulseSpacing.xl),
                       Text(
                         title,
@@ -95,7 +106,7 @@ class PulseEmptyState extends StatelessWidget {
                         const SizedBox(height: PulseSpacing.xxl),
                         FilledButton.icon(
                           onPressed: onAction,
-                          icon: Icon(actionIcon ?? Icons.add),
+                          icon: actionIcon ?? const Icon(Icons.add),
                           label: Text(actionLabel!),
                         ),
                       ],
