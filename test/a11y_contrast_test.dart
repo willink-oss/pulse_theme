@@ -91,6 +91,51 @@ void main() {
     }
   });
 
+  // `inversePrimary` is what Material paints an action label with on an
+  // `inverseSurface` (a plain SnackBar action is the everyday case). PULSE sets
+  // both slots, so both are its contract — and the pairing inverts between
+  // modes, which is precisely what Material's single fallback cannot express.
+  group('inverse surface pairs meet WCAG AA (4.5:1)', () {
+    final pairs = <String, (Color, Color)>{
+      'light (inverseSurface/inversePrimary)': (
+        PulseTheme.lightColorScheme.inverseSurface,
+        PulseTheme.lightColorScheme.inversePrimary,
+      ),
+      'dark  (inverseSurface/inversePrimary)': (
+        PulseTheme.darkColorScheme.inverseSurface,
+        PulseTheme.darkColorScheme.inversePrimary,
+      ),
+      'light (inverseSurface/onInverseSurface)': (
+        PulseTheme.lightColorScheme.inverseSurface,
+        PulseTheme.lightColorScheme.onInverseSurface,
+      ),
+      'dark  (inverseSurface/onInverseSurface)': (
+        PulseTheme.darkColorScheme.inverseSurface,
+        PulseTheme.darkColorScheme.onInverseSurface,
+      ),
+    };
+
+    for (final entry in pairs.entries) {
+      test('${entry.key} >= 4.5:1', () {
+        final (fill, ink) = entry.value;
+        expect(contrastRatio(fill, ink), greaterThanOrEqualTo(4.5));
+      });
+    }
+
+    test('Material\'s inherited fallback would be invisible in dark', () {
+      // Guards the fix rather than only its outcome. Unset, `inversePrimary`
+      // falls back to `onPrimary` — white — and dark's inverse surface is the
+      // *light* ink, so the action label would land at ~1.05:1.
+      expect(
+        contrastRatio(
+          PulseTheme.darkColorScheme.inverseSurface,
+          PulseTheme.darkColorScheme.onPrimary,
+        ),
+        lessThan(1.5),
+      );
+    });
+  });
+
   group('dark danger regression (the pair that failed)', () {
     test('white on dark red-500 would fail — that is why onError is inked', () {
       // Guards the fix, not just the outcome: if dark `onError` is ever set

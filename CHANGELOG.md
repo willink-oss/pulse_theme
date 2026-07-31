@@ -9,18 +9,70 @@ progress", not "minor bumps may break".
 
 ## [0.6.0] — 2026-07-31
 
-First of the API decisions being taken deliberately **before** the `1.0.0`
-freeze. `PulseButton`'s style enum mixed two independent ideas, and in Dart 3
-that mistake is not fixable after a freeze: adding a value to a public enum
-turns every consumer's exhaustive `switch` into a compile error, so
-`dangerOutline` could never have shipped as a minor release.
+API decisions being taken deliberately **before** the `1.0.0` freeze —
+the ones that stop being fixable once the public surface is frozen.
+
+### Added — a re-brand entry point that actually works
+
+`PulseTheme.light()` / `dark()` now accept optional `colorScheme` and
+`brandTokens`, and the schemes they default to are exposed as
+`PulseTheme.lightColorScheme` / `darkColorScheme`.
+
+```dart
+PulseTheme.light(
+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+)
+```
+
+This replaces `PulseTheme.light().copyWith(colorScheme: ...)`, which **does not
+work** and was previously documented as if it did. `ThemeData.copyWith`
+replaces the `colorScheme` field, but the component themes were already built
+from the old scheme, and Material reads those — so a re-branded app split in
+half: `Pulse*` widgets followed the new brand while plain `TextButton` /
+`FilledButton` / `Chip` / `TextField` kept painting DS violet. The adoption
+guide called this out as unverified; it is now verified, pinned by a test, and
+it is the reason a cancel button renders violet inside a blue-branded app.
+
+- `dialogTheme` is now part of the projection (surface + `radiusLg`). Dialogs
+  were the one common surface PULSE did not theme at all.
+
+### Fixed — dark `inversePrimary` was invisible
+
+`inversePrimary` was left unset, so Material fell back to `onPrimary` — white.
+In dark mode `inverseSurface` is the *light* ink (`#F8FAFC`), which put a plain
+SnackBar's action label at **1.05:1**. Both schemes now set the slot from the
+brand ladder: `brand-400` in light (6.56:1 on `#0F172A`) and `brand-600` in
+dark (5.45:1 on `#F8FAFC`). Same class of bug as the dark `onError` fix in
+`0.5.0` — a slot whose light-mode value cannot be reused once the surfaces
+flip. Locked by `test/a11y_contrast_test.dart`.
+
+`surfaceTint` is likewise now set explicitly. Its value is unchanged (it
+already resolved to `primary`), but it is part of the contract instead of an
+inherited default.
+
+### Added — the ThemeData contract is now test-locked
+
+`test/theme_contract_test.dart` pins all 11 component themes property by
+property, the `ColorScheme` slots Material derives rather than PULSE projecting
+them, and the boundary between the 7 `TextTheme` sizes PULSE owns and the
+Material 3 typography it inherits.
+
+This closes a real gap rather than adding ceremony: the only production
+consumer uses **zero** `Pulse*` components — it installs the theme and renders
+raw Material widgets under it — and that surface had no assertions anywhere.
+The goldens do not cover it either, since they only render `Pulse*` components.
 
 ### Changed — BREAKING: `PulseButton` styles on two axes
 
 `PulseButtonVariant` described *structure* (`filled` / `outline` / `ghost`) but
 also carried one *tone* (`danger`), so a destructive action was locked to the
-highest-emphasis shape. The axes are now separate and fully orthogonal — all
-six combinations are valid, and neither axis leaks into the other.
+highest-emphasis shape. In Dart 3 that is not fixable after a freeze: adding a
+value to a public enum turns every consumer's exhaustive `switch` into a
+compile error, so `dangerOutline` could never have shipped as a minor release.
+
+The axes are now separate and fully orthogonal — all six combinations are
+valid, and neither axis leaks into the other.
 
 ```diff
 -PulseButton(variant: PulseButtonVariant.danger, ...)

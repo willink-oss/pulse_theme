@@ -10,9 +10,8 @@
 /// [PulseTheme.light] / [PulseTheme.dark] return Material 3 `ThemeData` whose
 /// `ColorScheme`, `TextTheme` and component themes are a faithful projection of
 /// that token contract. The first 9 `Pulse*` components ship on the violet
-/// baseline (see the exports below); each reads colors from
-/// `Theme.of(context).colorScheme`, so a `copyWith` brand override flows
-/// through. See the README and `doc/adr/0001-pulse-mobile-first-architecture.md`.
+/// baseline (see the exports below). See the README and
+/// `doc/adr/0001-pulse-mobile-first-architecture.md`.
 ///
 /// ```dart
 /// import 'package:flutter/material.dart';
@@ -22,12 +21,21 @@
 ///   theme: PulseTheme.light(),
 ///   darkTheme: PulseTheme.dark(),
 ///   themeMode: ThemeMode.system,
-///   // Re-brand via standard Material 3 copyWith — every Pulse* widget reads
-///   // colors from Theme.of(context).colorScheme, so overrides flow through:
-///   // theme: PulseTheme.light().copyWith(
-///   //   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
-///   // ),
 ///   home: ...,
+/// );
+/// ```
+///
+/// To re-brand, hand the factory your own scheme — **not**
+/// `ThemeData.copyWith(colorScheme: ...)`, which leaves the already-built
+/// component themes on the violet baseline (see [PulseTheme.light]):
+///
+/// ```dart
+/// MaterialApp(
+///   theme: PulseTheme.light(
+///     colorScheme: PulseTheme.lightColorScheme.copyWith(
+///       primary: const Color(0xFF2E7BFF),
+///     ),
+///   ),
 /// );
 /// ```
 library;

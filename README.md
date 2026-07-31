@@ -99,19 +99,42 @@ Token classes are exported for direct use, e.g. `PulseSpacing.md`,
 
 ### Customizing the brand color
 
-Re-brand via standard Material 3 `copyWith` — every `Pulse*` widget reads
-colors from `Theme.of(context).colorScheme`, so overrides flow through
-automatically:
+Hand the factory your own `ColorScheme`. Start from `PulseTheme.lightColorScheme`
+so every slot you do not care about keeps its token value:
 
 ```dart
-final theme = PulseTheme.light().copyWith(
-  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+final theme = PulseTheme.light(
+  colorScheme: PulseTheme.lightColorScheme.copyWith(
+    primary: const Color(0xFF2E7BFF),
+  ),
 );
 ```
 
-That is why `PulseButtonTone.danger` is built from `colorScheme.error` (and not
-from the fixed `PulseSemantics.danger` token): an overridden scheme re-tints the
-destructive button the same way it re-tints the primary one.
+> **Do not use `PulseTheme.light().copyWith(colorScheme: ...)` for this.**
+> `ThemeData.copyWith` replaces the `colorScheme` field, but the component
+> themes (`filledButtonTheme`, `textButtonTheme`, `inputDecorationTheme`, …)
+> were already *built* from the old scheme, and Material reads those. The
+> result is a split app: `Pulse*` widgets resolve
+> `Theme.of(context).colorScheme` at build time and switch to your brand, while
+> a plain `TextButton` or `FilledButton` keeps painting DS violet. That is not
+> hypothetical — it is what makes a cancel button render violet inside a
+> blue-branded app. `PulseTheme.light(colorScheme: ...)` builds the component
+> themes from your scheme instead, so both halves agree.
+
+The non-Material extras (glow, gradients) live in a `PulseBrandTokens`
+extension rather than the `ColorScheme`, so re-brand them in the same call or a
+blue CTA keeps a violet glow:
+
+```dart
+final theme = PulseTheme.light(
+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+);
+```
+
+This is also why `PulseButtonTone.danger` is built from `colorScheme.error`
+(and not from the fixed `PulseSemantics.danger` token): an overridden scheme
+re-tints the destructive button the same way it re-tints the primary one.
 
 ### Install
 
