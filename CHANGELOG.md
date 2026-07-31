@@ -33,9 +33,9 @@ Coverage is now 195 tests, up from 126 at `0.6.0`'s start.
 ### Added — CI gates for the claims this package already makes
 
 Two things were checked by hand "sometimes", and both had already regressed
-unnoticed: two broken dartdoc references shipped in `0.5.0`, and an
-**unformatted file in `lib/` shipped in `0.6.0`**, costing 10 pana points. A
-check that runs after the release is not a gate.
+unnoticed: two broken dartdoc references shipped in `0.5.0`, and a file in
+`lib/` shipped unformatted in `0.6.0`. A check that runs after the release is
+not a gate.
 
 - **`dart format --set-exit-if-changed`** on every PR. `flutter analyze` is
   clean on unformatted code, so nothing in the pipeline noticed.
@@ -52,8 +52,16 @@ check that runs after the release is not a gate.
 
 ### Fixed — formatting regression from 0.6.0
 
-`lib/src/components/pulse_error_state.dart` did not match `dart format`, which
-is worth 10 pana points on pub.dev. Restored to 160/160.
+`lib/src/components/pulse_error_state.dart` did not match `dart format` as run
+by the Dart SDK this repo pins, and pana 0.23.15 deducted 10 points for it
+locally (150/160 → 160/160 after the fix).
+
+Worth stating precisely, because it is not what it first looked like: **pub.dev
+scored `0.6.0` at 160/160 regardless.** Its analyzer runs a different SDK, and
+`dart format`'s output is SDK-dependent, so the deduction never reached the
+published score. The gate is still worth having — it keeps the repository
+consistent with its own pinned toolchain, which is what the CI pins exist to
+guarantee — but no published score was harmed.
 
 ### Security — the release path
 

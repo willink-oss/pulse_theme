@@ -62,9 +62,12 @@ jobs:
 
       # `dart format` compliance is worth 10 pana points, and nothing else in
       # this pipeline notices it: `flutter analyze` is clean on unformatted
-      # code. A single unformatted file in lib/ shipped in 0.6.0 and cost the
-      # published score exactly that, which is why this runs before the slower
-      # gates rather than being folded into the pana job.
+      # code. One file in lib/ shipped unformatted in 0.6.0 and pana 0.23.15
+      # deducted those points locally. pub.dev still scored 0.6.0 160/160 — its
+      # analyzer runs a different SDK, and formatter output is SDK-dependent —
+      # so this gate is about staying consistent with the toolchain THIS repo
+      # pins, not about a score that already dropped. Runs before the slower
+      # gates because it is the cheapest way to catch that class.
       - name: Check formatting
         run: dart format --set-exit-if-changed .
 
