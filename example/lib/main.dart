@@ -104,27 +104,29 @@ class _ButtonMatrix extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // values を回しているので、variant が増えてもこの表は自動で追従する
-        // （danger もここに出る）。
-        for (final variant in PulseButtonVariant.values) ...[
-          Text(variant.name, style: labelStyle),
-          const SizedBox(height: PulseSpacing.sm),
-          Wrap(
-            spacing: PulseSpacing.sm,
-            runSpacing: PulseSpacing.sm,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              for (final size in PulseButtonSize.values)
-                PulseButton(
-                  onPressed: () {},
-                  variant: variant,
-                  size: size,
-                  child: Text(size.name),
-                ),
-            ],
-          ),
-          const SizedBox(height: PulseSpacing.lg),
-        ],
+        // 両軸の values を回しているので、variant / tone が増えてもこの表は
+        // 自動で追従する。variant が形、tone が色を決める（直交する2軸）。
+        for (final variant in PulseButtonVariant.values)
+          for (final tone in PulseButtonTone.values) ...[
+            Text('${variant.name} / ${tone.name}', style: labelStyle),
+            const SizedBox(height: PulseSpacing.sm),
+            Wrap(
+              spacing: PulseSpacing.sm,
+              runSpacing: PulseSpacing.sm,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final size in PulseButtonSize.values)
+                  PulseButton(
+                    onPressed: () {},
+                    variant: variant,
+                    tone: tone,
+                    size: size,
+                    child: Text(size.name),
+                  ),
+              ],
+            ),
+            const SizedBox(height: PulseSpacing.lg),
+          ],
         Text('icons / disabled', style: labelStyle),
         const SizedBox(height: PulseSpacing.sm),
         Wrap(
@@ -143,13 +145,21 @@ class _ButtonMatrix extends StatelessWidget {
               trailingIcon: const Icon(Icons.arrow_forward),
               child: const Text('次へ'),
             ),
-            // danger は filled と同じ形・同じ重さで色だけ違う（破壊的操作に使う）。
+            // tone: danger は形も重さも変えず色だけ差し替える（破壊的操作に使う）。
             // 色は colorScheme.error なので copyWith(colorScheme:) で再ブランドできる。
             PulseButton(
               onPressed: () {},
-              variant: PulseButtonVariant.danger,
+              tone: PulseButtonTone.danger,
               leadingIcon: const Icon(Icons.delete_outline),
               child: const Text('削除'),
+            ),
+            // 同じ tone を outline に載せれば「控えめな破壊的操作」になる。
+            // これが軸を分けた理由（旧 API では表現できなかった組み合わせ）。
+            PulseButton.label(
+              '削除（控えめ）',
+              onPressed: () {},
+              variant: PulseButtonVariant.outline,
+              tone: PulseButtonTone.danger,
             ),
             // onPressed: null で自動的に disabled 表示（opacity 0.5）。
             const PulseButton(onPressed: null, child: Text('無効')),

@@ -17,8 +17,9 @@ set of `Pulse*` components built mobile-first.
 > `PulseSnackBar`, `PulseProgressIndicator`. **`0.5.0` is the first release
 > published to [pub.dev](https://pub.dev/packages/pulse_theme)** — components are
 > hardened (48dp tap targets, `Semantics`, `TextScaler` robustness) and covered
-> by golden / visual-regression tests in CI. `PulseButton` covers `filled` /
-> `outline` / `ghost` / `danger` plus a non-dimming `isLoading` state, and
+> by golden / visual-regression tests in CI. `PulseButton` styles on two
+> independent axes — `variant` (`filled` / `outline` / `ghost`) × `tone`
+> (`brand` / `danger`) — plus a non-dimming `isLoading` state, and
 > `PulseSnackBar` covers `info` / `success` / `warning` / `error`. The public API
 > is not frozen until `1.0.0`.
 
@@ -108,9 +109,9 @@ final theme = PulseTheme.light().copyWith(
 );
 ```
 
-That is why `PulseButtonVariant.danger` is built from `colorScheme.error` (and
-not from the fixed `PulseSemantics.danger` token): an overridden scheme re-tints
-the destructive button the same way it re-tints the primary one.
+That is why `PulseButtonTone.danger` is built from `colorScheme.error` (and not
+from the fixed `PulseSemantics.danger` token): an overridden scheme re-tints the
+destructive button the same way it re-tints the primary one.
 
 ### Install
 
@@ -187,15 +188,25 @@ tech, which is why `loadingSemanticsLabel` exists — it names the *state*
 busy button is never nameless: without the argument a screen reader still
 announces "Save", with it "Save, Saving".
 
-Destructive actions get their own variant, and "it went through, but look at it"
-gets its own snack bar:
+Destructive actions get their own *tone* — orthogonal to the variant, so you
+choose how much emphasis a destructive action deserves without giving up its
+colour. "It went through, but look at it" gets its own snack bar:
 
 ```dart
+// Prominent: solid red.
 PulseButton(
   onPressed: _delete,
-  variant: PulseButtonVariant.danger,
+  tone: PulseButtonTone.danger,
   leadingIcon: const Icon(Icons.delete_outline),
   child: const Text('Delete'),
+);
+
+// Same meaning, quieter: red border and label only.
+PulseButton.label(
+  'Delete',
+  onPressed: _delete,
+  variant: PulseButtonVariant.outline,
+  tone: PulseButtonTone.danger,
 );
 
 PulseSnackBar.show(

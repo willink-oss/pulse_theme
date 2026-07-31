@@ -1,32 +1,42 @@
 // Visual-regression goldens (D3) via alchemist CI goldens.
 //
-// CI goldens are platform-independent (see test/flutter_test_config.dart), so a
-// snapshot generated on macOS matches Linux CI. Regenerate after an intentional
-// visual change with `flutter test --update-goldens`.
+// CI goldens suppress fonts and shadows (see test/flutter_test_config.dart) but
+// they are NOT bit-identical across CPU architectures: anti-aliasing differs
+// enough between arm64 and the x64 Linux runner to exceed the diff threshold.
+// The committed PNGs are therefore Linux-generated and these tests are expected
+// to fail on an Apple-silicon machine.
+//
+// Regenerate after an intentional visual change with the `golden-update`
+// workflow (`gh workflow run golden-update.yml --ref <branch>`), then commit the
+// `ci-goldens` artifact — never with a local `flutter test --update-goldens`.
 
 import 'package:alchemist/alchemist.dart';
 import 'package:flutter/material.dart';
 import 'package:pulse_theme/pulse_theme.dart';
 
 void main() {
+  // The full variant × tone × size matrix. Iterating `.values` on both enums
+  // means a new variant or tone cannot be added without its goldens appearing.
   goldenTest(
-    'PulseButton — variants × sizes',
+    'PulseButton — variants × tones × sizes',
     fileName: 'pulse_button',
     builder:
         () => GoldenTestGroup(
           columns: 3,
           children: [
             for (final variant in PulseButtonVariant.values)
-              for (final size in PulseButtonSize.values)
-                GoldenTestScenario(
-                  name: '${variant.name}/${size.name}',
-                  child: PulseButton(
-                    variant: variant,
-                    size: size,
-                    onPressed: () {},
-                    child: const Text('ボタン'),
+              for (final tone in PulseButtonTone.values)
+                for (final size in PulseButtonSize.values)
+                  GoldenTestScenario(
+                    name: '${variant.name}/${tone.name}/${size.name}',
+                    child: PulseButton(
+                      variant: variant,
+                      tone: tone,
+                      size: size,
+                      onPressed: () {},
+                      child: const Text('ボタン'),
+                    ),
                   ),
-                ),
           ],
         ),
   );
@@ -48,21 +58,25 @@ void main() {
     pumpBeforeTest: pumpNTimes(1, const Duration(milliseconds: 400)),
     builder:
         () => GoldenTestGroup(
-          // Two columns => one variant per row, idle | loading side by side.
+          // Two columns => one combination per row, idle | loading side by side.
           columns: 2,
           children: [
             for (final variant in PulseButtonVariant.values)
-              for (final isLoading in [false, true])
-                GoldenTestScenario(
-                  name: '${variant.name}/${isLoading ? 'loading' : 'idle'}',
-                  child: PulseButton(
-                    variant: variant,
-                    onPressed: () {},
-                    isLoading: isLoading,
-                    loadingSemanticsLabel: 'Submitting',
-                    child: const Text('Submit'),
+              for (final tone in PulseButtonTone.values)
+                for (final isLoading in [false, true])
+                  GoldenTestScenario(
+                    name:
+                        '${variant.name}/${tone.name}/'
+                        '${isLoading ? 'loading' : 'idle'}',
+                    child: PulseButton(
+                      variant: variant,
+                      tone: tone,
+                      onPressed: () {},
+                      isLoading: isLoading,
+                      loadingSemanticsLabel: 'Submitting',
+                      child: const Text('Submit'),
+                    ),
                   ),
-                ),
           ],
         ),
   );
