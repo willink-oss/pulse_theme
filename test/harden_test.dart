@@ -112,6 +112,29 @@ void main() {
         title: '今週のトレーニング実績',
         child: Text('内容'),
       ),
+      // The three the D4 table originally skipped. A tab bar in particular
+      // divides a fixed width between its labels, so it is the most likely of
+      // the nine to overflow once text triples in size.
+      'PulseTabBar': const DefaultTabController(
+        length: 3,
+        child: PulseTabBar(
+          tabs: [Tab(text: '概要'), Tab(text: 'トレーニング履歴'), Tab(text: '設定')],
+        ),
+      ),
+      'PulseProgressIndicator': const PulseProgressIndicator(
+        value: 0.65,
+        semanticsLabel: 'アップロード中',
+      ),
+      // The sheet's own content, laid out as PulseBottomSheet lays it out.
+      // `show()` needs a route, which the harness below drives separately.
+      'PulseBottomSheet content': const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('この操作は取り消せません'),
+          SizedBox(height: PulseSpacing.md),
+          Text('本当に削除してよろしいですか？'),
+        ],
+      ),
     };
 
     for (final scale in <double>[2.0, 3.0]) {
@@ -134,6 +157,174 @@ void main() {
             reason: '$name overflowed at ${scale}x text scale',
           );
         });
+      });
+    }
+  });
+
+  // The 48dp tap-target guideline was only asserted for PulseButton. Every
+  // other interactive affordance PULSE renders — the snack bar's action, the
+  // tab bar's tabs, the bottom sheet's drag handle — went unchecked, and a
+  // control too small to hit reliably is an accessibility defect whether or
+  // not it is a button widget.
+  group('D1 — 48dp tap targets beyond PulseButton', () {
+    testWidgets('PulseTabBar tabs meet the guideline', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(
+          const DefaultTabController(
+            length: 3,
+            child: PulseTabBar(
+              tabs: [Tab(text: '概要'), Tab(text: '履歴'), Tab(text: '設定')],
+            ),
+          ),
+        ),
+      );
+      // meetsGuideline passes vacuously when there is nothing tappable to
+      // measure, so prove the tabs are present AND interactive first —
+      // otherwise this test would stay green if PulseTabBar rendered nothing.
+      expect(find.text('概要'), findsOneWidget);
+      await tester.tap(find.text('設定'));
+      await tester.pumpAndSettle();
+      expect(DefaultTabController.of(tester.element(find.text('設定'))).index, 2);
+
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('PulseSnackBar action meets the guideline', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: PulseTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder:
+                  (context) => Center(
+                    child: ElevatedButton(
+                      onPressed:
+                          () => PulseSnackBar.show(
+                            context,
+                            message: '同期に失敗しました',
+                            actionLabel: '再試行',
+                            onAction: () {},
+                          ),
+                      child: const Text('show'),
+                    ),
+                  ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('show'));
+      await tester.pumpAndSettle();
+      expect(find.text('再試行'), findsOneWidget);
+
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      handle.dispose();
+
+      // Let the snack bar's auto-dismiss timer fire so no timer outlives the
+      // test.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('PulseBottomSheet content meets the guideline', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: PulseTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder:
+                  (context) => Center(
+                    child: ElevatedButton(
+                      onPressed:
+                          () => PulseBottomSheet.show<void>(
+                            context,
+                            builder:
+                                (_) => PulseBottomSheet(
+                                  title: '確認',
+                                  child: PulseButton(
+                                    onPressed: () {},
+                                    child: const Text('削除する'),
+                                  ),
+                                ),
+                          ),
+                      child: const Text('open'),
+                    ),
+                  ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('削除する'), findsOneWidget);
+
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      handle.dispose();
+    });
+  });
+
+  // PulseBottomSheet cannot go in the D4 table above because it needs a route.
+  // Its content still has to survive 3x text on a small phone — a sheet that
+  // overflows is worse than a screen that does, since it cannot be scrolled
+  // away from.
+  group('D4 — TextScaler robustness for route-driven surfaces', () {
+    for (final scale in <double>[2.0, 3.0]) {
+      testWidgets('PulseBottomSheet has no overflow at TextScaler ${scale}x', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: PulseTheme.light(),
+            home: Builder(
+              builder:
+                  (context) => MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: TextScaler.linear(scale)),
+                    child: Scaffold(
+                      body: Builder(
+                        builder:
+                            (inner) => Center(
+                              child: ElevatedButton(
+                                onPressed:
+                                    () => PulseBottomSheet.show<void>(
+                                      inner,
+                                      builder:
+                                          (_) => PulseBottomSheet(
+                                            title: 'アカウントを削除しますか？',
+                                            child: PulseButton(
+                                              onPressed: () {},
+                                              child: const Text('削除する'),
+                                            ),
+                                          ),
+                                    ),
+                                child: const Text('open'),
+                              ),
+                            ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'PulseBottomSheet overflowed at ${scale}x text scale',
+        );
       });
     }
   });

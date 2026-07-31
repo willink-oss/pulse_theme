@@ -12,6 +12,24 @@ progress", not "minor bumps may break".
 Quality infrastructure, so that "no visual or behavioural regressions within
 `1.x`" is a claim the repository can actually back.
 
+### Added — accessibility coverage for the components that had none
+
+The 48dp tap-target guideline was asserted for `PulseButton` and nothing else,
+and the TextScaler no-overflow suite covered 5 of 9 components. A control too
+small to hit reliably is a defect whether or not it is a button widget.
+
+- **Tap targets** now checked for `PulseTabBar`'s tabs, `PulseSnackBar`'s
+  action, and `PulseBottomSheet`'s content. Each test first proves the target
+  actually exists and responds — `meetsGuideline` passes vacuously when there
+  is nothing tappable to measure, so a test that only called it could stay
+  green while the widget rendered nothing.
+- **TextScaler 2× / 3× at 360×640** now also covers `PulseTabBar` (the most
+  overflow-prone of the nine: it divides a fixed width between labels),
+  `PulseProgressIndicator`, and `PulseBottomSheet` — the last driven through a
+  real route, since a sheet that overflows cannot be scrolled away from.
+
+Coverage is now 195 tests, up from 126 at `0.6.0`'s start.
+
 ### Added — CI gates for the claims this package already makes
 
 Two things were checked by hand "sometimes", and both had already regressed
