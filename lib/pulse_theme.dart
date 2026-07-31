@@ -34,7 +34,7 @@ library;
 
 export 'src/components/pulse_bottom_sheet.dart' show PulseBottomSheet;
 export 'src/components/pulse_button.dart'
-    show PulseButton, PulseButtonSize, PulseButtonVariant;
+    show PulseButton, PulseButtonSize, PulseButtonTone, PulseButtonVariant;
 export 'src/components/pulse_empty_state.dart' show PulseEmptyState;
 export 'src/components/pulse_error_state.dart' show PulseErrorState;
 export 'src/components/pulse_loading_state.dart' show PulseLoadingState;

@@ -1,26 +1,41 @@
 import 'package:flutter/material.dart';
 
-/// Visual style of [PulseButton].
+import '../tokens/pulse_tokens.dart';
+
+/// Structural style of [PulseButton] — how much visual weight it carries.
+///
+/// Orthogonal to [PulseButtonTone], which picks the accent. Every
+/// variant × tone pair is valid: `ghost` + `danger` is a low-emphasis
+/// destructive action, `filled` + `danger` a prominent one.
 ///
 /// Mirrors the React DS `Button` variant tokens.
 enum PulseButtonVariant {
-  /// Solid primary background with brand glow shadow.
+  /// Solid accent background with a matching glow shadow. Highest emphasis.
   filled,
 
-  /// Transparent background with primary-colored border + text.
+  /// Transparent background with an accent-colored border + text.
   outline,
 
-  /// Transparent background with primary-colored text only.
-  /// Hover/pressed shows a `primaryContainer` overlay.
+  /// Transparent background with accent-colored text only.
+  /// Hover/pressed shows an accent wash.
   ghost,
+}
 
-  /// Solid `colorScheme.error` background — destructive actions (delete,
-  /// revoke, cancel-subscription). Same shape and weight as [filled] so the
-  /// two read as peers; only the accent differs.
-  ///
-  /// Reads `colorScheme.error` rather than the fixed `PulseSemantics.danger`
-  /// token so that a consumer's `copyWith(colorScheme: ...)` re-tints it, the
-  /// same way [filled] tracks `colorScheme.primary`.
+/// Accent of [PulseButton] — which `ColorScheme` role the button is built from.
+///
+/// Orthogonal to [PulseButtonVariant]: a tone only swaps the accent, never the
+/// shape, padding or weight, so a `danger` button reads as a peer of its
+/// `brand` counterpart rather than a different kind of control.
+///
+/// Both tones resolve through the `ColorScheme` rather than a fixed
+/// `PulseSemantics` token, so a consumer's `copyWith(colorScheme: ...)`
+/// re-brands them together.
+enum PulseButtonTone {
+  /// `colorScheme.primary` — the default accent, for ordinary actions.
+  brand,
+
+  /// `colorScheme.error` — destructive actions (delete, revoke,
+  /// cancel-subscription).
   danger,
 }
 
@@ -49,6 +64,17 @@ enum PulseButtonSize {
 /// )
 /// ```
 ///
+/// Style is two independent axes — [variant] (structure) and [tone] (accent) —
+/// so a destructive action keeps its emphasis level:
+/// ```dart
+/// PulseButton.label(
+///   '削除',
+///   variant: PulseButtonVariant.outline,
+///   tone: PulseButtonTone.danger,
+///   onPressed: () => delete(),
+/// )
+/// ```
+///
 /// Colors derive from `Theme.of(context).colorScheme`, so overriding the
 /// scheme (`PulseTheme.light().copyWith(colorScheme: ...)`) re-brands the
 /// button automatically.
@@ -64,6 +90,7 @@ class PulseButton extends StatelessWidget {
     required this.child,
     super.key,
     this.variant = PulseButtonVariant.filled,
+    this.tone = PulseButtonTone.brand,
     this.size = PulseButtonSize.medium,
     this.leadingIcon,
     this.trailingIcon,
@@ -72,6 +99,27 @@ class PulseButton extends StatelessWidget {
     this.loadingSemanticsLabel,
   });
 
+  /// Shorthand for the common text-only button — builds the [Text] for you.
+  ///
+  /// `PulseButton.label('保存', onPressed: save)` is equivalent to
+  /// `PulseButton(onPressed: save, child: const Text('保存'))`.
+  ///
+  /// Not a `const` constructor, since it constructs the label widget. Use the
+  /// default constructor with a `const Text(...)` child in const contexts.
+  PulseButton.label(
+    String label, {
+    required this.onPressed,
+    super.key,
+    this.variant = PulseButtonVariant.filled,
+    this.tone = PulseButtonTone.brand,
+    this.size = PulseButtonSize.medium,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.fullWidth = false,
+    this.isLoading = false,
+    this.loadingSemanticsLabel,
+  }) : child = Text(label);
+
   /// Tap handler. When `null`, the button is rendered in a disabled state
   /// (opacity 0.5 + no ripple).
   final VoidCallback? onPressed;
@@ -79,8 +127,11 @@ class PulseButton extends StatelessWidget {
   /// Label content. Typically a [Text], but any widget is accepted.
   final Widget child;
 
-  /// Visual variant. Defaults to [PulseButtonVariant.filled].
+  /// Structural variant. Defaults to [PulseButtonVariant.filled].
   final PulseButtonVariant variant;
+
+  /// Accent tone. Defaults to [PulseButtonTone.brand].
+  final PulseButtonTone tone;
 
   /// Size variant. Defaults to [PulseButtonSize.medium].
   final PulseButtonSize size;
@@ -137,23 +188,37 @@ class PulseButton extends StatelessWidget {
 
   /// Whether this variant paints a filled accent background. The other
   /// variants tint text / border only.
-  bool get _isSolid =>
-      variant == PulseButtonVariant.filled ||
-      variant == PulseButtonVariant.danger;
+  bool get _isSolid => variant == PulseButtonVariant.filled;
 
-  /// The accent this variant is built from — `error` for [danger], otherwise
-  /// `primary`. Both come from the `ColorScheme`, so a consumer's
-  /// `copyWith(colorScheme: ...)` re-brands every variant.
-  Color _accent(ColorScheme colors) =>
-      variant == PulseButtonVariant.danger ? colors.error : colors.primary;
+  /// The accent this button is built from — picked by [tone], never by
+  /// [variant]. Both roles come from the `ColorScheme`, so a consumer's
+  /// `copyWith(colorScheme: ...)` re-brands every combination.
+  Color _accent(ColorScheme colors) => switch (tone) {
+    PulseButtonTone.brand => colors.primary,
+    PulseButtonTone.danger => colors.error,
+  };
 
-  /// Foreground drawn on top of [_accent].
+  /// Foreground drawn on top of [_accent] — the paired `on*` role when the
+  /// accent is painted as a background, otherwise the accent itself.
   Color _foreground(ColorScheme colors) =>
       _isSolid
-          ? (variant == PulseButtonVariant.danger
-              ? colors.onError
-              : colors.onPrimary)
+          ? switch (tone) {
+            PulseButtonTone.brand => colors.onPrimary,
+            PulseButtonTone.danger => colors.onError,
+          }
           : _accent(colors);
+
+  /// Hover/pressed wash for [PulseButtonVariant.ghost].
+  ///
+  /// `brand` uses `primaryContainer` (the DS's designed "wash of brand" token,
+  /// `brandSoft`). The token contract has no danger equivalent, so that tone
+  /// derives the wash from its own accent — deliberately not `errorContainer`,
+  /// which `PulseTheme` leaves unset and would resolve to a Material default
+  /// from outside the token contract.
+  Color _ghostOverlay(ColorScheme colors) => switch (tone) {
+    PulseButtonTone.brand => colors.primaryContainer,
+    PulseButtonTone.danger => colors.error.withValues(alpha: 0.12),
+  };
 
   /// Swaps the label for a spinner while keeping the button exactly as wide as
   /// it was — the invisible label is still laid out, so submitting a form does
@@ -216,7 +281,6 @@ class PulseButton extends StatelessWidget {
     Widget button;
     switch (variant) {
       case PulseButtonVariant.filled:
-      case PulseButtonVariant.danger:
         button = FilledButton(
           onPressed: effectiveOnPressed,
           style: FilledButton.styleFrom(
@@ -230,7 +294,7 @@ class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
             ),
           ),
           child: content,
@@ -249,7 +313,7 @@ class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
             ),
           ),
           child: content,
@@ -268,13 +332,13 @@ class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
             ),
           ).copyWith(
             overlayColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.pressed) ||
                   states.contains(WidgetState.hovered)) {
-                return colors.primaryContainer;
+                return _ghostOverlay(colors);
               }
               return null;
             }),
@@ -292,12 +356,12 @@ class PulseButton extends StatelessWidget {
     );
 
     if (_isSolid && !dimmed) {
-      // Accent glow: the variant's own accent at 30% alpha. Uses the
+      // Accent glow: the tone's own accent at 30% alpha. Uses the
       // ColorScheme (not PulseBrandTokens) so the glow tracks a consumer's
       // override (PulseTheme.light().copyWith(colorScheme: ...)).
       result = DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
           boxShadow: [
             BoxShadow(
               color: accent.withValues(alpha: 0.3),

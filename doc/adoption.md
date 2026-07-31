@@ -81,7 +81,7 @@ barrel が export しているシンボルは以下の 20 個で全部（`lib/pu
 
 `PulseTheme` / `PulseBrandTokens` /
 `PulsePrimitives` / `PulseSemantics` / `PulseSemanticsDark` / `PulseSpacing` / `PulseFontSize` / `PulseShadows` /
-`PulseButton` / `PulseButtonVariant` / `PulseButtonSize` /
+`PulseButton` / `PulseButtonVariant` / `PulseButtonTone` / `PulseButtonSize` /
 `PulseEmptyState` / `PulseErrorState` / `PulseLoadingState` /
 `PulseSectionCard` / `PulseTabBar` / `PulseBottomSheet` /
 `PulseSnackBar` / `PulseSnackBarVariant` / `PulseProgressIndicator`
@@ -314,7 +314,7 @@ Container(
 
 | コンポーネント | 用途 |
 |---|---|
-| `PulseButton` | ブランド対応ボタン（filled / outline / ghost / danger）+ `isLoading` |
+| `PulseButton` | ブランド対応ボタン（variant: filled / outline / ghost × tone: brand / danger）+ `isLoading` |
 | `PulseEmptyState` | データが無い画面の空状態 + CTA |
 | `PulseErrorState` | エラー表示（コピー / 再試行つき） |
 | `PulseLoadingState` | ローディング（全画面 / セクション内 / インライン） |
@@ -330,7 +330,8 @@ Container(
 |---|---|---|
 | `onPressed` | `VoidCallback?` | **必須**（`null` を渡すと disabled: 不透明度 0.5・リップル無し） |
 | `child` | `Widget` | **必須** |
-| `variant` | `PulseButtonVariant` | `filled` |
+| `variant` | `PulseButtonVariant` | `filled`（**構造**の軸） |
+| `tone` | `PulseButtonTone` | `brand`（**色**の軸。`variant` と直交する） |
 | `size` | `PulseButtonSize` | `medium` |
 | `leadingIcon` | `Widget?` | `null`（ラベルの左に 8px ギャップで配置） |
 | `trailingIcon` | `Widget?` | `null`（右に 8px ギャップ） |
@@ -338,8 +339,13 @@ Container(
 | `isLoading` | `bool` | `false`（`true` でスピナー表示＋タップ不可。**減光はしない**） |
 | `loadingSemanticsLabel` | `String?` | `null`（`isLoading` 中のスクリーンリーダー読み上げ） |
 
-- `PulseButtonVariant` = `filled` / `outline` / `ghost` / `danger`
+- `PulseButtonVariant` = `filled` / `outline` / `ghost` — **形**（どの Material ボタンを組むか・どれだけ目立つか）
+- `PulseButtonTone` = `brand` / `danger` — **色**（`colorScheme` のどのロールから作るか）
 - `PulseButtonSize` = `small`（padding 12×6・14px）/ `medium`（16×10・16px）/ `large`（24×14・18px）
+
+**2 軸は完全に直交する**。6 通りすべてが有効な組み合わせで、`tone` が形を変えることも `variant` が色を変えることもない（`test/pulse_button_test.dart` の «variant × tone orthogonality» が固定している）。
+
+ラベルがテキストだけなら `PulseButton.label('保存', onPressed: save)` と書ける（`child: const Text('保存')` の短縮形。`Text` を組み立てるので `const` コンストラクタではない）。
 
 ```dart
 PulseButton(
@@ -351,9 +357,9 @@ PulseButton(
 )
 ```
 
-#### `danger` — 破壊的操作
+#### `tone: danger` — 破壊的操作
 
-削除 / 取り消し / 解約などに使う。実体は `filled` と同じ `FilledButton`（同じ shape・padding・角丸 8・同じグロー影）で、色だけが違う。
+削除 / 取り消し / 解約などに使う。**形は一切変えず色だけを差し替える軸**なので、`filled` に載せれば `filled` と同じ `FilledButton`（同じ shape・padding・角丸 8・同じグロー影）のまま色だけが赤くなる。
 
 色は **`colorScheme.error` / `colorScheme.onError`** から取る。固定トークンの `PulseSemantics.danger` は使っていないので、[6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` でブランドを差し替えると `filled` と同じように追従する。
 
@@ -362,14 +368,26 @@ PulseButton(
 ```dart
 PulseButton(
   onPressed: () => deleteAccount(),
-  variant: PulseButtonVariant.danger,
+  tone: PulseButtonTone.danger,
   leadingIcon: const Icon(Icons.delete_outline),
   child: const Text('削除する'),
 )
 ```
 
-> `danger` があるのは **solid の 1 種類だけ**。`outline` / `ghost` の danger 版（枠線だけ赤・文字だけ赤）は**無い**。
-> 「破壊的だが弱い見せ方をしたい」場合は、`ghost` にアプリ側で `Text(style: TextStyle(color: colors.error))` を渡すなど、呼び出し側で作ること。
+**「破壊的だが弱い見せ方をしたい」場合は `variant` を下げるだけでよい**。tone を捨てずに強さだけ変えられるのが軸を分けた理由で、呼び出し側で色を組む必要は無くなった。
+
+```dart
+// 枠線と文字だけが赤（colorScheme.error）。形は通常の outline と同一。
+PulseButton.label(
+  '削除する',
+  onPressed: () => deleteAccount(),
+  variant: PulseButtonVariant.outline,
+  tone: PulseButtonTone.danger,
+)
+```
+
+> グローが出るのは **`filled` だけ**（`tone` ではなく `variant` の性質）。`outline` / `ghost` は tone に関わらずグローを描かない。
+> `ghost` のホバー / 押下時のウォッシュは、`brand` なら `primaryContainer`（DS の `brandSoft` トークン）、`danger` は対応するトークンが契約に無いのでアクセント自身の 12% を使う（`errorContainer` は `PulseTheme` が未設定でトークン契約の外側の Material 既定値に落ちるため、意図的に避けている）。
 
 #### `isLoading` — 送信中
 
@@ -399,7 +417,7 @@ PulseButton(
 
 `PulseButton` に **任意色を渡す口は無い**。`backgroundColor` / `foregroundColor` / `style` といった引数は存在しない。
 
-色は必ず `colorScheme`（`primary` / `onPrimary`、`danger` なら `error` / `onError`）から実行時に読む。DS として色を呼び出し側に開放しないのは意図的な設計で、再ブランドの正道は [6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` 一本。
+色は必ず `colorScheme`（`tone: brand` なら `primary` / `onPrimary`、`tone: danger` なら `error` / `onError`）から実行時に読む。DS として色を呼び出し側に開放しないのは意図的な設計で、再ブランドの正道は [6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` 一本。
 どうしても DS 外の色が要る 1 箇所は、`PulseButton` を使わず素の `FilledButton` を書く方が正直（DS のボタンに見えて DS に従わないものを増やさない）。
 
 ### 5.2 `PulseEmptyState`
@@ -845,18 +863,18 @@ flutter pub get   # pubspec.lock を再生成
 | アプリ側によくある形 | PULSE |
 |---|---|
 | `AppButton(isLoading: true, ...)` | `PulseButton(isLoading: true, loadingSemanticsLabel: '...', ...)` |
-| `AppButton(variant: destructive)` / `DangerButton` | `PulseButton(variant: PulseButtonVariant.danger, ...)` |
+| `AppButton(variant: destructive)` / `DangerButton` | `PulseButton(tone: PulseButtonTone.danger, ...)` |
 | `FeedbackSnackBar.showWarning(context, '...')` | `PulseSnackBar.show(context, message: '...', variant: PulseSnackBarVariant.warning)` |
 
 **引数名は 1:1 ではない。** fit-ai の `AppButton`（`apps/mobile/lib/core/widgets/atoms/app_button.dart`）を例に、実際に書き換わるところ:
 
 | `AppButton` | `PulseButton` | 注意 |
 |---|---|---|
-| `label: '保存'`（`String`・必須） | `child: const Text('保存')`（`Widget`・必須） | **型が変わる**。単純な引数リネームでは通らない |
+| `label: '保存'`（`String`・必須） | `PulseButton.label('保存', ...)` | **`0.6.0` から 1:1 で移せる**。`PulseButton(child: const Text('保存'))` と等価な短縮コンストラクタ |
 | `icon: Icons.check`（`IconData?`） | `leadingIcon: const Icon(Icons.check)`（`Widget?`） | こちらも `IconData` → `Widget` |
 | `isExpanded: true` | `fullWidth: true` | 名前のみ |
 | `isLoading: _isSubmitting` | `isLoading: _isSubmitting` + `loadingSemanticsLabel: '保存中'` | 読み上げラベルは PULSE 側の追加引数（[7.2](#72-アプリ側がやること) の 6） |
-| `variant: AppButtonVariant.danger` / `.destructive` | `variant: PulseButtonVariant.danger` | |
+| `variant: AppButtonVariant.danger` / `.destructive` | `tone: PulseButtonTone.danger` | 色は `variant` ではなく `tone` の軸。`variant` は形のまま据え置ける |
 | `backgroundColor:` / `foregroundColor:` | **無い** | 色は `colorScheme` からのみ（[5.1 の「無いもの」](#無いもの設計判断)） |
 
 `isLoading` の**見た目には 1 点だけ差がある**（同義ではない）:
@@ -888,7 +906,7 @@ PULSE 側が改善である（フォームのレイアウトが跳ねなくな�
 | 無いもの | 状況 | 回避策 |
 |---|---|---|
 | `PulseButton` の任意色上書き（`backgroundColor` / `foregroundColor` / `style`） | **無い。設計判断として開けていない** | 再ブランドは `copyWith(colorScheme: ...)`（[6 章](#6-ブランド色の上書き)）。DS 外の色が必須の 1 箇所は素の `FilledButton` を書く |
-| `outline` / `ghost` の danger 版 | **無い**（danger は solid のみ） | `ghost` + `Text(style: TextStyle(color: colors.error))` を呼び出し側で組む |
+| ~~`outline` / `ghost` の danger 版~~ | **`0.6.0` で解消**（`variant` × `tone` の 2 軸化により 6 通り全部が表現可能） | `variant: outline, tone: danger` |
 | アイコンのみのボタン（`IconButton` 相当） | **無い** | `Semantics(label: ...)` を巻いた素の `IconButton` |
 | ボタン内の成功アニメーション / チェックマーク遷移 | **無い**（`isLoading` はスピナーのみ） | 呼び出し側で状態を持つ |
 | snack bar の任意色 / 任意アイコン | **無い**（4 variant 固定） | 4 つのどれかに寄せる。寄らないものは素の `SnackBar` |

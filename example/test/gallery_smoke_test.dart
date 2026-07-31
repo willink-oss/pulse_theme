@@ -90,23 +90,33 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('the button matrix covers the danger variant', (tester) async {
+  testWidgets('the button matrix covers every variant × tone pair', (
+    tester,
+  ) async {
     await tester.pumpWidget(const PulseExampleApp());
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The matrix labels each row with `variant.name`, so this row existing is
-    // the proof it iterates `PulseButtonVariant.values` rather than a hardcoded
-    // list. The card is a single list child, so its whole subtree is built even
-    // where it is clipped — no scrolling needed to find it.
-    expect(find.text('danger'), findsOneWidget);
+    // The matrix labels each row '<variant> / <tone>', so every row existing is
+    // the proof it iterates both enums' `.values` rather than a hardcoded list.
+    // The card is a single list child, so its whole subtree is built even where
+    // it is clipped — no scrolling needed to find it.
+    for (final variant in PulseButtonVariant.values) {
+      for (final tone in PulseButtonTone.values) {
+        expect(
+          find.text('${variant.name} / ${tone.name}'),
+          findsOneWidget,
+          reason: 'the matrix should have a ${variant.name}/${tone.name} row',
+        );
+      }
+    }
 
-    // …plus one realistic destructive action.
+    // …plus one realistic destructive action, carrying the tone on the default
+    // (filled) structure.
     final destructive = find.widgetWithText(PulseButton, '削除');
     expect(destructive, findsOneWidget);
-    expect(
-      tester.widget<PulseButton>(destructive).variant,
-      PulseButtonVariant.danger,
-    );
+    final button = tester.widget<PulseButton>(destructive);
+    expect(button.tone, PulseButtonTone.danger);
+    expect(button.variant, PulseButtonVariant.filled);
   });
 
   testWidgets('isLoading swaps the label for a spinner, same width', (

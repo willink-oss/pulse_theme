@@ -1,8 +1,8 @@
 // Tests for PulseButton.
 //
-// Cover variant color contracts (filled / outline / ghost / danger), disabled
-// vs. loading state behavior, ColorScheme override, leading-icon layout, and
-// the 48dp a11y tap-target guideline.
+// Cover the two style axes — variant (filled / outline / ghost) × tone
+// (brand / danger) — disabled vs. loading state behavior, ColorScheme
+// override, leading-icon layout, and the 48dp a11y tap-target guideline.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +13,24 @@ void main() {
     theme: theme ?? PulseTheme.light(),
     home: Scaffold(body: Center(child: child)),
   );
+
+  /// Every BoxShadow painted by an ancestor DecoratedBox of [scope] (the glow
+  /// sits in a DecoratedBox when the variant is solid and not dimmed).
+  Iterable<BoxShadow> glowsAround(WidgetTester tester, Finder scope) => tester
+      .widgetList<DecoratedBox>(
+        find.ancestor(of: scope, matching: find.byType(DecoratedBox)),
+      )
+      .map((d) => d.decoration)
+      .whereType<BoxDecoration>()
+      .expand((d) => d.boxShadow ?? const <BoxShadow>[]);
+
+  /// The glow's geometric signature, independent of its color — used to assert
+  /// a glow is *absent* without depending on which DecoratedBoxes Material
+  /// happens to build around a button.
+  bool isGlow(BoxShadow s) =>
+      s.blurRadius == 16 &&
+      s.offset == const Offset(0, 4) &&
+      s.spreadRadius == -2;
 
   group('PulseButton — filled variant', () {
     testWidgets('uses primary background + onPrimary text color', (
@@ -195,17 +213,7 @@ void main() {
     }
   });
 
-  group('PulseButton — danger variant', () {
-    /// Every accent glow painted above [scope] (the button subtree is wrapped
-    /// in a DecoratedBox when the variant is solid and not dimmed).
-    Iterable<BoxShadow> glowsAround(WidgetTester tester, Finder scope) => tester
-        .widgetList<DecoratedBox>(
-          find.ancestor(of: scope, matching: find.byType(DecoratedBox)),
-        )
-        .map((d) => d.decoration)
-        .whereType<BoxDecoration>()
-        .expand((d) => d.boxShadow ?? const <BoxShadow>[]);
-
+  group('PulseButton — danger tone (filled)', () {
     testWidgets('renders a FilledButton with error / onError colors', (
       tester,
     ) async {
@@ -213,7 +221,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           PulseButton(
-            variant: PulseButtonVariant.danger,
+            tone: PulseButtonTone.danger,
             onPressed: () {},
             child: const Text('削除'),
           ),
@@ -239,7 +247,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           PulseButton(
-            variant: PulseButtonVariant.danger,
+            tone: PulseButtonTone.danger,
             onPressed: () {},
             child: const Text('削除'),
           ),
@@ -281,7 +289,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           PulseButton(
-            variant: PulseButtonVariant.danger,
+            tone: PulseButtonTone.danger,
             onPressed: () {},
             child: const Text('削除'),
           ),
@@ -306,7 +314,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           PulseButton(
-            variant: PulseButtonVariant.danger,
+            tone: PulseButtonTone.danger,
             onPressed: () => tapped = true,
             child: const Text('削除'),
           ),
@@ -314,6 +322,185 @@ void main() {
       );
 
       await tester.tap(find.text('削除'));
+      expect(tapped, isTrue);
+    });
+  });
+
+  // The two axes must stay independent: `variant` decides which Material
+  // button (structure) is built, `tone` decides the accent. A regression that
+  // let one leak into the other is exactly what merging them into a single
+  // enum used to hide.
+  group('PulseButton — variant × tone orthogonality', () {
+    const structures = <PulseButtonVariant, Type>{
+      PulseButtonVariant.filled: FilledButton,
+      PulseButtonVariant.outline: OutlinedButton,
+      PulseButtonVariant.ghost: TextButton,
+    };
+
+    testWidgets('tone never changes which Material button is built', (
+      tester,
+    ) async {
+      for (final tone in PulseButtonTone.values) {
+        for (final entry in structures.entries) {
+          await tester.pumpWidget(
+            wrap(
+              PulseButton(
+                variant: entry.key,
+                tone: tone,
+                onPressed: () {},
+                child: const Text('操作'),
+              ),
+            ),
+          );
+          expect(
+            find.byType(entry.value),
+            findsOneWidget,
+            reason:
+                '${entry.key.name}/${tone.name} should build a ${entry.value}',
+          );
+        }
+      }
+    });
+
+    testWidgets('outline/danger tints border + label with error', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.outline,
+            tone: PulseButtonTone.danger,
+            onPressed: () {},
+            child: const Text('削除'),
+          ),
+          theme: theme,
+        ),
+      );
+
+      final style =
+          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).style!;
+      expect(
+        style.foregroundColor!.resolve(<WidgetState>{}),
+        equals(theme.colorScheme.error),
+      );
+      expect(
+        style.side!.resolve(<WidgetState>{})!.color,
+        equals(theme.colorScheme.error),
+      );
+      // …and not the brand accent, which is what a leaking axis would paint.
+      expect(theme.colorScheme.error, isNot(equals(theme.colorScheme.primary)));
+    });
+
+    testWidgets('ghost/danger tints the label with error', (tester) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton(
+            variant: PulseButtonVariant.ghost,
+            tone: PulseButtonTone.danger,
+            onPressed: () {},
+            child: const Text('削除'),
+          ),
+          theme: theme,
+        ),
+      );
+
+      final style = tester.widget<TextButton>(find.byType(TextButton)).style!;
+      expect(
+        style.foregroundColor!.resolve(<WidgetState>{}),
+        equals(theme.colorScheme.error),
+      );
+    });
+
+    testWidgets('glow is a filled-variant trait, not a tone trait', (
+      tester,
+    ) async {
+      for (final tone in PulseButtonTone.values) {
+        for (final variant in <PulseButtonVariant>[
+          PulseButtonVariant.outline,
+          PulseButtonVariant.ghost,
+        ]) {
+          await tester.pumpWidget(
+            wrap(
+              PulseButton(
+                variant: variant,
+                tone: tone,
+                onPressed: () {},
+                child: const Text('操作'),
+              ),
+            ),
+          );
+          expect(
+            glowsAround(tester, find.text('操作')).any(isGlow),
+            isFalse,
+            reason: '${variant.name}/${tone.name} must not paint a glow',
+          );
+        }
+      }
+    });
+
+    testWidgets('filled glows in both tones, each with its own accent', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light();
+      for (final (tone, accent) in <(PulseButtonTone, Color)>[
+        (PulseButtonTone.brand, theme.colorScheme.primary),
+        (PulseButtonTone.danger, theme.colorScheme.error),
+      ]) {
+        await tester.pumpWidget(
+          wrap(
+            PulseButton(
+              tone: tone,
+              onPressed: () {},
+              child: const Text('操作'),
+            ),
+            theme: theme,
+          ),
+        );
+        expect(
+          glowsAround(tester, find.text('操作')).any(
+            (s) => isGlow(s) && s.color == accent.withValues(alpha: 0.3),
+          ),
+          isTrue,
+          reason: 'filled/${tone.name} should glow with its own accent',
+        );
+      }
+    });
+  });
+
+  group('PulseButton — PulseButton.label', () {
+    testWidgets('wraps the string in a Text and forwards both axes', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light();
+      await tester.pumpWidget(
+        wrap(
+          PulseButton.label(
+            '削除',
+            variant: PulseButtonVariant.outline,
+            tone: PulseButtonTone.danger,
+            onPressed: () {},
+          ),
+          theme: theme,
+        ),
+      );
+
+      expect(find.text('削除'), findsOneWidget);
+      final style =
+          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).style!;
+      expect(
+        style.foregroundColor!.resolve(<WidgetState>{}),
+        equals(theme.colorScheme.error),
+      );
+    });
+
+    testWidgets('tap fires handler', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        wrap(PulseButton.label('OK', onPressed: () => tapped = true)),
+      );
+      await tester.tap(find.text('OK'));
       expect(tapped, isTrue);
     });
   });
@@ -573,7 +760,7 @@ void main() {
         await tester.pumpWidget(
           wrap(
             PulseButton(
-              variant: PulseButtonVariant.danger,
+              tone: PulseButtonTone.danger,
               onPressed: () {},
               size: size,
               child: const Text('削除'),

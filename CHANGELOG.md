@@ -7,6 +7,61 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.6.0] — 2026-07-31
+
+First of the API decisions being taken deliberately **before** the `1.0.0`
+freeze. `PulseButton`'s style enum mixed two independent ideas, and in Dart 3
+that mistake is not fixable after a freeze: adding a value to a public enum
+turns every consumer's exhaustive `switch` into a compile error, so
+`dangerOutline` could never have shipped as a minor release.
+
+### Changed — BREAKING: `PulseButton` styles on two axes
+
+`PulseButtonVariant` described *structure* (`filled` / `outline` / `ghost`) but
+also carried one *tone* (`danger`), so a destructive action was locked to the
+highest-emphasis shape. The axes are now separate and fully orthogonal — all
+six combinations are valid, and neither axis leaks into the other.
+
+```diff
+-PulseButton(variant: PulseButtonVariant.danger, ...)
++PulseButton(tone: PulseButtonTone.danger, ...)
+```
+
+- **Removed** `PulseButtonVariant.danger`. The enum is now `filled` / `outline`
+  / `ghost` only.
+- **Added** `PulseButtonTone` (`brand` / `danger`) and `PulseButton.tone`,
+  defaulting to `brand` — so every call site that did not use `danger` is
+  unchanged, and the rendered output for the other three variants is identical.
+- `variant: outline` / `ghost` with `tone: danger` are new combinations that
+  previously had to be hand-built by the caller. The adoption guide's "not in
+  PULSE yet" row for them is retired.
+- Glow stays a property of `filled` (either tone); `outline` / `ghost` never
+  glow. The `ghost` hover/pressed wash follows the tone: `primaryContainer`
+  (the `brandSoft` token) for `brand`, and the accent at 12% for `danger`,
+  since the token contract has no danger equivalent and `errorContainer` is a
+  slot `PulseTheme` deliberately leaves unset.
+
+### Added
+
+- `PulseButton.label(String, ...)` — shorthand for the common text-only button,
+  equivalent to `PulseButton(child: Text(...))`. Not `const` (it builds the
+  label widget). This makes the migration from a `label: String` app button a
+  1:1 rename rather than a type change.
+
+### Fixed
+
+- `PulseButton` painted its corner radius from a hard-coded `8` at four sites
+  instead of `PulsePrimitives.radiusMd`. The values were identical, so nothing
+  moves — but a change to the `radius.md` token would not have propagated, and
+  the token-codegen gate only diffs the generated file, so nothing would have
+  caught it.
+- `test/golden/pulse_golden_test.dart`'s header claimed CI goldens are
+  platform-independent and could be regenerated locally with
+  `--update-goldens`. They are not: anti-aliasing differs between arm64 and the
+  x64 Linux runner by more than the diff threshold, which is why the committed
+  PNGs are Linux-generated. The comment now says so and points at the
+  `golden-update` workflow.
+
 ## [0.5.1] — 2026-07-30
 
 ### Fixed — documentation
