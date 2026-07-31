@@ -223,6 +223,15 @@ dart pub publish --dry-run       # 0 warnings
 gh pr create --fill
 ```
 
+> **タグを打つ前に CHANGELOG の見出しを日付にすること。** 開発中は
+> `## [0.9.0] — unreleased` で書き進めて構わないが、そのまま公開すると
+> **アーカイブの中に「未リリース」と書かれた自分自身が入る**（`0.8.0` で実際に
+> やってしまった）。`dart pub publish --dry-run` も CI も、これは検出しない。
+>
+> ```bash
+> grep -n "unreleased" CHANGELOG.md   # 空であること
+> ```
+
 マージ後、**main の HEAD** にタグを打つ:
 
 ```bash

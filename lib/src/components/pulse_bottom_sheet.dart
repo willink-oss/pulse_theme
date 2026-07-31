@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../tokens/pulse_radius.dart';
 import '../tokens/pulse_tokens.dart';
 
 /// Material 3 brand-aware modal bottom sheet.
@@ -33,7 +34,7 @@ import '../tokens/pulse_tokens.dart';
 /// sheet follows any brand the consumer configures via
 /// `copyWith(colorScheme: ...)` automatically. The barrier is black at 50%
 /// alpha, matching the React Sheet overlay (`bg-black/50`); the top corners
-/// use [PulsePrimitives.radiusXl] (16px — the DS radius feel, instead of
+/// use [PulseRadius.sheet] (16px — the DS radius feel, instead of
 /// the Material 3 default 28px).
 final class PulseBottomSheet extends StatelessWidget {
   const PulseBottomSheet({required this.child, super.key, this.title});
@@ -81,7 +82,7 @@ final class PulseBottomSheet extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(PulsePrimitives.radiusXl),
+          top: Radius.circular(PulseRadius.sheet),
         ),
       ),
       showDragHandle: false,
@@ -107,9 +108,7 @@ final class PulseBottomSheet extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: handleColor,
-                  borderRadius: BorderRadius.circular(
-                    PulsePrimitives.radiusFull,
-                  ),
+                  borderRadius: BorderRadius.circular(PulseRadius.pill),
                 ),
               ),
             ),

@@ -76,10 +76,10 @@ Dart / pub の caret は **メジャーが 0 のときだけ挙動が変わる**
 import 'package:pulse_theme/pulse_theme.dart';
 ```
 
-barrel が export しているシンボルは以下の 22 個で全部（`lib/pulse_theme.dart` の実体）。
+barrel が export しているシンボルは以下の 23 個で全部（`lib/pulse_theme.dart` の実体）。
 
 `PulseTheme` / `PulseBrandTokens` /
-`PulsePrimitives` / `PulseSemantics` / `PulseSemanticsDark` / `PulseSpacing` / `PulseFontSize` / `PulseShadows` /
+`PulsePrimitives` / `PulseSemantics` / `PulseSemanticsDark` / `PulseSpacing` / `PulseFontSize` / `PulseShadows` / `PulseRadius` /
 `PulseButton` / `PulseButtonVariant` / `PulseButtonTone` / `PulseButtonSize` /
 `PulseStrings` /
 `PulseEmptyState` / `PulseErrorState` / `PulseLoadingState` /
@@ -220,7 +220,23 @@ success / warning / danger
 これらの大半は `PulseTheme` が `ColorScheme` にマップ済み（例: `brand` → `primary`、`bg` → `surface`、`fg` → `onSurface`、`muted` → `onSurfaceVariant`、`border` → `outline` / `outlineVariant`、`danger` → `error`、`track` → `surfaceContainerHighest`）。
 `ColorScheme` に行き先が無いのは `success` / `warning` / `brandHover` / `brandActive` / `ring` / `surfaceInverted` / `fg*` の細分などで、これらが直接参照の主な用途になる。
 
-### 4.5 `PulsePrimitives` — 生の値（色 / 半径 / 時間 / イージング）
+### 4.5 `PulseRadius` — 角丸（意味づけ）
+
+**`0.9.0` 追加。** 「何を丸めるか」で選ぶ。値は `PulsePrimitives` を参照しているだけなので、SSOT が動けば一緒に動く。
+
+```dart
+PulseRadius.control  //  8 — 指で操作するもの（ボタン / 入力欄）
+PulseRadius.surface  // 12 — 中身を載せる面（カード / ダイアログ / スナックバー）
+PulseRadius.sheet    // 16 — 画面端に接する面（ボトムシート。2 辺しか見えないので 1 段大きい）
+PulseRadius.pill     // 全丸 — チップ / ドラッグハンドル
+PulseRadius.inset    //  4 — 面の *内側* の小さな当たり（trailing のスプラッシュなど）
+```
+
+ここにある役割は**すべて PULSE 自身が実際に描いているもの**で、体裁を整えるために発明した役割は 1 つも無い（使われない役割を公開 API に凍結しないため）。
+
+DS 側の描画も全てこのクラス経由に統一済み。角丸を自分で書くときは、まずこちらを見ること。
+
+### 4.6 `PulsePrimitives` — 生の値（色 / 半径 / 時間 / イージング）
 
 色は原則使わない（意味を持たないため）。実務で使うのは半径・時間・カーブ。
 
@@ -255,7 +271,7 @@ AnimatedContainer(
 )
 ```
 
-### 4.6 `PulseShadows` — 影（`List<BoxShadow>` 5 種）
+### 4.7 `PulseShadows` — 影（`List<BoxShadow>` 5 種）
 
 ```dart
 PulseShadows.soft      // 通常のソフト影（ライト）
@@ -265,7 +281,7 @@ PulseShadows.mdDark    // 同・ダーク
 PulseShadows.glow      // ブランド着色のグロー（モード不変）
 ```
 
-### 4.7 `PulseBrandTokens` — ThemeExtension（Material で表現できないもの）
+### 4.8 `PulseBrandTokens` — ThemeExtension（Material で表現できないもの）
 
 `ColorScheme` では表現できないグラデーション / グロー / カスタム影を運ぶ `ThemeExtension`。
 `PulseTheme.light()` / `dark()` が `extensions` に自動で載せているので、アプリ側での登録は不要。

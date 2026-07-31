@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme_extensions/pulse_brand_tokens.dart';
+import '../tokens/pulse_radius.dart';
 import '../tokens/pulse_tokens.dart';
 
 /// Section-shaped surface that hosts grouped content under an optional title.
@@ -8,7 +9,7 @@ import '../tokens/pulse_tokens.dart';
 /// Mirrors the React DS `Card` compound (`<Card><CardHeader>...</Card>`)
 /// but in a single Flutter widget that takes `title` + optional `trailing`.
 /// Background is `Theme.of(context).colorScheme.surface`, corner radius is
-/// [PulsePrimitives.radiusLg], and the shadow comes from the theme's
+/// [PulseRadius.surface], and the shadow comes from the theme's
 /// [PulseBrandTokens.shadowSoft] so it darkens in dark mode.
 ///
 /// ```dart
@@ -66,7 +67,7 @@ final class PulseSectionCard extends StatelessWidget {
         // radiusLg, matching `cardTheme` and this widget's own documentation.
         // The code said radiusMd until 0.6.0, so the DS drew section cards at a
         // different radius than the Material Card it is the sibling of.
-        borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
+        borderRadius: BorderRadius.circular(PulseRadius.surface),
         // The shadow used to be a hand-coded 5%-black, which never darkened in
         // dark mode — where the card and the scaffold are both `surface`, so
         // the shadow is the *only* thing separating them. PulseShadows.softDark
@@ -109,7 +110,7 @@ final class PulseSectionCard extends StatelessWidget {
                         child: InkWell(
                           onTap: onTrailingTap,
                           borderRadius: BorderRadius.circular(
-                            PulsePrimitives.radiusSm,
+                            PulseRadius.inset,
                           ),
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(

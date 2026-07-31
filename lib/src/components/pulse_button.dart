@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/pulse_tokens.dart';
+import '../tokens/pulse_radius.dart';
 
 /// Structural style of [PulseButton] — how much visual weight it carries.
 ///
@@ -294,7 +294,7 @@ final class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+              borderRadius: BorderRadius.circular(PulseRadius.control),
             ),
           ),
           child: content,
@@ -313,7 +313,7 @@ final class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+              borderRadius: BorderRadius.circular(PulseRadius.control),
             ),
           ),
           child: content,
@@ -332,7 +332,7 @@ final class PulseButton extends StatelessWidget {
             // the 48dp a11y minimum (do NOT use shrinkWrap — it disables that).
             minimumSize: Size.zero,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+              borderRadius: BorderRadius.circular(PulseRadius.control),
             ),
           ).copyWith(
             overlayColor: WidgetStateProperty.resolveWith((states) {
@@ -361,7 +361,7 @@ final class PulseButton extends StatelessWidget {
       // override (PulseTheme.light().copyWith(colorScheme: ...)).
       result = DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(PulsePrimitives.radiusMd),
+          borderRadius: BorderRadius.circular(PulseRadius.control),
           boxShadow: [
             BoxShadow(
               color: accent.withValues(alpha: 0.3),
