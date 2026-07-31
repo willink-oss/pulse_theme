@@ -12,6 +12,59 @@ progress", not "minor bumps may break".
 Quality infrastructure, so that "no visual or behavioural regressions within
 `1.x`" is a claim the repository can actually back.
 
+### Added — CI gates for the claims this package already makes
+
+Two things were checked by hand "sometimes", and both had already regressed
+unnoticed: two broken dartdoc references shipped in `0.5.0`, and an
+**unformatted file in `lib/` shipped in `0.6.0`**, costing 10 pana points. A
+check that runs after the release is not a gate.
+
+- **`dart format --set-exit-if-changed`** on every PR. `flutter analyze` is
+  clean on unformatted code, so nothing in the pipeline noticed.
+- **`dart doc` reference check.** Note that `dart doc --dry-run` **exits 0 even
+  when it reports warnings** — verified, not assumed — so the obvious
+  `run: dart doc --dry-run` would have been a gate that could never fail. The
+  step parses the summary line, and fails closed if that line is missing, so a
+  future change to dart doc's output format is a loud failure rather than a
+  silent pass.
+- **pana, pinned to `0.23.15`, at `--exit-code-threshold 0`.** The score must
+  stay 160/160. Pinning matters for the same reason the Flutter version is
+  pinned: an unpinned pana release that reweights a check would turn CI red on
+  a PR that changed nothing.
+
+### Fixed — formatting regression from 0.6.0
+
+`lib/src/components/pulse_error_state.dart` did not match `dart format`, which
+is worth 10 pana points on pub.dev. Restored to 160/160.
+
+### Security — the release path
+
+- **Every third-party action is now pinned by commit SHA.** A tag can be
+  repointed by whoever owns the action; a SHA cannot. This matters most for
+  `publish.yml`, which is the job holding the OIDC identity allowed to push to
+  pub.dev.
+- **Added `SECURITY.md`** with a private reporting channel and the scope that
+  actually applies to a package with no runtime dependencies and no I/O: the
+  supply chain, not the widgets.
+- **Added `.github/dependabot.yml`** for github-actions, pub (root + example),
+  and the `tool/` npm ecosystem. The last one closes a structural gap: the
+  token contract is pinned exactly by `tool/package-lock.json` and the
+  token-codegen gate verifies against *that pin*, so a new
+  `@willink-labs/tokens` release was invisible to CI forever — drift by
+  staleness. Dependabot is the missing bump signal. Pinning by SHA has the same
+  shape: a pin that nothing ever updates is a stale dependency by another name.
+
+### Fixed — the token generator dropped unknown groups silently
+
+`tool/generate_tokens.mjs` reads named token groups. Anything the DTCG contract
+added that it did not know about was never visited — no error, no warning — and
+because the generated Dart genuinely did not change, the token-codegen gate
+stayed green. A new category arriving in a tokens MINOR (icon sizes, z-index,
+breakpoints) would simply have vanished.
+
+The generator now fails on any group that is neither emitted nor explicitly
+deferred. Verified by injecting one: it exits 1 with an actionable message.
+
 ### Added — visual coverage for dark mode and three uncovered components
 
 Dark mode had **no** golden coverage at all, which is where every colour bug

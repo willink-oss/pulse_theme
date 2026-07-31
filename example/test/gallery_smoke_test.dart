@@ -11,8 +11,10 @@ import 'package:pulse_theme/pulse_theme.dart';
 import 'package:pulse_theme_example/main.dart';
 
 /// The gallery's vertical list (not the TabBarView's horizontal PageView).
-Finder get _list =>
-    find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable));
+Finder get _list => find.descendant(
+  of: find.byType(ListView),
+  matching: find.byType(Scrollable),
+);
 
 void main() {
   testWidgets('every tab renders its components', (tester) async {

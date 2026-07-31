@@ -46,11 +46,7 @@ class GalleryPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('PULSE Gallery'),
           bottom: const PulseTabBar(
-            tabs: [
-              Tab(text: 'コンポーネント'),
-              Tab(text: '空状態'),
-              Tab(text: 'エラー'),
-            ],
+            tabs: [Tab(text: 'コンポーネント'), Tab(text: '空状態'), Tab(text: 'エラー')],
           ),
         ),
         body: const TabBarView(
@@ -407,11 +403,7 @@ class _ErrorStateTab extends StatelessWidget {
       title: '読み込みに失敗しました',
       // message を省略すると error.toString() が表示され、そのままコピーできる。
       error: 'SocketException: Failed host lookup (api.example.com)',
-      onRetry:
-          () => PulseSnackBar.show(
-            context,
-            message: '再試行しています…',
-          ),
+      onRetry: () => PulseSnackBar.show(context, message: '再試行しています…'),
     );
   }
 }

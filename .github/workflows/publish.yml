@@ -27,7 +27,7 @@ jobs:
       id-token: write # required for pub.dev OIDC Trusted Publisher
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # BOTH toolchain actions are required, and the order is deliberate.
       #
@@ -44,9 +44,9 @@ jobs:
       #   pub get / dry-run / publish is then the one bundled with the pinned
       #   Flutter 3.44.2 — byte-for-byte the toolchain ci.yml already proves
       #   green on every PR, instead of a floating standalone SDK.
-      - uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260 # v1
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           # Match ci.yml's pin (golden-snapshot stability). 3.44.2 ships Dart

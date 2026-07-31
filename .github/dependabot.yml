@@ -1,0 +1,51 @@
+# Dependency update automation.
+#
+# Two of these ecosystems guard things that are otherwise structurally silent:
+#
+#   - github-actions: every action is pinned by commit SHA (see the note in
+#     publish.yml). A SHA never moves, which is the point — but it also means
+#     security fixes never arrive on their own. Dependabot is what turns a pin
+#     from "frozen" into "deliberately updated".
+#
+#   - npm (tool/): the DTCG token contract is pinned exactly by
+#     tool/package-lock.json, and the token-codegen-gate verifies the committed
+#     Dart against *that pin*. So when @willink-labs/tokens publishes a new
+#     version, the gate stays green forever against the old one — drift by
+#     staleness, invisible to CI. Dependabot is the missing bump signal.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"
+
+  - package-ecosystem: npm
+    directory: /tool
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+    # A tokens bump is never just a lockfile change: it can alter the generated
+    # lib/src/tokens/pulse_tokens.dart, which is public API. The
+    # token-codegen-gate will fail the PR until the regenerated Dart is
+    # committed alongside it — that failure is the intended review trigger, not
+    # a nuisance. See doc/releasing.md for the semver mapping.
+    labels:
+      - dependencies
+      - tokens
+
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
+
+  - package-ecosystem: pub
+    directory: /example
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
