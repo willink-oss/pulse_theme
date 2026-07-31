@@ -27,3 +27,11 @@ tool/node_modules/
 # a local failing run silently bakes 4 PNGs into the published tarball forever.
 # (Since 0.7.0 the off-CI diff threshold absorbs cross-arch AA, so local runs pass.)
 test/golden/failures/
+
+# Local tooling artefact: a hook writes one line per tool invocation here.
+# Contents are timestamps and tool names only — no arguments, paths or output —
+# but it is machine-local noise, and it slipped into a commit once already.
+# (pub excludes root dot-directories, so it never reached the published
+# archive; this keeps it out of the repository too.)
+.claude/logs/
+
