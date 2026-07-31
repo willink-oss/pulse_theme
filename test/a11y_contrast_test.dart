@@ -145,7 +145,10 @@ void main() {
         contrastRatio(PulseSemanticsDark.danger, PulseSemanticsDark.brandFg),
         lessThan(4.5),
       );
-      expect(PulseTheme.dark().colorScheme.onError, isNot(const Color(0xFFFFFFFF)));
+      expect(
+        PulseTheme.dark().colorScheme.onError,
+        isNot(const Color(0xFFFFFFFF)),
+      );
     });
   });
 }

@@ -55,6 +55,49 @@ const outFile = process.env.PULSE_TOKENS_OUT
 const primitive = readJson("primitive.json");
 const semantic = readJson("semantic.json");
 
+// ---------------------------------------------------------------------------
+// Coverage guard.
+//
+// The emitter reads named groups. Anything the DTCG contract adds that is not
+// named here is simply never visited — no error, no warning, and the summary
+// at the bottom counts only what it already knew about. So a new token
+// category arriving in a tokens MINOR (icon sizes, z-index, breakpoints…)
+// would vanish silently, and the token-codegen-gate would stay green because
+// the generated Dart genuinely did not change.
+//
+// Fail instead. A new group must be either emitted or explicitly deferred, and
+// deciding which is a review conversation, not a default.
+// ---------------------------------------------------------------------------
+const EMITTED = {
+  primitive: ["color", "radius", "duration", "easing", "spacing", "font-size", "shadow"],
+  semantic: ["color"],
+};
+// Deferred on purpose — see the file header. Listed, not ignored, so the set of
+// known-unprojected groups stays visible.
+const DEFERRED = {
+  primitive: [],
+  semantic: ["motion", "easing"],
+};
+
+for (const [name, tree] of [["primitive", primitive], ["semantic", semantic]]) {
+  const known = new Set([...EMITTED[name], ...DEFERRED[name]]);
+  const unknown = Object.keys(tree).filter(
+    (k) => !k.startsWith("$") && !known.has(k),
+  );
+  if (unknown.length > 0) {
+    console.error(
+      `\nERROR: ${name}.json has token group(s) this generator does not know ` +
+        `about: ${unknown.join(", ")}\n\n` +
+        `  A new DTCG group is never a no-op. Either project it into a Dart ` +
+        `class and add it to EMITTED, or decide it is out of scope for now ` +
+        `and add it to DEFERRED (with a note in the file header saying why).\n` +
+        `  Doing nothing would drop it silently: the generated Dart would be ` +
+        `unchanged, so the token-codegen-gate would pass.\n`,
+    );
+    process.exit(1);
+  }
+}
+
 function readJson(name) {
   const p = path.join(tokensDir, name);
   if (!fs.existsSync(p)) {

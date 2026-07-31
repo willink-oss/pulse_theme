@@ -161,9 +161,7 @@ class PulseErrorState extends StatelessWidget {
                           const SizedBox(height: PulseSpacing.xl),
                           FilledButton(
                             onPressed: onRetry,
-                            child: Text(
-                              retryLabel ?? strings.errorRetryLabel,
-                            ),
+                            child: Text(retryLabel ?? strings.errorRetryLabel),
                           ),
                         ],
                       ],

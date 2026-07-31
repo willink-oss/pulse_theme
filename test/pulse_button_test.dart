@@ -450,18 +450,15 @@ void main() {
       ]) {
         await tester.pumpWidget(
           wrap(
-            PulseButton(
-              tone: tone,
-              onPressed: () {},
-              child: const Text('操作'),
-            ),
+            PulseButton(tone: tone, onPressed: () {}, child: const Text('操作')),
             theme: theme,
           ),
         );
         expect(
-          glowsAround(tester, find.text('操作')).any(
-            (s) => isGlow(s) && s.color == accent.withValues(alpha: 0.3),
-          ),
+          glowsAround(
+            tester,
+            find.text('操作'),
+          ).any((s) => isGlow(s) && s.color == accent.withValues(alpha: 0.3)),
           isTrue,
           reason: 'filled/${tone.name} should glow with its own accent',
         );

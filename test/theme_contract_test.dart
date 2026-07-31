@@ -41,7 +41,10 @@ void main() {
         final t = theme.cardTheme;
         expect(t.color, colors.surface);
         expect(t.elevation, 1);
-        expect(radiusOf(t.shape), BorderRadius.circular(PulsePrimitives.radiusLg));
+        expect(
+          radiusOf(t.shape),
+          BorderRadius.circular(PulsePrimitives.radiusLg),
+        );
         expect(t.clipBehavior, Clip.antiAlias);
       });
 
@@ -112,7 +115,10 @@ void main() {
       test('dialogTheme is a radiusLg surface', () {
         final t = theme.dialogTheme;
         expect(t.backgroundColor, colors.surface);
-        expect(radiusOf(t.shape), BorderRadius.circular(PulsePrimitives.radiusLg));
+        expect(
+          radiusOf(t.shape),
+          BorderRadius.circular(PulsePrimitives.radiusLg),
+        );
       });
 
       test('inputDecorationTheme borders are radiusMd in all four states', () {
@@ -138,13 +144,17 @@ void main() {
           );
         }
 
-        expect((t.enabledBorder! as OutlineInputBorder).borderSide.color,
-            colors.outline);
+        expect(
+          (t.enabledBorder! as OutlineInputBorder).borderSide.color,
+          colors.outline,
+        );
         final focused = (t.focusedBorder! as OutlineInputBorder).borderSide;
         expect(focused.color, colors.primary);
         expect(focused.width, 2);
-        expect((t.errorBorder! as OutlineInputBorder).borderSide.color,
-            colors.error);
+        expect(
+          (t.errorBorder! as OutlineInputBorder).borderSide.color,
+          colors.error,
+        );
 
         // Left null on purpose: a labelStyle without an explicit fontSize lets
         // titleMedium's 18px leak into every field label, because Material's
@@ -159,20 +169,22 @@ void main() {
         expect(t.space, 1);
       });
 
-      test('chipTheme sits on surfaceContainerLow so its outline stays visible',
-          () {
-        final t = theme.chipTheme;
-        // Not surfaceContainerHighest: that maps to `track`, which equals
-        // `border`/`outline` in light, so the outline would vanish.
-        expect(t.backgroundColor, colors.surfaceContainerLow);
-        expect(t.backgroundColor, isNot(colors.surfaceContainerHighest));
-        expect(t.labelStyle!.color, colors.onSurface);
-        expect(t.side!.color, colors.outline);
-        expect(
-          radiusOf(t.shape),
-          BorderRadius.circular(PulsePrimitives.radiusFull),
-        );
-      });
+      test(
+        'chipTheme sits on surfaceContainerLow so its outline stays visible',
+        () {
+          final t = theme.chipTheme;
+          // Not surfaceContainerHighest: that maps to `track`, which equals
+          // `border`/`outline` in light, so the outline would vanish.
+          expect(t.backgroundColor, colors.surfaceContainerLow);
+          expect(t.backgroundColor, isNot(colors.surfaceContainerHighest));
+          expect(t.labelStyle!.color, colors.onSurface);
+          expect(t.side!.color, colors.outline);
+          expect(
+            radiusOf(t.shape),
+            BorderRadius.circular(PulsePrimitives.radiusFull),
+          );
+        },
+      );
 
       test('progressIndicatorTheme tracks primary', () {
         expect(theme.progressIndicatorTheme.color, colors.primary);
@@ -260,52 +272,50 @@ void main() {
   group('re-branding', () {
     const brandBlue = Color(0xFF2E7BFF);
 
-    testWidgets(
-      'PulseTheme.light(colorScheme:) reaches raw Material widgets',
-      (tester) async {
-        final theme = PulseTheme.light(
-          colorScheme: PulseTheme.lightColorScheme.copyWith(
-            primary: brandBlue,
-          ),
-        );
+    testWidgets('PulseTheme.light(colorScheme:) reaches raw Material widgets', (
+      tester,
+    ) async {
+      final theme = PulseTheme.light(
+        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+      );
 
-        // The component themes are built from the scheme that was handed in,
-        // so a plain TextButton — the clubhouse cancel-button case — follows.
-        expect(
-          theme.textButtonTheme.style!.foregroundColor!.resolve({}),
-          brandBlue,
-        );
-        expect(
-          theme.filledButtonTheme.style!.backgroundColor!.resolve({}),
-          brandBlue,
-        );
-        expect(
-          (theme.inputDecorationTheme.focusedBorder! as OutlineInputBorder)
-              .borderSide
-              .color,
-          brandBlue,
-        );
+      // The component themes are built from the scheme that was handed in,
+      // so a plain TextButton — the clubhouse cancel-button case — follows.
+      expect(
+        theme.textButtonTheme.style!.foregroundColor!.resolve({}),
+        brandBlue,
+      );
+      expect(
+        theme.filledButtonTheme.style!.backgroundColor!.resolve({}),
+        brandBlue,
+      );
+      expect(
+        (theme.inputDecorationTheme.focusedBorder! as OutlineInputBorder)
+            .borderSide
+            .color,
+        brandBlue,
+      );
 
-        // …and it survives all the way to a rendered widget.
-        late Color rendered;
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: theme,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) {
-                  rendered = TextButtonTheme.of(
-                    context,
-                  ).style!.foregroundColor!.resolve({})!;
-                  return TextButton(onPressed: () {}, child: const Text('OK'));
-                },
-              ),
+      // …and it survives all the way to a rendered widget.
+      late Color rendered;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                rendered =
+                    TextButtonTheme.of(
+                      context,
+                    ).style!.foregroundColor!.resolve({})!;
+                return TextButton(onPressed: () {}, child: const Text('OK'));
+              },
             ),
           ),
-        );
-        expect(rendered, brandBlue);
-      },
-    );
+        ),
+      );
+      expect(rendered, brandBlue);
+    });
 
     test('slots left alone keep their token values', () {
       final theme = PulseTheme.light(
@@ -333,8 +343,10 @@ void main() {
       final theme = PulseTheme.dark(
         colorScheme: PulseTheme.darkColorScheme.copyWith(primary: brandBlue),
       );
-      expect(theme.textButtonTheme.style!.foregroundColor!.resolve({}),
-          brandBlue);
+      expect(
+        theme.textButtonTheme.style!.foregroundColor!.resolve({}),
+        brandBlue,
+      );
       expect(theme.colorScheme.brightness, Brightness.dark);
       expect(theme.colorScheme.surface, PulseSemanticsDark.bg);
     });
@@ -343,22 +355,24 @@ void main() {
     // documented: if a future Flutter made copyWith rebuild component themes,
     // this test fails and the warning in PulseTheme.light's dartdoc — and in
     // the adoption guide — has to be rewritten.
-    test('ThemeData.copyWith(colorScheme:) does NOT restyle component themes',
-        () {
-      final base = PulseTheme.light();
-      final patched = base.copyWith(
-        colorScheme: base.colorScheme.copyWith(primary: brandBlue),
-      );
+    test(
+      'ThemeData.copyWith(colorScheme:) does NOT restyle component themes',
+      () {
+        final base = PulseTheme.light();
+        final patched = base.copyWith(
+          colorScheme: base.colorScheme.copyWith(primary: brandBlue),
+        );
 
-      expect(patched.colorScheme.primary, brandBlue);
-      expect(
-        patched.textButtonTheme.style!.foregroundColor!.resolve({}),
-        PulseSemantics.brand,
-        reason:
-            'component themes were built before the copyWith, so they still '
-            'carry the violet baseline — this is the bug PulseTheme.light('
-            'colorScheme:) exists to avoid',
-      );
-    });
+        expect(patched.colorScheme.primary, brandBlue);
+        expect(
+          patched.textButtonTheme.style!.foregroundColor!.resolve({}),
+          PulseSemantics.brand,
+          reason:
+              'component themes were built before the copyWith, so they still '
+              'carry the violet baseline — this is the bug PulseTheme.light('
+              'colorScheme:) exists to avoid',
+        );
+      },
+    );
   });
 }

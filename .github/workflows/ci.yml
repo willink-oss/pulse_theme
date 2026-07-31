@@ -19,9 +19,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           # Pinned exact: alchemist golden snapshots are Flutter-version
@@ -59,6 +59,14 @@ jobs:
         if: steps.example.outputs.present == 'true'
         working-directory: example
         run: flutter pub get
+
+      # `dart format` compliance is worth 10 pana points, and nothing else in
+      # this pipeline notices it: `flutter analyze` is clean on unformatted
+      # code. A single unformatted file in lib/ shipped in 0.6.0 and cost the
+      # published score exactly that, which is why this runs before the slower
+      # gates rather than being folded into the pana job.
+      - name: Check formatting
+        run: dart format --set-exit-if-changed .
 
       - name: Analyze (all severities)
         run: flutter analyze
@@ -101,9 +109,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
 
@@ -119,3 +127,65 @@ jobs:
             echo "::error::lib/src/tokens/pulse_tokens.dart is stale vs @willink-labs/tokens. Run \`npm --prefix tool ci && node tool/generate_tokens.mjs\` and commit."
             exit 1
           fi
+
+  # ---------------------------------------------------------------------------
+  # package-score — the two quality claims the README makes about this package,
+  # enforced before merge instead of observed after publish.
+  #
+  # Both existed as "we check it by hand sometimes", and both had already
+  # regressed unnoticed: two broken dartdoc references shipped in 0.5.0 (fixed
+  # in 0.5.1), and an unformatted file in lib/ shipped in 0.6.0 (-10 pana
+  # points). A gate that runs after the release is not a gate.
+  # ---------------------------------------------------------------------------
+  package-score:
+    name: package-score
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: "3.44.2"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # `dart doc` EXITS 0 EVEN WITH WARNINGS — verified, not assumed. So the
+      # naive `run: dart doc --dry-run` would be a gate that can never fail.
+      # Parse the summary instead, and fail closed if the summary line itself
+      # is missing: a changed output format must be a loud failure, never a
+      # silent pass.
+      - name: Doc references resolve (dart doc)
+        run: |
+          set -euo pipefail
+          dart doc --dry-run 2>&1 | tee /tmp/dartdoc.log
+          summary="$(grep -oE 'Found [0-9]+ warnings? and [0-9]+ errors?\.' /tmp/dartdoc.log | tail -1 || true)"
+          if [ -z "$summary" ]; then
+            echo "::error::Could not find the 'Found N warnings and M errors.' summary in dart doc output — its format changed, so this gate can no longer verify anything. Fix the gate."
+            exit 1
+          fi
+          echo "dart doc: $summary"
+          if [ "$summary" != "Found 0 warnings and 0 errors." ]; then
+            echo "::error::dart doc reported unresolved references. They render as broken links in the API docs on pub.dev."
+            grep -iE 'warning|error' /tmp/dartdoc.log || true
+            exit 1
+          fi
+
+      # Pinned exactly, for the same reason the Flutter version is: a pana
+      # release that adds or reweights a check would otherwise turn CI red on a
+      # PR that changed nothing. Bumping this pin is a deliberate change.
+      - name: Install pana
+        run: dart pub global activate pana 0.23.15
+
+      # --exit-code-threshold 0 = the score must stay perfect. The package is at
+      # 160/160 and every deduction pana reports is actionable (formatting,
+      # docs, platform declarations, dependency freshness), so there is no band
+      # of "acceptable" loss to allow for.
+      - name: pana score (must stay 160/160)
+        run: |
+          set -euo pipefail
+          dart pub global run pana --no-warning --exit-code-threshold 0 . 2>&1 | tee /tmp/pana.log
+          grep -E '^Points:' /tmp/pana.log || true
