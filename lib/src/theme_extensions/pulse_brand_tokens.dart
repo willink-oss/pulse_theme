@@ -16,7 +16,7 @@ import '../tokens/pulse_tokens.dart';
 /// final brandTokens = Theme.of(context).extension<PulseBrandTokens>()!;
 /// ```
 @immutable
-class PulseBrandTokens extends ThemeExtension<PulseBrandTokens> {
+final class PulseBrandTokens extends ThemeExtension<PulseBrandTokens> {
   const PulseBrandTokens({
     required this.brandGlow,
     required this.brandGradient,

@@ -15,7 +15,7 @@ import 'package:flutter/widgets.dart';
 /// Primitive (raw) tokens — fixed across the design system; meaningless on
 /// their own. Consumers normally use [PulseSemantics] or the [PulseTheme]
 /// factories instead of referencing primitives directly.
-class PulsePrimitives {
+abstract final class PulsePrimitives {
   const PulsePrimitives._();
   static const Color neutral50 = Color(0xFFF8FAFC);
   static const Color neutral100 = Color(0xFFF1F5F9);
@@ -83,7 +83,7 @@ class PulsePrimitives {
 
 /// Spacing scale (logical px) — paddings / gaps / margins. Mirrors the web
 /// `--spacing-*` scale so layouts stay consistent across web and mobile.
-class PulseSpacing {
+abstract final class PulseSpacing {
   const PulseSpacing._();
   static const double xs = 4.0;
   static const double sm = 8.0;
@@ -95,7 +95,7 @@ class PulseSpacing {
 
 /// Font-size scale (logical px) — mirrors the web `--font-size-*` type
 /// scale (`text-xs` … `text-3xl`). Wired into [PulseTheme]'s `TextTheme`.
-class PulseFontSize {
+abstract final class PulseFontSize {
   const PulseFontSize._();
   static const double fontSizeXs = 12.0;
   static const double fontSizeSm = 14.0;
@@ -109,7 +109,7 @@ class PulseFontSize {
 /// Elevation / glow shadows — the primitive `shadow` scale parsed from CSS
 /// box-shadow into `List<BoxShadow>`. `*Dark` variants come from the
 /// `willink.dark` extension (ADR-0013); brand-tinted `glow` is mode-invariant.
-class PulseShadows {
+abstract final class PulseShadows {
   const PulseShadows._();
   static const List<BoxShadow> soft = [
     BoxShadow(
@@ -168,7 +168,7 @@ class PulseShadows {
 /// Semantic color roles (light) — named by role, not by hue. Aliases in
 /// the DTCG source are folded to their [PulsePrimitives] reference so a
 /// value is never duplicated. This is the default i-Willink mapping.
-class PulseSemantics {
+abstract final class PulseSemantics {
   const PulseSemantics._();
   static const Color bg = Color(0xFFFFFFFF);
   static const Color fg = PulsePrimitives.neutral900;
@@ -202,7 +202,7 @@ class PulseSemantics {
 /// Semantic color roles (dark) — the `$extensions["willink.dark"]` flip of
 /// [PulseSemantics] (ADR-0013). Roles without a dark extension are
 /// mode-invariant and resolve to the same value as the light role.
-class PulseSemanticsDark {
+abstract final class PulseSemanticsDark {
   const PulseSemanticsDark._();
   static const Color bg = PulsePrimitives.neutral950;
   static const Color fg = PulsePrimitives.neutral50;

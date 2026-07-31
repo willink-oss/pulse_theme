@@ -84,7 +84,7 @@ enum PulseButtonSize {
 /// [isLoading] is a separate state from disabled: the button stays at full
 /// opacity (it is still the active affordance) but swaps its label for a
 /// spinner and stops accepting taps.
-class PulseButton extends StatelessWidget {
+final class PulseButton extends StatelessWidget {
   const PulseButton({
     required this.onPressed,
     required this.child,

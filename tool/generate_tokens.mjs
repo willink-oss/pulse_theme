@@ -316,7 +316,7 @@ push("");
 push("/// Primitive (raw) tokens — fixed across the design system; meaningless on");
 push("/// their own. Consumers normally use [PulseSemantics] or the [PulseTheme]");
 push("/// factories instead of referencing primitives directly.");
-push("class PulsePrimitives {");
+push("abstract final class PulsePrimitives {");
 push(`${ind}const PulsePrimitives._();`);
 
 eachColorGroup(primitive.color, (member, leaf) => {
@@ -350,7 +350,7 @@ push("");
 // ---- PulseSpacing ----
 push("/// Spacing scale (logical px) — paddings / gaps / margins. Mirrors the web");
 push("/// `--spacing-*` scale so layouts stay consistent across web and mobile.");
-push("class PulseSpacing {");
+push("abstract final class PulseSpacing {");
 push(`${ind}const PulseSpacing._();`);
 eachLeaf(primitive.spacing, (key, leaf) => {
   push(
@@ -363,7 +363,7 @@ push("");
 // ---- PulseFontSize ----
 push("/// Font-size scale (logical px) — mirrors the web `--font-size-*` type");
 push("/// scale (`text-xs` … `text-3xl`). Wired into [PulseTheme]'s `TextTheme`.");
-push("class PulseFontSize {");
+push("abstract final class PulseFontSize {");
 push(`${ind}const PulseFontSize._();`);
 eachLeaf(primitive["font-size"], (key, leaf) => {
   push(
@@ -393,7 +393,7 @@ function emitShadowList(member, layers) {
 push("/// Elevation / glow shadows — the primitive `shadow` scale parsed from CSS");
 push("/// box-shadow into `List<BoxShadow>`. `*Dark` variants come from the");
 push("/// `willink.dark` extension (ADR-0013); brand-tinted `glow` is mode-invariant.");
-push("class PulseShadows {");
+push("abstract final class PulseShadows {");
 push(`${ind}const PulseShadows._();`);
 eachLeaf(primitive.shadow, (key, leaf) => {
   emitShadowList(camel(key), parseShadow(leaf.$value));
@@ -407,7 +407,7 @@ push("");
 push("/// Semantic color roles (light) — named by role, not by hue. Aliases in");
 push("/// the DTCG source are folded to their [PulsePrimitives] reference so a");
 push("/// value is never duplicated. This is the default i-Willink mapping.");
-push("class PulseSemantics {");
+push("abstract final class PulseSemantics {");
 push(`${ind}const PulseSemantics._();`);
 eachLeaf(semantic.color, (key, leaf) => {
   push(`${ind}static const Color ${camel(key)} = ${colorExpr(leaf.$value)};`);
@@ -419,7 +419,7 @@ push("");
 push("/// Semantic color roles (dark) — the `$extensions[\"willink.dark\"]` flip of");
 push("/// [PulseSemantics] (ADR-0013). Roles without a dark extension are");
 push("/// mode-invariant and resolve to the same value as the light role.");
-push("class PulseSemanticsDark {");
+push("abstract final class PulseSemanticsDark {");
 push(`${ind}const PulseSemanticsDark._();`);
 eachLeaf(semantic.color, (key, leaf) => {
   const dark = leaf.$extensions?.["willink.dark"];

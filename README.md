@@ -302,10 +302,21 @@ Strict [SemVer 2.0](https://semver.org/). PULSE versions **independently** of
 the `@willink-labs/*` npm group and of the legacy `willink_theme` package
 (per [ADR-018]). `0.5.0` is the **first version published to pub.dev** (`0.4.0`
 and earlier were repo-only cuts and never shipped to the registry, but stay in
-[CHANGELOG.md](CHANGELOG.md) as history). `0.4.0` was the component-harden cut
-(48dp tap target, Semantics, TextScaler robustness) on top of the `0.3.0`
-Stage-2 components and the `0.2.0` token-codegen foundation; the public API is
-not frozen until `1.0.0`.
+[CHANGELOG.md](CHANGELOG.md) as history).
+
+**[doc/stability.md](doc/stability.md) is the contract**: what the `1.0.0`
+freeze will cover, what it deliberately will not, how enum additions and
+deprecations are handled, why every public class is `final`, and how
+`@willink-labs/tokens` versions map onto this package's. Read it before
+depending on anything not listed as covered.
+
+Two things worth knowing up front:
+
+- **The public API is not frozen until `1.0.0`**, and below 1.0 a *minor* bump
+  may break you (`0.6 → 0.7`). Pub's caret agrees: `^0.7.0` means
+  `>=0.7.0 <0.8.0`.
+- **Adding a value to a `Pulse*` enum ships in a minor release.** Do not write
+  exhaustive `switch` expressions over them.
 
 Releases are cut from a `v<version>` git tag — see
 [CHANGELOG.md](CHANGELOG.md) for the per-version history.
