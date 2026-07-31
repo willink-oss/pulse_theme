@@ -17,7 +17,7 @@ import '../tokens/pulse_tokens.dart';
 ///   error: (err, _) => PulseErrorState(error: err),
 /// )
 /// ```
-class PulseLoadingState extends StatelessWidget {
+final class PulseLoadingState extends StatelessWidget {
   const PulseLoadingState({
     super.key,
     this.message,

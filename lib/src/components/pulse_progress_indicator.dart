@@ -30,7 +30,7 @@ import 'package:flutter/material.dart';
 /// full-area loading *states* (centered spinner + optional caption replacing
 /// the content); use [PulseProgressIndicator] for *inline* linear progress
 /// inside otherwise-rendered UI — uploads, downloads, multi-step flows.
-class PulseProgressIndicator extends StatelessWidget {
+final class PulseProgressIndicator extends StatelessWidget {
   const PulseProgressIndicator({
     super.key,
     this.value,

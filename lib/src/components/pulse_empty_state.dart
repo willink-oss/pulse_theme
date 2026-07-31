@@ -20,7 +20,7 @@ import '../tokens/pulse_tokens.dart';
 /// Colors derive from `Theme.of(context).colorScheme` (icon = onSurfaceVariant,
 /// title = onSurfaceVariant, description = outline) so the widget adapts to a
 /// consumer's ColorScheme override automatically.
-class PulseEmptyState extends StatelessWidget {
+final class PulseEmptyState extends StatelessWidget {
   const PulseEmptyState({
     required this.icon,
     required this.title,

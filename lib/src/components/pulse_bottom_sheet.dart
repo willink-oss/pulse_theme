@@ -35,7 +35,7 @@ import '../tokens/pulse_tokens.dart';
 /// alpha, matching the React Sheet overlay (`bg-black/50`); the top corners
 /// use [PulsePrimitives.radiusXl] (16px — the DS radius feel, instead of
 /// the Material 3 default 28px).
-class PulseBottomSheet extends StatelessWidget {
+final class PulseBottomSheet extends StatelessWidget {
   const PulseBottomSheet({required this.child, super.key, this.title});
 
   /// Body content rendered inside the sheet. Required.

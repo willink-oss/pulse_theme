@@ -30,7 +30,7 @@ import 'package:flutter/material.dart';
 /// Tab selection state lives in a [TabController] — pass one via [controller]
 /// or rely on an ancestor [DefaultTabController], exactly like [TabBar].
 /// Implements [PreferredSizeWidget] so it slots into [AppBar.bottom].
-class PulseTabBar extends StatelessWidget implements PreferredSizeWidget {
+final class PulseTabBar extends StatelessWidget implements PreferredSizeWidget {
   const PulseTabBar({
     required this.tabs,
     super.key,

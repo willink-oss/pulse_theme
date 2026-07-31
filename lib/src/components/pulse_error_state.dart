@@ -30,7 +30,7 @@ import '../tokens/pulse_tokens.dart';
 /// ```dart
 /// MaterialApp(theme: PulseTheme.light(strings: PulseStrings.ja));
 /// ```
-class PulseErrorState extends StatelessWidget {
+final class PulseErrorState extends StatelessWidget {
   const PulseErrorState({
     super.key,
     this.title,

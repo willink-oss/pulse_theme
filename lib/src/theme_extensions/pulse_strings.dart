@@ -34,7 +34,7 @@ import 'package:flutter/material.dart';
 /// );
 /// ```
 @immutable
-class PulseStrings extends ThemeExtension<PulseStrings> {
+final class PulseStrings extends ThemeExtension<PulseStrings> {
   const PulseStrings({
     required this.errorTitle,
     required this.errorRetryLabel,

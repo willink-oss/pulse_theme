@@ -56,7 +56,7 @@ enum PulseSnackBarVariant {
 /// change because an app's brand did. They do flip between light and dark.
 ///
 /// Reuses Material 3 SnackBar timing and queueing — no custom queue logic.
-class PulseSnackBar {
+abstract final class PulseSnackBar {
   const PulseSnackBar._();
 
   /// Builds the brand-styled [SnackBar] and shows it via the nearest

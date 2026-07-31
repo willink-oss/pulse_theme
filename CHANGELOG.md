@@ -7,7 +7,63 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [0.8.0] — unreleased
+
+### Added — a written stability policy
+
+[`doc/stability.md`](doc/stability.md) states what the `1.0.0` freeze will
+cover and what it deliberately will not. Until now the only promise on record
+was "strict SemVer, not frozen until 1.0.0", which says nothing about the
+questions that actually come up: is a visual change breaking? what happens when
+Flutter moves the typescale? how long does a deprecation live? can I `implements`
+your widget?
+
+Some of it is a commitment we had not made before:
+
+- **The `ThemeData` contract is covered by the freeze.** That is the surface
+  most consumers actually depend on — an app can use `PulseTheme` with zero
+  `Pulse*` widgets and still be broken by a change to it.
+- **The accessibility guarantees are covered.** Regressing an asserted contrast
+  ratio or tap-target minimum is breaking, even though nothing fails to
+  compile.
+- **Adding an enum value ships in a minor release**, with the reasoning stated
+  and the mitigation spelled out (don't write exhaustive switches). The
+  alternative — every new variant waiting for a major — would mean a design
+  system that cannot grow between majors.
+- **A visual change caused by a Flutter upgrade is not our breaking change**,
+  because our `TextTheme` sets `fontSize` on seven roles and inherits
+  everything else from Material 3.
+- **Goldens guarantee layout and solid colours, not letterforms or shadows** —
+  they run with text flattened and shadows off so they compare across machines.
+  Stated as a limit of the promise rather than left to be discovered.
+- **A deprecation lives at least one minor release**, is never removed in a
+  patch, and must ship with a described migration.
+
+### Changed — BREAKING: every public class is `final` or `abstract final`
+
+`Pulse*` classes can no longer be `implements`ed, `extends`ed or mixed in.
+
+This is what makes "adding an optional parameter is a minor release" actually
+true. On an ordinary open Dart class, adding *any* member breaks anyone who
+`implements` it — so the additive-evolution promise the rest of this package
+relies on was not something it could keep. All 18 public classes were plain
+`class` until now.
+
+Static-only namespaces (`PulseTheme`, `PulseSnackBar`, and the six generated
+token classes) are `abstract final`; widgets and theme extensions are `final`.
+Compose rather than inherit: wrap a `Pulse*` widget, or build brand tokens with
+`PulseBrandTokens.pulse.copyWith(...)`.
+
+### Added — token provenance in the changelog
+
+Each release now records the `@willink-labs/tokens` version its
+`lib/src/tokens/` was generated from, so "which token contract is inside this
+release" is answerable from the CHANGELOG alone. Backfilled for `0.5.1`–`0.7.0`
+(all 1.9.0).
+
 ## [0.7.0] — 2026-07-31
+
+_Generated from `@willink-labs/tokens` 1.9.0._
 
 Quality infrastructure, so that "no visual or behavioural regressions within
 `1.x`" is a claim the repository can actually back.
@@ -138,6 +194,8 @@ architecture. `PULSE_SKIP_GOLDENS=1` skips the comparison for a host that
 diverges further; it cannot silence CI.
 
 ## [0.6.0] — 2026-07-31
+
+_Generated from `@willink-labs/tokens` 1.9.0._
 
 API decisions being taken deliberately **before** the `1.0.0` freeze —
 the ones that stop being fixable once the public surface is frozen.
@@ -323,6 +381,8 @@ valid, and neither axis leaks into the other.
   `golden-update` workflow.
 
 ## [0.5.1] — 2026-07-30
+
+_Generated from `@willink-labs/tokens` 1.9.0._
 
 ### Fixed — documentation
 

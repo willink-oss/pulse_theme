@@ -18,7 +18,7 @@ import 'theme_extensions/pulse_strings.dart';
 import 'tokens/pulse_tokens.dart';
 
 /// Material 3 [ThemeData] factory for the PULSE design system.
-class PulseTheme {
+abstract final class PulseTheme {
   const PulseTheme._();
 
   /// PULSE light theme (the default — vibrant violet baseline).

@@ -19,7 +19,7 @@ import '../tokens/pulse_tokens.dart';
 ///   child: const Column(children: [...]),
 /// )
 /// ```
-class PulseSectionCard extends StatelessWidget {
+final class PulseSectionCard extends StatelessWidget {
   const PulseSectionCard({
     required this.child,
     super.key,
