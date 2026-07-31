@@ -2,7 +2,7 @@
 // actually paint.
 //
 // Scope is deliberately narrow: a *solid* fill plus the text drawn on top of
-// it, i.e. exactly what `PulseButton(variant: filled | danger)` renders. Those
+// it, i.e. exactly what `PulseButton(variant: filled)` renders in either tone. Those
 // are the pairs a token flip can silently break — dark `onError` did break,
 // which is why this file exists. Text-on-surface pairs (the `outline` / `ghost`
 // label, which is `primary` over `surface`) are NOT covered here; see
@@ -53,7 +53,7 @@ void main() {
   });
 
   group('PulseButton solid variants meet WCAG AA (4.5:1)', () {
-    // `filled` reads (primary, onPrimary); `danger` reads (error, onError).
+    // tone `brand` reads (primary, onPrimary); tone `danger` reads (error, onError).
     // See PulseButton._accent / ._foreground.
     final pairs = <String, (Color, Color)>{
       'light filled  (primary/onPrimary)': (

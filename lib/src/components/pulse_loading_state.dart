@@ -44,8 +44,14 @@ final class PulseLoadingState extends StatelessWidget {
   /// Optional caption shown below the spinner. Ignored in [inline].
   final String? message;
 
-  /// Spinner edge length in logical pixels. Purely a size — it no longer
-  /// selects the layout.
+  /// Spinner edge length in logical pixels.
+  ///
+  /// Purely a size as far as *layout* goes — it no longer selects between the
+  /// bare and captioned forms (that belongs to [PulseLoadingState.inline]).
+  /// Stroke weight does still step with it: 2.5 at or below 24, 3 above. That
+  /// threshold is a visual detail, not part of the frozen contract, so it may
+  /// move in a minor — but it is named here rather than left as a surprise 0.5
+  /// logical pixels wide.
   final double size;
 
   /// Whether to render the bare, padding-less layout. Set only by [inline].

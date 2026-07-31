@@ -39,8 +39,10 @@ flutter run
 - **テーマ配線はこれだけ** — `MaterialApp` に `theme: PulseTheme.light()` /
   `darkTheme: PulseTheme.dark()` / `themeMode: ThemeMode.system` を渡すだけ。
   OS のライト / ダーク設定に自動で追従する。
-- **再ブランドは `copyWith`** — `Pulse*` は色を `Theme.of(context).colorScheme` から読むので、
-  `PulseTheme.light().copyWith(colorScheme: ...)` でギャラリー全体の色が入れ替わる。
+- **再ブランドはファクトリの `colorScheme` 引数** — AppBar のパレットアイコンで実際に切り替わる。
+  `PulseTheme.light().copyWith(colorScheme: ...)` では**効かない**（component theme が構築時の
+  scheme から焼き込み済みで、素の Material ウィジェットはそちらを読むため）。空状態 / エラータブの
+  CTA は素の Material ボタンなので、その違いが目で見える。
 - **`PulseTabBar` は `TabController` を自前で持たない**（Material の `TabBar` と同じ契約）。
   この例では `DefaultTabController` を祖先に置いている。
 - **`PulseBottomSheet.show<T>()`** は `Navigator.pop(context, value)` に渡した値で解決する

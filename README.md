@@ -141,7 +141,7 @@ re-tints the destructive button the same way it re-tints the primary one.
 ```yaml
 # pubspec.yaml
 dependencies:
-  pulse_theme: ^0.6.0
+  pulse_theme: ^1.0.0
 ```
 
 …or let pub add the current constraint for you:
@@ -280,7 +280,7 @@ When an app is ready, the dependency swap is:
 ```yaml
 dependencies:
   # willink_theme: ^1.5.0   ← remove
-  pulse_theme: ^0.6.0
+  pulse_theme: ^1.0.0
 ```
 
 The symbol port is a 1:1 rename with identical argument shapes —
