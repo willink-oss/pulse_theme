@@ -330,7 +330,7 @@ dart.dev 原文: *"a published package lasts forever"* / *"Retraction isn't dele
 - **clubhouse** — PR #34（`chore/migrate-to-pulse-theme`）の git 依存ブロックを
   `pulse_theme: ^0.5.0` に差し替え、`flutter pub get` で `pubspec.lock` を再生成してから ready for review。
 - **その他の社内アプリ**（tsuu / nami / willink-chess 等）— theme 系依存が無く SDK 互換なので
-  `pulse_theme: ^0.5.0` を追加するだけで採用できる。
+  `pulse_theme: ^0.6.0` を追加するだけで採用できる。
 - 導入手順そのものは [`doc/adoption.md`](adoption.md) を参照。
 
 `willink_theme`（pub.dev, 1.5.0）は PULSE に置き換わったので、
