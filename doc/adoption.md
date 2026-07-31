@@ -31,8 +31,7 @@
 
 Material 3 前提（`ThemeData(useMaterial3: true)`）。Material 2 のアプリにそのまま載せる想定はしていない。
 
-> **未確認**: pub.dev 上での公開状態（初回公開が完了しているか）は、本ドキュメント作成時点では検証していない。
-> `flutter pub add` が `Could not find package pulse_theme` で失敗する場合は、まだ初回公開前の可能性がある。
+公開済み: https://pub.dev/packages/pulse_theme （publisher `i-willink.com`）。
 
 ---
 
@@ -47,7 +46,7 @@ flutter pub add pulse_theme
 ```yaml
 dependencies:
   # PULSE — i-Willink mobile-first Design System (Material 3 ThemeData factory)
-  pulse_theme: ^0.5.0
+  pulse_theme: ^0.6.0
 ```
 
 ```bash
@@ -90,8 +89,8 @@ barrel が export しているシンボルは以下の 20 個で全部（`lib/pu
 
 ## 3. テーマ配線
 
-`PulseTheme` は `ThemeData` のファクトリ。実在するメンバーは **`light()` と `dark()` の 2 つの static メソッドだけ**（どちらも引数なし・戻り値 `ThemeData`）。
-コンストラクタは private（`const PulseTheme._()`）なのでインスタンス化はできない。
+`PulseTheme` は `ThemeData` のファクトリ。実在するメンバーは **`light()` / `dark()` の 2 つの static メソッド**と、その既定 scheme を公開する **`lightColorScheme` / `darkColorScheme`** の 2 定数。
+`light()` / `dark()` はどちらも省略可能な `colorScheme` / `brandTokens` を取る（無指定なら PULSE の既定値 → [6 章](#6-ブランド色の上書き)）。コンストラクタは private（`const PulseTheme._()`）なのでインスタンス化はできない。
 
 ```dart
 import 'package:flutter/material.dart';
@@ -119,7 +118,9 @@ class MyApp extends StatelessWidget {
 - `scaffoldBackgroundColor`（= `colorScheme.surface`）
 - `textTheme`（後述）
 - `extensions: [PulseBrandTokens.pulse]`（dark は `PulseBrandTokens.pulseDark`）
-- `appBarTheme` / `cardTheme` / `filledButtonTheme` / `elevatedButtonTheme` / `outlinedButtonTheme` / `textButtonTheme` / `inputDecorationTheme` / `dividerTheme` / `chipTheme` / `progressIndicatorTheme`
+- `appBarTheme` / `cardTheme` / `filledButtonTheme` / `elevatedButtonTheme` / `outlinedButtonTheme` / `textButtonTheme` / `dialogTheme` / `inputDecorationTheme` / `dividerTheme` / `chipTheme` / `progressIndicatorTheme`
+
+これらの投影内容は `test/theme_contract_test.dart` が 1 プロパティずつ固定している（`Pulse*` を 1 つも使わず素の Material を載せるアプリが依存しているのはこの面なので、変更が差分に必ず現れるようにしてある）。
 
 ### TextTheme について（既存アプリで見た目が動く箇所）
 
@@ -361,7 +362,7 @@ PulseButton(
 
 削除 / 取り消し / 解約などに使う。**形は一切変えず色だけを差し替える軸**なので、`filled` に載せれば `filled` と同じ `FilledButton`（同じ shape・padding・角丸 8・同じグロー影）のまま色だけが赤くなる。
 
-色は **`colorScheme.error` / `colorScheme.onError`** から取る。固定トークンの `PulseSemantics.danger` は使っていないので、[6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` でブランドを差し替えると `filled` と同じように追従する。
+色は **`colorScheme.error` / `colorScheme.onError`** から取る。固定トークンの `PulseSemantics.danger` は使っていないので、[6 章](#6-ブランド色の上書き)の `PulseTheme.light(colorScheme: ...)` でブランドを差し替えると `filled` と同じように追従する。
 
 > **ライト / ダークで文字色が違う**。ライトは赤 600 の上に白（4.83:1）。ダークの `error` は明るい赤 500（`#EF4444`）なので、白だと 3.76:1 で WCAG AA（4.5:1）を割る。そのためダークの `onError` だけは白ではなく背景インク `#020617` を使っている（5.36:1）。`copyWith` で `error` を差し替えるときは `onError` も一緒に見直すこと（[7.2](#72-アプリ側がやること) の 3）。
 
@@ -417,7 +418,7 @@ PulseButton(
 
 `PulseButton` に **任意色を渡す口は無い**。`backgroundColor` / `foregroundColor` / `style` といった引数は存在しない。
 
-色は必ず `colorScheme`（`tone: brand` なら `primary` / `onPrimary`、`tone: danger` なら `error` / `onError`）から実行時に読む。DS として色を呼び出し側に開放しないのは意図的な設計で、再ブランドの正道は [6 章](#6-ブランド色の上書き)の `copyWith(colorScheme: ...)` 一本。
+色は必ず `colorScheme`（`tone: brand` なら `primary` / `onPrimary`、`tone: danger` なら `error` / `onError`）から実行時に読む。DS として色を呼び出し側に開放しないのは意図的な設計で、再ブランドの正道は [6 章](#6-ブランド色の上書き)の `PulseTheme.light(colorScheme: ...)` 一本。
 どうしても DS 外の色が要る 1 箇所は、`PulseButton` を使わず素の `FilledButton` を書く方が正直（DS のボタンに見えて DS に従わないものを増やさない）。
 
 ### 5.2 `PulseEmptyState`
@@ -649,72 +650,60 @@ const PulseProgressIndicator(semanticsLabel: 'アップロード中'); // 不定
 
 ## 6. ブランド色の上書き
 
-`ColorScheme` を差し替えるだけ。`Pulse*` コンポーネントは実行時に `Theme.of(context).colorScheme` を読むので、上書きがそのまま流れる。
+**`0.6.0` から、ファクトリに `colorScheme` を直接渡すのが正道**。`PulseTheme.lightColorScheme` を起点にすれば、上書きしないスロットはトークンの値を保つ。
 
 ```dart
+const brandBlue = Color(0xFF2E7BFF);
+
 MaterialApp(
-  theme: PulseTheme.light().copyWith(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF2563EB), // = PulsePrimitives.blue600
-    ),
+  theme: PulseTheme.light(
+    colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
   ),
-  darkTheme: PulseTheme.dark().copyWith(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF2563EB),
-      brightness: Brightness.dark,
-    ),
+  darkTheme: PulseTheme.dark(
+    colorScheme: PulseTheme.darkColorScheme.copyWith(primary: brandBlue),
   ),
   themeMode: ThemeMode.system,
   home: const HomePage(),
 );
 ```
 
-`PulseButton` については、この上書きが効くことを本リポジトリのテストが保証している
-（`test/pulse_button_test.dart` の `respects copyWith(colorScheme: ...) override`）。
-`PulseButton` は自前で `backgroundColor: colors.primary` を実行時に注入するため、確実に追従する。
-
-### ⚠ `copyWith(colorScheme:)` の効果範囲（重要）
-
-`ThemeData.copyWith` は `colorScheme` フィールドを差し替えるだけで、**`PulseTheme` が構築時に焼き込んだ各コンポーネントテーマ（`filledButtonTheme` / `outlinedButtonTheme` / `chipTheme` / `inputDecorationTheme` など）は再計算されない**。
-`_base()` はこれらを構築時の `colorScheme` から組み立てているため、上書き後も旧ブランド色が残る。
-
-影響するのは「素の Material ウィジェット」および「内部で素の Material ウィジェットを使う PULSE コンポーネント」。具体的には:
-
-- 素の `FilledButton` / `ElevatedButton` / `OutlinedButton` / `TextButton` / `Chip` / `TextField`
-- `PulseEmptyState` の CTA（内部が `FilledButton.icon`）
-- `PulseErrorState` の再試行ボタン（内部が `FilledButton`）とコピーボタン（`TextButton.icon`）
-
-全面的に再ブランドしたい場合は、`colorScheme` と併せてボタン系テーマも上書きする。
+`PulseBrandTokens`（グラデーション / グロー）は `ColorScheme` とは別系統の `ThemeExtension` なので、**同じ呼び出しで一緒に差し替える**。忘れると「CTA は青・グローは紫」のちぐはぐになる。
 
 ```dart
-final scheme = ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB));
-
-final theme = PulseTheme.light().copyWith(
-  colorScheme: scheme,
-  filledButtonTheme: FilledButtonThemeData(
-    style: FilledButton.styleFrom(
-      backgroundColor: scheme.primary,
-      foregroundColor: scheme.onPrimary,
-    ),
-  ),
-  // 必要に応じて outlinedButtonTheme / textButtonTheme / chipTheme / inputDecorationTheme も
+PulseTheme.light(
+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
 );
 ```
 
-> **未確認**: 上記の「component theme が追従しない」はソース（`ThemeData.copyWith` の仕様 + `_base()` の実装）からの帰結であり、実機・テストでの実測はしていない。
-> 再ブランドを行うアプリは、`PulseEmptyState` / `PulseErrorState` の CTA 色を必ず目視確認すること。
+### ⚠ `copyWith(colorScheme:)` は使わないこと（重要）
 
-`PulseBrandTokens`（グラデーション / グロー）も差し替えたい場合は `extensions` を上書きする。
+`ThemeData.copyWith` は `colorScheme` フィールドを差し替えるだけで、**`PulseTheme` が構築時に焼き込んだ各コンポーネントテーマ（`filledButtonTheme` / `textButtonTheme` / `chipTheme` / `inputDecorationTheme` など）は再計算されない**。Material のウィジェットが読むのはそちらなので、アプリが**真っ二つに割れる**:
 
-```dart
-PulseTheme.light().copyWith(
-  extensions: <ThemeExtension<dynamic>>[
-    PulseBrandTokens.pulse.copyWith(
-      brandGradient: const LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF06B6D4)]),
-    ),
-  ],
-);
+| | 追従する | 追従しない |
+|---|---|---|
+| 色の読み方 | `Theme.of(context).colorScheme` を build 時に読む | 構築時に焼き込まれた component theme を読む |
+| 該当 | `Pulse*` コンポーネント（`PulseButton` など） | 素の `FilledButton` / `TextButton` / `Chip` / `TextField`、および内部で素の Material を使う `PulseEmptyState` の CTA・`PulseErrorState` の再試行 / コピーボタン |
+
+**これは実測で確定している**（`test/theme_contract_test.dart` の «`ThemeData.copyWith(colorScheme:)` does NOT restyle component themes»）。0.5.x の本ドキュメントは「未確認」と書いていたが、**実際に起きる**。青ブランドのアプリでキャンセルボタンだけ DS の紫で描かれるのがこの症状。
+
+`PulseTheme.light(colorScheme: ...)` は component theme を渡された scheme から組み立て直すので、両側が一致する。
+
+<details>
+<summary>0.5.x で <code>copyWith</code> を使っていた場合の移行</summary>
+
+```diff
+-PulseTheme.light().copyWith(
+-  colorScheme: ColorScheme.fromSeed(seedColor: brandBlue),
+-)
++PulseTheme.light(
++  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
++)
 ```
+
+`ColorScheme.fromSeed` から `lightColorScheme.copyWith` に変えている点に注意。`fromSeed` は 30 以上のスロットを**すべて**seed から作り直すので、PULSE のトークン（`surface` / `fg` / `border` など）がまるごと Material の生成値に置き換わる。`copyWith` なら変えたいスロットだけが変わる。
+
+</details>
 
 ---
 
@@ -738,7 +727,7 @@ PulseTheme.light().copyWith(
 
 コントラストの自動検証は**塗りバリアントの (塗り, 文字) ペアだけ**に入っている（上表）。**面（surface）の上に載る文字色は対象外**で、既知の未達がある:
 
-- **ダークの `outline` / `ghost` のラベル**（`primary` = brand600 `#7C3AED` を `surface` = `#020617` の上に描く）は **3.54:1** で、通常サイズ文字の AA（4.5:1）に届かない。ライトは 5.70:1 で問題ない。ダークで `outline` / `ghost` を主要導線に使うなら、アプリ側で `copyWith(colorScheme:)` の `primary` を明るくするか `filled` を使うこと。
+- **ダークの `outline` / `ghost` のラベル**（`primary` = brand600 `#7C3AED` を `surface` = `#020617` の上に描く）は **3.54:1** で、通常サイズ文字の AA（4.5:1）に届かない。ライトは 5.70:1 で問題ない。ダークで `outline` / `ghost` を主要導線に使うなら、アプリ側で `PulseTheme.light(colorScheme: ...)` の `primary` を明るくするか `filled` を使うこと。
 - スナックバー / タブバー / 各種 muted テキストのコントラストは未測定。
 
 これらは 0.5.0 時点の既知の状態であり、直近の変更で悪化したものではない（`danger` のダークだけは 0.5.0 で導入と同時に修正済み）。
@@ -755,7 +744,7 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
    - `FocusTraversalGroup` / `FocusTraversalOrder` で論理順を保証する。PULSE はレイアウト順以上の制御をしない。
    - モーダル（`PulseBottomSheet`）を開いたあとの初期フォーカス位置は、必要ならアプリ側で `FocusScope` を使って指定する。
 3. **コントラスト検証**
-   - `copyWith(colorScheme: ...)` でブランド色を差し替えた瞬間、PULSE 側のコントラスト前提は無効になる。差し替えたら WCAG AA（通常テキスト 4.5:1 / 大きい文字 3:1）を自分で測る。
+   - `PulseTheme.light(colorScheme: ...)` でブランド色を差し替えた瞬間、PULSE 側のコントラスト前提は無効になる。差し替えたら WCAG AA（通常テキスト 4.5:1 / 大きい文字 3:1）を自分で測る。
    - ダークモードも別途測る。
 4. **画面単位の文字拡大確認**
    - PULSE のコンポーネント単体は 3.0× まで検証済みだが、**画面全体の合成レイアウトは未検証**。`MediaQuery` の `textScaler` を上げた状態で主要画面を通しで確認する。
@@ -816,7 +805,7 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
 -  # i-Willink Design System (Material 3 ThemeData factory · WillinkBrand.clublink)
 -  willink_theme: ^1.5.0
 +  # PULSE — i-Willink mobile-first Design System (Material 3 ThemeData factory).
-+  pulse_theme: ^0.5.0
++  pulse_theme: ^0.6.0
 ```
 
 ```bash
@@ -905,7 +894,7 @@ PULSE 側が改善である（フォームのレイアウトが跳ねなくな�
 
 | 無いもの | 状況 | 回避策 |
 |---|---|---|
-| `PulseButton` の任意色上書き（`backgroundColor` / `foregroundColor` / `style`） | **無い。設計判断として開けていない** | 再ブランドは `copyWith(colorScheme: ...)`（[6 章](#6-ブランド色の上書き)）。DS 外の色が必須の 1 箇所は素の `FilledButton` を書く |
+| `PulseButton` の任意色上書き（`backgroundColor` / `foregroundColor` / `style`） | **無い。設計判断として開けていない** | 再ブランドは `PulseTheme.light(colorScheme: ...)`（[6 章](#6-ブランド色の上書き)）。DS 外の色が必須の 1 箇所は素の `FilledButton` を書く |
 | ~~`outline` / `ghost` の danger 版~~ | **`0.6.0` で解消**（`variant` × `tone` の 2 軸化により 6 通り全部が表現可能） | `variant: outline, tone: danger` |
 | アイコンのみのボタン（`IconButton` 相当） | **無い** | `Semantics(label: ...)` を巻いた素の `IconButton` |
 | ボタン内の成功アニメーション / チェックマーク遷移 | **無い**（`isLoading` はスピナーのみ） | 呼び出し側で状態を持つ |
@@ -958,7 +947,7 @@ https://github.com/willink-oss/pulse_theme/issues
 - `flutter --version` の出力
 - `pulse_theme` の解決済みバージョン（`pubspec.lock` の該当エントリ）
 - 再現する最小コード（できれば `MaterialApp(theme: PulseTheme.light(), home: ...)` の形）
-- ダーク / ライトどちらで起きるか、`copyWith(colorScheme: ...)` を使っているか
+- ダーク / ライトどちらで起きるか、`PulseTheme.light(colorScheme: ...)` でブランドを差し替えているか
 - アクセシビリティ関連なら、`TextScaler` の倍率と画面サイズ
 
 ---

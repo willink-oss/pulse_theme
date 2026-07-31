@@ -6,9 +6,10 @@
 // The `TextTheme` sizes come from `PulseFontSize`, and component radii from
 // `PulsePrimitives`. Nothing here hand-mirrors a token value.
 //
-// Brand customization is the standard Material way — override the resulting
-// `ColorScheme` with `copyWith(colorScheme: ColorScheme.fromSeed(...))`; every
-// component theme below reads from `colorScheme`, so the override flows through.
+// Brand customization goes through the factories' own `colorScheme` argument,
+// NOT through `ThemeData.copyWith(colorScheme: ...)` — see the note on
+// [PulseTheme.light]. The component themes below are built *from* the scheme
+// they are handed, so they can only be correct if they are handed the right one.
 
 import 'package:flutter/material.dart';
 
@@ -24,7 +25,50 @@ class PulseTheme {
   /// ```dart
   /// MaterialApp(theme: PulseTheme.light());
   /// ```
-  static ThemeData light() => _base(_lightScheme, PulseBrandTokens.pulse);
+  ///
+  /// ## Re-branding
+  ///
+  /// Pass your own [colorScheme] — start from [lightColorScheme] so every slot
+  /// you do not care about keeps its token value:
+  ///
+  /// ```dart
+  /// MaterialApp(
+  ///   theme: PulseTheme.light(
+  ///     colorScheme: PulseTheme.lightColorScheme.copyWith(
+  ///       primary: const Color(0xFF2E7BFF),
+  ///     ),
+  ///   ),
+  /// );
+  /// ```
+  ///
+  /// **Do not use `PulseTheme.light().copyWith(colorScheme: ...)` for this.**
+  /// `ThemeData.copyWith` replaces the `colorScheme` field, but the component
+  /// themes (`filledButtonTheme`, `textButtonTheme`, `inputDecorationTheme`, …)
+  /// have already been *built* from the old scheme by then, and Material reads
+  /// those — so a plain `TextButton` or `FilledButton` keeps painting the
+  /// violet baseline while `Pulse*` widgets, which resolve
+  /// `Theme.of(context).colorScheme` at build time, switch to your brand. That
+  /// split is not hypothetical: it is what makes a cancel button render DS
+  /// violet inside a blue-branded app.
+  ///
+  /// [brandTokens] re-brands the non-Material extras (glow, gradients) in the
+  /// same call. They live in a [PulseBrandTokens] extension rather than the
+  /// `ColorScheme`, so overriding only the scheme would leave a blue CTA with a
+  /// violet glow:
+  ///
+  /// ```dart
+  /// PulseTheme.light(
+  ///   colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+  ///   brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+  /// );
+  /// ```
+  static ThemeData light({
+    ColorScheme? colorScheme,
+    PulseBrandTokens? brandTokens,
+  }) => _base(
+    colorScheme ?? lightColorScheme,
+    brandTokens ?? PulseBrandTokens.pulse,
+  );
 
   /// PULSE dark theme — the semantic flip of [light] (ADR-0013). Brand identity
   /// is mode-invariant (`primary` stays the same brand violet); surfaces and
@@ -37,7 +81,19 @@ class PulseTheme {
   ///   themeMode: ThemeMode.system,
   /// );
   /// ```
-  static ThemeData dark() => _base(_darkScheme, PulseBrandTokens.pulseDark);
+  ///
+  /// Takes the same [colorScheme] / [brandTokens] overrides as [light] — start
+  /// from [darkColorScheme]. When you re-brand both modes, re-check contrast in
+  /// dark separately: a brand color that clears WCAG AA on a light surface can
+  /// fail on a dark one, which is why PULSE's own dark `onError` is the only
+  /// slot that does not reuse `brandFg`.
+  static ThemeData dark({
+    ColorScheme? colorScheme,
+    PulseBrandTokens? brandTokens,
+  }) => _base(
+    colorScheme ?? darkColorScheme,
+    brandTokens ?? PulseBrandTokens.pulseDark,
+  );
 
   // === ColorSchemes ===
   // Every slot is a semantic role. Slots Material requires but the DTCG
@@ -46,7 +102,11 @@ class PulseTheme {
   // except where that would fail WCAG AA against the fill it sits on; see
   // dark `onError` below.
 
-  static const ColorScheme _lightScheme = ColorScheme(
+  /// The light `ColorScheme` PULSE projects from the token contract.
+  ///
+  /// Exposed so a re-brand can start from it and override only the slots it
+  /// cares about — see [light].
+  static const ColorScheme lightColorScheme = ColorScheme(
     brightness: Brightness.light,
     primary: PulseSemantics.brand,
     onPrimary: PulseSemantics.brandFg,
@@ -70,9 +130,27 @@ class PulseTheme {
     surfaceContainerHighest: PulseSemantics.track,
     outline: PulseSemantics.border,
     outlineVariant: PulseSemantics.border,
+    // Material tints elevated surfaces with this. Left unset it falls back to
+    // `primary`, i.e. the same value — set explicitly so the tint is part of
+    // the token contract instead of an inherited Material default that a
+    // re-brand could move without anyone deciding to.
+    surfaceTint: PulseSemantics.brand,
+    // Brand accent for content sitting ON `inverseSurface` (a Material SnackBar
+    // action label is the common case). Unset, Material falls back to
+    // `onPrimary` — white — which happens to read here (17.85:1 on the dark
+    // inverse surface) but is invisible in dark mode; see the dark scheme.
+    // Light's inverse surface is the dark ink, so the accent steps up the brand
+    // ladder to stay legible: brand-400 on #0F172A is 6.56:1. The DTCG contract
+    // has no semantic role for this slot, so it references the primitive
+    // directly rather than inventing a semantic name here.
+    inversePrimary: PulsePrimitives.brand400,
   );
 
-  static const ColorScheme _darkScheme = ColorScheme(
+  /// The dark `ColorScheme` PULSE projects from the token contract.
+  ///
+  /// Exposed so a re-brand can start from it and override only the slots it
+  /// cares about — see [dark].
+  static const ColorScheme darkColorScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: PulseSemanticsDark.brand,
     onPrimary: PulseSemanticsDark.brandFg,
@@ -104,6 +182,15 @@ class PulseTheme {
     surfaceContainerHighest: PulseSemanticsDark.track,
     outline: PulseSemanticsDark.border,
     outlineVariant: PulseSemanticsDark.border,
+    // Same reasoning as the light scheme's `surfaceTint`.
+    surfaceTint: PulseSemanticsDark.brand,
+    // The slot Material's fallback gets actively wrong here. In dark mode
+    // `inverseSurface` is the *light* ink (#F8FAFC), so the inherited
+    // `onPrimary` white would paint a SnackBar action at **1.05:1** — not dim,
+    // invisible. The regular brand-600 is 5.45:1 against it. Same class of bug
+    // as dark `onError` above: a slot whose light-mode value cannot simply be
+    // reused after the surfaces flip.
+    inversePrimary: PulsePrimitives.brand600,
   );
 
   // === Type scale ===
@@ -187,6 +274,16 @@ class PulseTheme {
           foregroundColor: colorScheme.primary,
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+      // Dialogs were the one common surface PULSE did not theme at all, so they
+      // fell back to Material's own radius and surface. Only structure is set
+      // here — elevation and the text roles stay at Material 3 defaults, which
+      // already resolve to this theme's `TextTheme`.
+      dialogTheme: DialogThemeData(
+        backgroundColor: colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(PulsePrimitives.radiusLg),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
