@@ -207,4 +207,57 @@ void main() {
 }
 
 /// Const-constructible no-op so the widget trees above can stay `const`.
-void _noop() {}
+void _noop() {
+  // Both components pair a label with its handler. PulseSnackBar has asserted
+  // that pairing since it shipped; these two used to drop the affordance
+  // silently instead. Adding the assert AFTER 1.0 would turn debug builds that
+  // currently render (wrongly, but without complaint) into crashes — an
+  // observable behaviour change on a frozen constructor — so it lands now.
+  group('paired-argument contracts', () {
+    test('PulseEmptyState rejects a CTA label with no handler', () {
+      expect(
+        () => PulseEmptyState(
+          icon: const Icon(Icons.inbox),
+          title: 'X',
+          actionLabel: '追加',
+        ),
+        throwsAssertionError,
+      );
+      expect(
+        () => PulseEmptyState(
+          icon: const Icon(Icons.inbox),
+          title: 'X',
+          onAction: () {},
+        ),
+        throwsAssertionError,
+      );
+      // Neither, or both, is fine.
+      expect(
+        () => const PulseEmptyState(icon: Icon(Icons.inbox), title: 'X'),
+        returnsNormally,
+      );
+    });
+
+    test('PulseSectionCard rejects trailing without a title', () {
+      // The header row is the only place trailing is rendered, so a titleless
+      // card given a trailing widget dropped it — and onTrailingTap could
+      // never fire.
+      expect(
+        () => PulseSectionCard(
+          trailing: const Icon(Icons.chevron_right),
+          onTrailingTap: () {},
+          child: const SizedBox.shrink(),
+        ),
+        throwsAssertionError,
+      );
+      expect(
+        () => const PulseSectionCard(
+          title: 'X',
+          trailing: Icon(Icons.chevron_right),
+          child: SizedBox.shrink(),
+        ),
+        returnsNormally,
+      );
+    });
+  });
+}

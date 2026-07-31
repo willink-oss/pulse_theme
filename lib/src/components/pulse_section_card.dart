@@ -29,7 +29,11 @@ final class PulseSectionCard extends StatelessWidget {
     this.onTrailingTap,
     this.padding,
     this.margin,
-  });
+  }) : assert(
+         trailing == null || title != null,
+         'trailing is rendered inside the header row, which only exists when '
+         'title is set — otherwise it and onTrailingTap are dropped silently.',
+       );
 
   /// Content rendered inside the card body. Required.
   final Widget child;
@@ -44,6 +48,10 @@ final class PulseSectionCard extends StatelessWidget {
   /// Tap handler for [trailing]. When set, the trailing area becomes a real
   /// button: it reports as one to assistive tech and is padded out to the 48dp
   /// minimum tap target. When null, [trailing] is rendered as inert decoration.
+  ///
+  /// Like [trailing], this only exists when [title] is set — the assertion on
+  /// the constructor makes that impossible to get wrong rather than leaving a
+  /// callback that can never fire.
   final VoidCallback? onTrailingTap;
 
   /// Inner content padding. Defaults to [PulseSpacing.lg] on all sides

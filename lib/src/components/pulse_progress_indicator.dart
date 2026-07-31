@@ -43,6 +43,15 @@ final class PulseProgressIndicator extends StatelessWidget {
          'note the React Progress uses 0–100 — divide by 100 when porting.',
        );
 
+  // The assert above is stripped in release and profile builds. Flutter then
+  // clamps silently — both the paint and the screen-reader percentage — so a
+  // release build fed React-scale values renders and announces 100% for
+  // anything from 1 to 100. That is the exact mistake the message predicts,
+  // made invisible in the build where nobody is watching a console. Developers
+  // hit the assert on first debug run, which is why this is a documented
+  // property rather than a runtime check, but it is a real debug/release
+  // divergence and it is stated rather than left to be discovered.
+
   /// Progress fraction in `0.0–1.0`. When `null`, the indicator is
   /// indeterminate (continuous sweep animation) — the same nullable-value
   /// contract as both [LinearProgressIndicator] and the React `Progress`.

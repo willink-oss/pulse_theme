@@ -203,4 +203,48 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets(
+    'the brand toggle reaches raw Material widgets, not just Pulse*',
+    (tester) async {
+      await tester.pumpWidget(const PulseExampleApp());
+      await tester.pump(const Duration(milliseconds: 300));
+
+      Color primaryOf(WidgetTester t) =>
+          Theme.of(t.element(find.byType(GalleryPage))).colorScheme.primary;
+
+      /// What a plain FilledButton would paint — this is the half that
+      /// `ThemeData.copyWith(colorScheme:)` fails to move, and it is what the
+      /// empty/error tabs' CTAs actually use.
+      Color filledButtonBgOf(WidgetTester t) =>
+          Theme.of(
+            t.element(find.byType(GalleryPage)),
+          ).filledButtonTheme.style!.backgroundColor!.resolve({})!;
+
+      final violet = primaryOf(tester);
+      expect(
+        filledButtonBgOf(tester),
+        violet,
+        reason: 'baseline: the button theme agrees with the scheme',
+      );
+
+      await tester.tap(find.byIcon(Icons.palette_outlined));
+      await tester.pumpAndSettle();
+
+      final blue = primaryOf(tester);
+      expect(blue, isNot(violet), reason: 'the override did not apply');
+      expect(
+        filledButtonBgOf(tester),
+        blue,
+        reason:
+            'the component theme must follow the override too — this is '
+            'exactly what copyWith(colorScheme:) leaves behind',
+      );
+
+      // …and back.
+      await tester.tap(find.byIcon(Icons.palette));
+      await tester.pumpAndSettle();
+      expect(primaryOf(tester), violet);
+    },
+  );
 }

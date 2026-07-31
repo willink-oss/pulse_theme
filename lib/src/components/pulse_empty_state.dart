@@ -29,7 +29,11 @@ final class PulseEmptyState extends StatelessWidget {
     this.actionLabel,
     this.onAction,
     this.actionIcon,
-  });
+  }) : assert(
+         (actionLabel == null) == (onAction == null),
+         'actionLabel and onAction must be provided together — a label with no '
+         'handler renders nothing at all.',
+       );
 
   /// Symbol shown above the title, rendered at 80px in
   /// `colorScheme.onSurfaceVariant`.
@@ -46,9 +50,13 @@ final class PulseEmptyState extends StatelessWidget {
   final String? description;
 
   /// CTA label. If null, no button is rendered.
+  ///
+  /// Must be given together with [onAction]; passing one without the other is
+  /// an assertion error rather than a silently missing button. Same pairing
+  /// contract as `PulseSnackBar.show`.
   final String? actionLabel;
 
-  /// Tap handler for the CTA. Required if [actionLabel] is set.
+  /// Tap handler for the CTA. Required whenever [actionLabel] is set.
   final VoidCallback? onAction;
 
   /// Optional leading icon for the CTA. Defaults to `Icon(Icons.add)`.

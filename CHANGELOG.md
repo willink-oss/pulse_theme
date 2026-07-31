@@ -7,9 +7,108 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
-## [0.9.0] — unreleased
+## [1.0.0-rc.1] — 2026-07-31
 
 _Generated from `@willink-labs/tokens` 1.9.0._
+
+**Release candidate for the API freeze.** Nothing in `1.0.0` is planned to
+differ from this except the version string. Prereleases are not resolved by a
+caret constraint, so pin it exactly to try it:
+
+```yaml
+dependencies:
+  pulse_theme: 1.0.0-rc.1
+```
+
+[`doc/stability.md`](doc/stability.md) is what is being frozen. Read it before
+depending on anything it does not list as covered.
+
+### Why now
+
+An adversarial review of the whole public surface ran before this tag: four
+independent lenses (exported API, observable behaviour, consumer fit, docs
+truth) produced 40 candidate findings, and each non-minor one was handed to a
+separate agent whose instruction was to refute it. **19 of 29 were refuted, and
+none of the survivors was breaking-if-late** — nothing found requires a `2.0`
+to fix later. That is the evidence the surface is ready to freeze; the
+survivors are below.
+
+### Changed — paired arguments now assert instead of dropping silently
+
+`PulseEmptyState` accepted an `actionLabel` with no `onAction` and simply
+rendered no button. `PulseSectionCard` accepted `trailing` / `onTrailingTap`
+with no `title` and rendered neither — leaving a callback that could never
+fire, while `onTrailingTap`'s own dartdoc promised a real button. Both now
+assert, matching the contract `PulseSnackBar` has always had for the same
+pairing.
+
+This is the one review finding that had to land **before** the tag. Adding
+these asserts after `1.0.0` would turn debug builds that currently render
+(silently, wrongly) into crashes — an observable behaviour change on a frozen
+constructor.
+
+### Fixed — documentation that had gone false
+
+`doc/adoption.md` is the complete API reference and had drifted from the
+surface it documents:
+
+- `PulseEmptyState.actionIcon` was typed `IconData?` (it is `Widget?` since
+  `0.6.0`), and the sample below it, `icon: Icons.inbox`, **did not compile**.
+- The whole `PulseErrorState` table was wrong: `title` / `retryLabel` /
+  `copySuccessMessage` were listed as non-null `String` with hardcoded Japanese
+  defaults. They are `String?` resolving through `PulseStrings`, whose default
+  is **English**. The table told a Japanese consumer their defaults were
+  already Japanese, so they would have shipped English copy. `copyLabel` was
+  missing entirely, and the l10n workaround it prescribed had been obsolete
+  since `PulseStrings` landed.
+- It still claimed the warning snack bar shows light-mode amber in dark
+  (fixed in `0.6.0`), and referenced `PulseButtonVariant.danger` twice — an
+  enum value removed in `0.6.0`.
+- Three documents and `.gitignore` still told contributors the golden suite is
+  expected to fail locally. It has passed since `0.7.0`. **A release checklist
+  that pre-authorises a red suite is how a real regression ships**, so that
+  line is gone.
+- The Flutter floor read `>=3.22.0` in three places (corrected to `>=3.27.0` in
+  `0.6.0`), and `CONTRIBUTING.md` claimed the `shadow` token group is deferred
+  from codegen when it has been emitted since Stage 2.
+
+### Fixed — the example asserted re-branding instead of showing it
+
+`example/lib/main.dart` and `example/README.md` both told readers to re-brand
+with `PulseTheme.light().copyWith(colorScheme: ...)` — the anti-pattern
+`0.6.0` replaced — and the gallery never re-branded at all.
+
+The gallery now has a **live brand toggle** in its app bar, and its smoke test
+asserts the override reaches `filledButtonTheme` and not merely the
+`ColorScheme`. That is precisely the half `copyWith` leaves behind, and it is
+what paints the CTAs on the empty and error tabs.
+
+### Documented — two behaviours that are now contract
+
+- `PulseProgressIndicator`'s range check is an `assert`, so it is stripped in
+  release. Flutter then clamps silently: a release build fed React-scale values
+  (0–100) renders and announces 100% for everything from 1 upward — the exact
+  mistake the assert message predicts, invisible in the build where nobody is
+  watching a console.
+- `PulseLoadingState.size` still steps the stroke weight at 24 (2.5 below, 3
+  above). The `0.6.0` notes said the size-as-layout-switch threshold was
+  removed; its stroke twin survived, and is now named rather than left as a
+  surprise half a logical pixel wide.
+
+### Known, deferred to 1.x
+
+`PulseButton`'s filled glow is cast from the 48dp tap-target box rather than
+the painted button — measured overhang 22px at `small`, 12px at `medium`, 2px
+at `large`, so a small button glows from a rectangle 85% taller than itself.
+
+The clean fix requires separating the visual button from its tap target, and
+the only lever for that (`tapTargetSize.shrinkWrap`) also removes the semantics
+expansion the 48dp accessibility guarantee is measured on. Trading a documented
+a11y promise for a shadow's geometry, unrehearsed, on the eve of a freeze is
+the wrong order of risk. Pixels are explicitly outside the freeze, so this is a
+`1.x` fix and the code says so where it happens.
+
+### Added in this cycle — `PulseRadius` (was queued as 0.9.0, never released separately)
 
 ### Added — `PulseRadius`, a semantic layer over the radius scale
 

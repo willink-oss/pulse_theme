@@ -358,7 +358,22 @@ final class PulseButton extends StatelessWidget {
     if (_isSolid && !dimmed) {
       // Accent glow: the tone's own accent at 30% alpha. Uses the
       // ColorScheme (not PulseBrandTokens) so the glow tracks a consumer's
-      // override (PulseTheme.light().copyWith(colorScheme: ...)).
+      // override (PulseTheme.light(colorScheme: ...)).
+      //
+      // KNOWN, and deliberately not fixed on the eve of the 1.0 freeze: this
+      // DecoratedBox wraps the button *including* Material's 48dp tap-target
+      // padding, so the glow is cast from the padded box rather than the
+      // painted one. Measured overhang: 22px at `small` (80x48 vs 80x26), 12px
+      // at `medium`, 2px at `large` — so a small button glows from a rectangle
+      // 85% taller than itself.
+      //
+      // The clean fix needs the visual button and the tap target to be
+      // separated, and the only lever for that (`tapTargetSize.shrinkWrap`)
+      // also removes the semantics node expansion that the 48dp accessibility
+      // guarantee is measured on. Trading a documented a11y promise for a
+      // shadow's geometry, unrehearsed, right before a freeze is the wrong
+      // order of risk. Pixels are explicitly outside the freeze
+      // (doc/stability.md), so this is a 1.x fix.
       result = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(PulseRadius.control),

@@ -229,7 +229,7 @@ gh pr create --fill
 > やってしまった）。`dart pub publish --dry-run` も CI も、これは検出しない。
 >
 > ```bash
-> grep -n "unreleased" CHANGELOG.md   # 空であること
+> grep -nE "^## \[.*\] — unreleased" CHANGELOG.md   # 空であること（見出しだけを見る）
 > ```
 
 マージ後、**main の HEAD** にタグを打つ:
@@ -312,7 +312,7 @@ git diff -- lib/src/tokens/pulse_tokens.dart
 - [ ] README / doc 内のバージョン表記（`^0.x.y`）が新バージョンと一致
 - [ ] CHANGELOG が「実際に存在するファイル」だけを列挙している
 - [ ] `flutter analyze` → No issues（root と `example/` の両方）
-- [ ] `flutter test` → golden 1 件のみ失敗（macOS）／CI では全 green
+- [ ] `flutter test` → **全 green**（`0.7.0` でローカル閾値を分けたので macOS でも落ちない）
 - [ ] `dart pub publish --dry-run` → **0 warnings**、ファイルツリーに想定外のものが無い
 - [ ] main の HEAD で CI が green（`gh run list --branch main`）
 
@@ -339,7 +339,7 @@ dart.dev 原文: *"a published package lasts forever"* / *"Retraction isn't dele
 - **clubhouse** — PR #34（`chore/migrate-to-pulse-theme`）の git 依存ブロックを
   `pulse_theme: ^0.5.0` に差し替え、`flutter pub get` で `pubspec.lock` を再生成してから ready for review。
 - **その他の社内アプリ**（tsuu / nami / willink-chess 等）— theme 系依存が無く SDK 互換なので
-  `pulse_theme: ^0.6.0` を追加するだけで採用できる。
+  `pulse_theme: ^1.0.0` を追加するだけで採用できる。
 - 導入手順そのものは [`doc/adoption.md`](adoption.md) を参照。
 
 `willink_theme`（pub.dev, 1.5.0）は PULSE に置き換わったので、

@@ -25,5 +25,5 @@ tool/node_modules/
 # untracked build output — but `dart pub publish` bundles *everything* under the
 # package root except what .gitignore/.pubignore excludes, so without this entry
 # a local failing run silently bakes 4 PNGs into the published tarball forever.
-# (Expected locally: committed goldens are Linux-generated, so macOS reruns fail.)
+# (Since 0.7.0 the off-CI diff threshold absorbs cross-arch AA, so local runs pass.)
 test/golden/failures/

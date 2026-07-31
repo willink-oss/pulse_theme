@@ -19,7 +19,7 @@
 | 項目 | 要件 |
 |---|---|
 | Dart SDK | `^3.7.0`（= `>=3.7.0 <4.0.0`） |
-| Flutter | `>=3.22.0` |
+| Flutter | `>=3.27.0` |
 | パッケージ名 | `pulse_theme` |
 | 配布先 | pub.dev |
 | publisher | `i-willink.com` |
@@ -46,7 +46,7 @@ flutter pub add pulse_theme
 ```yaml
 dependencies:
   # PULSE — i-Willink mobile-first Design System (Material 3 ThemeData factory)
-  pulse_theme: ^0.6.0
+  pulse_theme: ^1.0.0
 ```
 
 ```bash
@@ -59,14 +59,15 @@ Dart / pub の caret は **メジャーが 0 のときだけ挙動が変わる**
 
 | 指定 | 実際の許容範囲 |
 |---|---|
-| `^1.2.3` | `>=1.2.3 <2.0.0`（メジャーが上がるまで許容） |
-| `^0.6.0` | **`>=0.6.0 <0.7.0`**（**マイナー**が上がるまでしか許容しない） |
+| `^1.0.0` | `>=1.0.0 <2.0.0`（メジャーが上がるまで許容） |
+| `^0.8.0`（旧 0.x 系） | **`>=0.8.0 <0.9.0`**（**マイナー**が上がるまでしか許容しない） |
 
-つまり `^0.6.0` を指定した場合、`0.6.1` / `0.6.9` は自動で上がるが、`0.7.0` は上がらない。
+つまり 0.x 系では `^0.8.0` を指定しても `0.9.0` は上がってこなかった。**`1.0.0` 以降はこの窮屈さが無くなる** — `^1.0.0` なら `1.4.2` まで自動で上がり、破壊的変更は `2.0.0` を待つ。
 これは pub の仕様が「0.x はマイナーが破壊的変更を運ぶ」と扱っているためで、PULSE も **1.0.0 に到達するまで、マイナー昇格（0.5 → 0.6）で破壊的変更が入りうる**運用にしている（→ [9. アップグレード方針](#9-アップグレード方針)）。
 
-`pulse_theme: ^0.6.0` と書いておけば、破壊的変更が勝手に入ってくることはない。
-上げるときは明示的に `^0.7.0` に書き換える、という運用でよい。
+`pulse_theme: ^1.0.0` と書いておけば、破壊的変更が勝手に入ってくることはない（[doc/stability.md](stability.md) が何を凍結するかを定義している）。
+
+**リリース候補期間中**は caret が prerelease を解決しないので、正確に指定すること: `pulse_theme: 1.0.0-rc.1`
 
 ### import
 
@@ -449,13 +450,13 @@ PulseButton(
 | `description` | `String?` | `null` |
 | `actionLabel` | `String?` | `null` |
 | `onAction` | `VoidCallback?` | `null` |
-| `actionIcon` | `IconData?` | `null` → `Icons.add` にフォールバック |
+| `actionIcon` | `Widget?` | `null` → `const Icon(Icons.add)` にフォールバック（`icon` と同じく `0.6.0` で `IconData` から変更） |
 
 CTA ボタンは **`actionLabel` と `onAction` の両方が非 null のときだけ**描画される。片方だけ渡しても出ない。
 
 ```dart
 PulseEmptyState(
-  icon: Icons.inbox,
+  icon: const Icon(Icons.inbox),
   title: 'まだ記録がありません',
   description: '最初の記録を作成してみましょう',
   actionLabel: '記録を作成',
@@ -469,15 +470,17 @@ PulseEmptyState(
 
 | 引数 | 型 | 既定値 |
 |---|---|---|
-| `title` | `String` | `'エラーが発生しました'` |
+| `title` | `String?` | `null` → `PulseStrings.errorTitle` |
 | `message` | `String?` | `null`（null なら `error.toString()` を表示） |
 | `error` | `Object?` | `null`（クリップボードコピー用。`message` があれば表示はされない） |
 | `onRetry` | `VoidCallback?` | `null`（null なら再試行ボタン非表示） |
-| `retryLabel` | `String` | `'再試行'` |
+| `retryLabel` | `String?` | `null` → `PulseStrings.errorRetryLabel` |
 | `showCopyButton` | `bool` | `true` |
-| `copySuccessMessage` | `String` | `'エラー内容をコピーしました'` |
+| `copyLabel` | `String?` | `null` → `PulseStrings.errorCopyLabel` |
+| `copySuccessMessage` | `String?` | `null` → `PulseStrings.errorCopiedMessage` |
 
-> 既定文言は日本語ハードコード。コピーボタンのラベル `'エラーをコピー'` は**引数化されていない**ので、多言語対応が必要なアプリでは `showCopyButton: false` にして自前のボタンを置く。
+> **`0.6.0` から既定文言は英語**（`Something went wrong` / `Retry` / `Copy error`）。日本語アプリは `PulseTheme.light(strings: PulseStrings.ja)` をテーマに 1 回渡せば全体に効く（→ [6.1](#61-コンポーネントが出す文言pulsestrings)）。
+> コピーボタンのラベルも `copyLabel` で差し替え可能になった（`0.6.0` 以前は引数が無かった）。呼び出し側で明示した文言が常に優先される。
 
 ```dart
 asyncValue.when(
@@ -627,7 +630,7 @@ final applied = await PulseBottomSheet.show<bool>(
 | `warning` | **処理は通った**が要注意 | 一部だけ同期できた / 上限に近い / 表示中のデータが古い |
 | `error` | **処理されなかった** | 保存失敗 / 通信エラー / バリデーション不合格 |
 
-`success` と同じ流儀で、`warning` の色は固定トークン `PulseSemantics.warning` を使う（`colorScheme` に warning スロットが無いため）。したがってダークモードでも同じ amber600 が出る。アイコンは `Icons.warning_amber_rounded`。
+`success` と同じ流儀で、`warning` の色は固定トークン `PulseSemantics.warning` を使う（`colorScheme` に warning スロットが無いため）。したがってダークモードでは `PulseSemanticsDark.warning` に切り替わる（`0.6.0` で修正。それ以前はライトの amber600 が出ていた）。アイコンは `Icons.warning_amber_rounded`。
 
 ```dart
 PulseSnackBar.show(context, message: '保存しました', variant: PulseSnackBarVariant.success);
@@ -832,7 +835,7 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
 `PulseSemanticsDark` / `PulseFontSize` / `PulseShadows` の公開 export、
 `PulseBrandTokens.pulse` / `.pulseDark` の static プリセット、
 `PulseLoadingState` の `semanticsLabel` 引数と `.compact` / `.inline` コンストラクタ、
-`PulseButtonVariant.danger`、`PulseButton` の `isLoading` / `loadingSemanticsLabel`、
+`PulseButtonTone.danger`、`PulseButton` の `isLoading` / `loadingSemanticsLabel`、
 `PulseSnackBarVariant.warning`。
 
 **PULSE で消えた willink API は無い**（`WillinkBrand` enum / `WillinkTheme.clublink()` は `willink_theme` 0.5.0 の時点で既に削除済み）。
@@ -847,7 +850,7 @@ PULSE を入れただけでは満たせない。以下はアプリの責任。
 -  # i-Willink Design System (Material 3 ThemeData factory · WillinkBrand.clublink)
 -  willink_theme: ^1.5.0
 +  # PULSE — i-Willink mobile-first Design System (Material 3 ThemeData factory).
-+  pulse_theme: ^0.6.0
++  pulse_theme: ^1.0.0
 ```
 
 ```bash
@@ -873,12 +876,12 @@ flutter pub get   # pubspec.lock を再生成
 
 - `willink_theme` に依存しているリポジトリは **clubhouse 1 本のみ**（`^1.5.0`）。
   影響範囲は `lib/theme/app_theme.dart` と `lib/theme/app_spacing.dart` の **2 ファイル 5 箇所**だけで、`Willink*` ウィジェットは 1 つも使われていない。アプリ内の 113 箇所の呼び出しは `AppTheme` / `AppSpacing` 経由なので無変更。
-- 他の Flutter アプリ（tsuu / nami / willink-chess）は theme 系依存ゼロの greenfield。`pulse_theme: ^0.6.0` を追加するだけで採用できる。
+- 他の Flutter アプリ（tsuu / nami / willink-chess）は theme 系依存ゼロの greenfield。`pulse_theme: ^1.0.0` を追加するだけで採用できる。
 - fit-ai（`apps/mobile`）は最大規模。独自 theme 実装との衝突有無は**未調査**なので、採用前に個別調査が必要。
-  ただし独自ウィジェットの監査は済んでおり、その結果が `PulseButtonVariant.danger` / `PulseButton.isLoading` /
+  ただし独自ウィジェットの監査は済んでおり、その結果が `PulseButtonTone.danger` / `PulseButton.isLoading` /
   `PulseSnackBarVariant.warning` の追加動機になっている（この 3 つが無いと、既存の `AppButton` /
   warning 系スナックバーを PULSE に置き換えた瞬間に機能後退する）。→ [8.6](#86-アプリ独自ウィジェットからの移行)
-- SDK 制約は全アプリで互換（PULSE の `sdk: ^3.7.0` / `flutter: >=3.22.0` が、clubhouse `^3.11.4` / tsuu `^3.7.0` / nami・willink-chess `^3.11.4` / fit-ai `>=3.8.0 <4.0.0` / fit-ai-frontend `^3.8.1` のすべてと交差する）。
+- SDK 制約は全アプリで互換（PULSE の `sdk: ^3.7.0` / `flutter: >=3.27.0` が、clubhouse `^3.11.4` / tsuu `^3.7.0` / nami・willink-chess `^3.11.4` / fit-ai `>=3.8.0 <4.0.0` / fit-ai-frontend `^3.8.1` のすべてと交差する）。
 
 ### 8.5 移行時に見た目が動く箇所
 
@@ -949,7 +952,7 @@ PULSE 側が改善である（フォームのレイアウトが跳ねなくな�
 ### 9.1 0.x のあいだの破壊的変更ポリシー
 
 - PULSE は [SemVer 2.0](https://semver.org/) に従う。**公開 API は `1.0.0` まで凍結しない**。
-- 0.x では **マイナー昇格（0.6 → 0.7）が破壊的変更を運ぶ**。pub の caret 意味論とも一致する（`^0.6.0` は `0.7.0` を取り込まない）。
+- **`1.0.0` から public API は凍結**。破壊的変更は `2.0.0` を要する。何が凍結対象かは [doc/stability.md](stability.md) を参照（enum への値追加は minor で入るので `Pulse*` の enum に exhaustive switch を書かないこと）。
 - パッチ昇格（0.5.0 → 0.5.1）は後方互換。バグ修正・内部実装・トークン再生成のみ。
 - PULSE は `@willink-labs/*` npm 群とも、レガシーの `willink_theme` とも**独立にバージョニング**される。
 
@@ -974,7 +977,7 @@ flutter pub deps --style=compact | grep pulse_theme
 flutter pub upgrade pulse_theme
 
 # メジャー相当（0.5 → 0.6）は pubspec を手で書き換えてから
-#   pulse_theme: ^0.6.0
+#   pulse_theme: ^1.0.0
 flutter pub get
 flutter analyze
 flutter test
@@ -1017,7 +1020,7 @@ hosted パッケージの `dev_dependencies` は消費者側の解決に参加�
 
 ### 10.2 Flutter バージョン不一致
 
-- 要件は `flutter: ">=3.22.0"`。下回ると `pub get` の時点で落ちる。
+- 要件は `flutter: ">=3.27.0"`。下回ると `pub get` の時点で落ちる。
 - PULSE 本体の CI は **Flutter 3.44.2（stable）**にピン留めして検証されている。
   アプリ CI の Flutter を PULSE の検証バージョンと合わせておくと、レンダリング差分の切り分けが楽になる。
 - ローカルと CI で Flutter バージョンがずれていると、golden 差分・レイアウト差分の原因が特定できなくなる。`fvm` などでピン留めすること。
@@ -1032,7 +1035,7 @@ hosted パッケージの `dev_dependencies` は消費者側の解決に参加�
   → **golden は CI と同じ環境で生成したものをコミットする**。ローカル macOS で `--update-goldens` して push すると CI が赤くなる。
   → PULSE 本体はこれを、Linux 上で golden を再生成する専用の GitHub Actions ワークフロー（`golden-update.yml`）で回避している。同じ構成をアプリ側にも用意するのが確実。
 - PULSE 本体は [alchemist](https://pub.dev/packages/alchemist) の **CI golden のみ**（テキストをブロックに平坦化・影を無効化）を使い、ホストのフォント描画差に影響されないようにしている。アプリ側でも同じ方針を取ると差分が安定する。
-- なお、PULSE リポジトリ自体を macOS で `flutter test` すると `test/golden/pulse_golden_test.dart` の `PulseButton — variants × sizes` が 1 件失敗する。これは**既知かつ想定内**（コミットされている golden が Linux CI 生成のため）。バグではないので golden を再生成しないこと。
+`flutter test` は macOS でも **全 green**。`0.7.0` で golden の diff 閾値を実行環境で分けた（CI 0.005 / ローカル 0.01）ため、アーキ差の AA ノイズで落ちなくなった。CI が厳格側で、ローカルは助言的という分担。どうしても比較を止めたい場合は `PULSE_SKIP_GOLDENS=1`。
 
 ### 10.4 `Theme.of(context).extension<PulseBrandTokens>()` が null
 

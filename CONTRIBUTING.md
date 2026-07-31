@@ -40,9 +40,7 @@ contract.
   `token-codegen-gate` regenerates from the published contract and fails on any
   drift, so a stale regenerate (or hand-edit) breaks the build.
 - Covered by codegen today: `color` (primitive + semantic, incl. dark),
-  `radius`, `duration`, `easing`, `spacing`, `font-size`. The primitive
-  `shadow` group and the semantic `motion` / `easing` role groups are
-  intentionally deferred (see the header in `tool/generate_tokens.mjs`).
+  `radius`, `duration`, `easing`, `spacing`, `font-size`. The semantic `motion` / `easing` role groups are intentionally deferred (see the header in `tool/generate_tokens.mjs`).
 
 ---
 
