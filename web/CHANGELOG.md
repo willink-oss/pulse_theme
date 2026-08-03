@@ -44,6 +44,24 @@ The Flutter log is [../CHANGELOG.md](../CHANGELOG.md).
   provides the focus trap. `@willink-labs/react` remains the tier that wraps
   Radix and owns behaviour — the same split DaisyUI and shadcn/ui have.
 
+### Added — Tailwind v4 bridge (`@willink-labs/pulse/tailwind.css`)
+
+- One import maps the tokens into Tailwind's theme namespaces, so
+  `bg-brand text-brand-fg rounded-control px-md min-h-tap` works with no config
+  file and no plugin.
+- Uses `@theme inline`, so Tailwind emits `var(--pulse-color-brand)` into the
+  utility rather than resolving it to a hex at build time. A plain `@theme`
+  would bake today's light value into `.bg-brand` and the utility would stop
+  following `data-pulse-theme` — silently, which is the worst way for a theme
+  to break.
+- Exposes the parts that justify the system: `rounded-control` /
+  `rounded-surface` say *what* is being rounded, and `min-h-tap` is the
+  mobile-first contract as a utility.
+- Not to be imported alongside `@willink-labs/tailwind-preset` — both claim
+  `--color-brand`. Deterministic (later import wins) but the ramp middles differ,
+  because the preset derives its scale via OKLCH `color-mix` while these are
+  literals. Documented in the README with the measured divergence.
+
 ### Fixed — `data-pulse-theme` now works on any element
 
 `pulse.css` emitted `:root[data-pulse-theme="dark"]`, so the attribute only did

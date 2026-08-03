@@ -1,0 +1,110 @@
+/*
+ * @willink-labs/pulse — Tailwind v4 bridge.
+ *
+ *   @import "tailwindcss";
+ *   @import "@willink-labs/pulse/pulse.css";
+ *   @import "@willink-labs/pulse/tailwind.css";
+ *
+ *   <button class="bg-brand text-brand-fg rounded-control px-md min-h-tap">
+ *
+ * ── Why `@theme inline` and not `@theme` ────────────────────────────────────
+ *
+ * `inline` makes Tailwind emit `var(--pulse-color-brand)` into the utility
+ * rather than resolving it to a hex at build time. That is the whole point: the
+ * value has to stay a live reference so `data-pulse-theme="dark"` — and a
+ * consumer's own `:root` override — still move it. A plain `@theme` would bake
+ * today's light value into `.bg-brand` and the utility would stop following the
+ * appearance, silently.
+ *
+ * ── This file claims Tailwind's default namespaces ──────────────────────────
+ *
+ * `--color-brand` here means `bg-brand` / `text-brand` / `border-brand`, which
+ * are the same utility names `@willink-labs/tailwind-preset` produces. Importing
+ * both is not broken — later import wins, deterministically, and both derive
+ * from the same token contract — but the middle of the brand ramp will not
+ * match, because the preset *derives* its scale from one input via OKLCH
+ * `color-mix` while these are literals:
+ *
+ *     step   this file   tailwind-preset
+ *     500    #2e7bff     #4279d9      ← fit-ai's headline colour vs an approximation
+ *     600    #1d5fd0     #1d5fd0      ← the anchor; always agrees
+ *
+ * Pick one. Use the preset if you are consuming `@willink-labs/react`, whose
+ * components are styled against it; use this if PULSE is your system.
+ */
+
+@theme inline {
+  /* Semantic colour roles — these flip with the appearance. */
+  --color-bg: var(--pulse-color-bg);
+  --color-fg: var(--pulse-color-fg);
+  --color-fg-strong: var(--pulse-color-fg-strong);
+  --color-fg-emphasis: var(--pulse-color-fg-emphasis);
+  --color-fg-secondary: var(--pulse-color-fg-secondary);
+  --color-fg-subtle: var(--pulse-color-fg-subtle);
+  --color-fg-faint: var(--pulse-color-fg-faint);
+  --color-muted: var(--pulse-color-muted);
+  --color-border: var(--pulse-color-border);
+  --color-ring: var(--pulse-color-ring);
+  --color-track: var(--pulse-color-track);
+  --color-surface-subtle: var(--pulse-color-surface-subtle);
+  --color-surface-muted: var(--pulse-color-surface-muted);
+  --color-surface-inverted: var(--pulse-color-surface-inverted);
+  --color-surface-inverted-fg: var(--pulse-color-surface-inverted-fg);
+
+  --color-brand: var(--pulse-color-brand);
+  --color-brand-fg: var(--pulse-color-brand-fg);
+  --color-brand-glow: var(--pulse-color-brand-glow);
+  --color-brand-hover: var(--pulse-color-brand-hover);
+  --color-brand-active: var(--pulse-color-brand-active);
+  --color-brand-soft: var(--pulse-color-brand-soft);
+  --color-brand-soft-fg: var(--pulse-color-brand-soft-fg);
+
+  --color-success: var(--pulse-color-success);
+  --color-warning: var(--pulse-color-warning);
+  --color-danger: var(--pulse-color-danger);
+  --color-accent-cyan: var(--pulse-color-accent-cyan);
+  --color-accent-pink: var(--pulse-color-accent-pink);
+
+  /* Radius — the raw scale plus PULSE's semantic roles, which are the reason
+   * to reach for this system at all: `rounded-control` and `rounded-surface`
+   * say what is being rounded, not how much. */
+  --radius-sm: var(--pulse-radius-sm);
+  --radius-md: var(--pulse-radius-md);
+  --radius-lg: var(--pulse-radius-lg);
+  --radius-xl: var(--pulse-radius-xl);
+  --radius-control: var(--pulse-radius-control);
+  --radius-surface: var(--pulse-radius-surface);
+  --radius-sheet: var(--pulse-radius-sheet);
+  --radius-pill: var(--pulse-radius-pill);
+  --radius-inset: var(--pulse-radius-inset);
+
+  /* Spacing — named steps (`p-md`, `gap-lg`), alongside Tailwind's own numeric
+   * scale, which is left untouched. */
+  --spacing-xs: var(--pulse-space-xs);
+  --spacing-sm: var(--pulse-space-sm);
+  --spacing-md: var(--pulse-space-md);
+  --spacing-lg: var(--pulse-space-lg);
+  --spacing-xl: var(--pulse-space-xl);
+  --spacing-2xl: var(--pulse-space-2xl);
+  /* The mobile-first contract as a utility: `min-h-tap`. */
+  --spacing-tap: var(--pulse-tap-target-min);
+
+  /* Type scale. */
+  --text-xs: var(--pulse-text-xs);
+  --text-sm: var(--pulse-text-sm);
+  --text-base: var(--pulse-text-base);
+  --text-lg: var(--pulse-text-lg);
+  --text-xl: var(--pulse-text-xl);
+  --text-2xl: var(--pulse-text-2xl);
+  --text-3xl: var(--pulse-text-3xl);
+
+  /* Elevation. `shadow-soft` / `shadow-md` flip with the appearance; the
+   * brand-tinted `shadow-glow` is mode-invariant by design. */
+  --shadow-soft: var(--pulse-shadow-soft);
+  --shadow-md: var(--pulse-shadow-md);
+  --shadow-glow: var(--pulse-shadow-glow);
+
+  /* Motion. */
+  --ease-standard: var(--pulse-easing-standard);
+  --ease-emphasized: var(--pulse-easing-emphasized);
+}

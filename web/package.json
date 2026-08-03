@@ -16,6 +16,7 @@
     "./light.css": "./dist/pulse.light.css",
     "./dark.css": "./dist/pulse.dark.css",
     "./components.css": "./src/components.css",
+    "./tailwind.css": "./src/tailwind.css",
     "./dist/*": "./dist/*",
     "./src/*": "./src/*",
     "./package.json": "./package.json"
