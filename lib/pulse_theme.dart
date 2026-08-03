@@ -8,9 +8,9 @@
 /// web and mobile stay at parity from a single token SSOT.
 ///
 /// [PulseTheme.light] / [PulseTheme.dark] return Material 3 `ThemeData` whose
-/// `ColorScheme`, `TextTheme` and component themes are a faithful projection of
-/// that token contract. The first 9 `Pulse*` components ship on the violet
-/// baseline (see the exports below). See the README and
+/// `ColorScheme`, `TextTheme` and component themes are a token-backed projection
+/// of that contract. The first 9 `Pulse*` components ship on the accessible
+/// blue baseline (see the exports below). See the README and
 /// `doc/adr/0001-pulse-mobile-first-architecture.md`.
 ///
 /// ```dart
@@ -27,13 +27,13 @@
 ///
 /// To re-brand, hand the factory your own scheme — **not**
 /// `ThemeData.copyWith(colorScheme: ...)`, which leaves the already-built
-/// component themes on the violet baseline (see [PulseTheme.light]):
+/// component themes on the blue baseline (see [PulseTheme.light]):
 ///
 /// ```dart
 /// MaterialApp(
 ///   theme: PulseTheme.light(
 ///     colorScheme: PulseTheme.lightColorScheme.copyWith(
-///       primary: const Color(0xFF2E7BFF),
+///       primary: const Color(0xFF0F766E),
 ///     ),
 ///   ),
 /// );

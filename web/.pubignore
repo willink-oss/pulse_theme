@@ -1,0 +1,10 @@
+# Exclude the entire web (npm) binding from the published pub.dev package.
+# `@willink-labs/pulse` is generated from the same token contract as the Dart
+# code in lib/, but it ships to npm, not to pub.dev — a Flutter consumer has no
+# use for the CSS and would pay for it in every `pub get`. Scoping the exclude
+# here (rather than a root .pubignore) keeps the root .gitignore in effect for
+# build/, .dart_tool/, etc. — a root .pubignore would replace it.
+#
+# The reverse exclusion (keeping lib/ out of the npm tarball) is handled by the
+# `files` field in web/package.json, which allowlists dist/ + README.md only.
+*

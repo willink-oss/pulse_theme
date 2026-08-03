@@ -1,0 +1,140 @@
+/*
+ * GENERATED FILE — DO NOT EDIT BY HAND.
+ *
+ * @willink-labs/pulse — the web binding of PULSE, i-Willink's design system.
+ *
+ * Source of truth: @willink-labs/tokens (DTCG JSON), the same contract the
+ * Flutter package `pulse_theme` (pub.dev) is generated from. Regenerate with
+ * `node tool/generate_css.mjs`; CI (css-codegen-gate) re-runs the emitter and
+ * fails on any drift from this committed output, and test/web_parity_test.dart
+ * asserts these values equal their Dart counterparts.
+ */
+
+/* dark-only build: no media query, no attribute switching. Use this when
+ * the app has exactly one appearance. For automatic light/dark, use
+ * pulse.css instead. */
+:root {
+  /* Color primitives — the raw scales. Prefer the semantic roles below. */
+  --pulse-color-neutral-50: #f8fafc;
+  --pulse-color-neutral-100: #f1f5f9;
+  --pulse-color-neutral-200: #e2e8f0;
+  --pulse-color-neutral-300: #cbd5e1;
+  --pulse-color-neutral-400: #94a3b8;
+  --pulse-color-neutral-500: #64748b;
+  --pulse-color-neutral-600: #475569;
+  --pulse-color-neutral-700: #334155;
+  --pulse-color-neutral-800: #1e293b;
+  --pulse-color-neutral-900: #0f172a;
+  --pulse-color-neutral-950: #020617;
+  --pulse-color-brand-50: #f0f6ff;
+  --pulse-color-brand-100: #dbeaff;
+  --pulse-color-brand-200: #bdd9ff;
+  --pulse-color-brand-300: #94bfff;
+  --pulse-color-brand-400: #5f9dff;
+  --pulse-color-brand-500: #2e7bff;
+  --pulse-color-brand-600: #1d5fd0;
+  --pulse-color-brand-700: #144dad;
+  --pulse-color-brand-800: #113f8e;
+  --pulse-color-brand-900: #113573;
+  --pulse-color-brand-950: #0b2045;
+  --pulse-color-blue-50: #eff6ff;
+  --pulse-color-blue-100: #dbeafe;
+  --pulse-color-blue-200: #bfdbfe;
+  --pulse-color-blue-300: #93c5fd;
+  --pulse-color-blue-400: #60a5fa;
+  --pulse-color-blue-500: #3b82f6;
+  --pulse-color-blue-600: #2563eb;
+  --pulse-color-blue-700: #1d4ed8;
+  --pulse-color-blue-800: #1e40af;
+  --pulse-color-blue-900: #1e3a8a;
+  --pulse-color-blue-950: #172554;
+  --pulse-color-green-50: #ecfdf5;
+  --pulse-color-green-100: #d1fae5;
+  --pulse-color-green-500: #10b981;
+  --pulse-color-green-600: #059669;
+  --pulse-color-green-700: #047857;
+  --pulse-color-cyan-500: #06b6d4;
+  --pulse-color-pink-500: #ec4899;
+  --pulse-color-sky-50: #f0f9ff;
+  --pulse-color-sky-500: #0ea5e9;
+  --pulse-color-red-500: #ef4444;
+  --pulse-color-red-600: #dc2626;
+  --pulse-color-amber-500: #f59e0b;
+  --pulse-color-amber-600: #d97706;
+
+  /* Radius — raw scale. */
+  --pulse-radius-sm: 0.25rem;
+  --pulse-radius-md: 0.5rem;
+  --pulse-radius-lg: 0.75rem;
+  --pulse-radius-xl: 1rem;
+  --pulse-radius-full: 9999px;
+
+  /* Radius — semantic roles: *what kind of thing* is being rounded. */
+  /* PULSE's own decisions; mirrors PulseRadius in the Flutter binding. */
+  --pulse-radius-control: var(--pulse-radius-md);
+  --pulse-radius-surface: var(--pulse-radius-lg);
+  --pulse-radius-sheet: var(--pulse-radius-xl);
+  --pulse-radius-pill: var(--pulse-radius-full);
+  --pulse-radius-inset: var(--pulse-radius-sm);
+
+  /* Spacing scale — paddings / gaps / margins. */
+  --pulse-space-xs: 0.25rem;
+  --pulse-space-sm: 0.5rem;
+  --pulse-space-md: 1rem;
+  --pulse-space-lg: 1.5rem;
+  --pulse-space-xl: 2rem;
+  --pulse-space-2xl: 3rem;
+
+  /* Type scale. */
+  --pulse-text-xs: 0.75rem;
+  --pulse-text-sm: 0.875rem;
+  --pulse-text-base: 1rem;
+  --pulse-text-lg: 1.125rem;
+  --pulse-text-xl: 1.25rem;
+  --pulse-text-2xl: 1.5rem;
+  --pulse-text-3xl: 1.875rem;
+
+  /* Motion. */
+  --pulse-duration-fast: 150ms;
+  --pulse-duration-base: 250ms;
+  --pulse-duration-slow: 400ms;
+  --pulse-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --pulse-easing-emphasized: cubic-bezier(0.3, 0, 0, 1.1);
+
+  /* Mobile-first contract: the minimum size of anything a finger operates. */
+  --pulse-tap-target-min: 48px;
+
+  /* Semantic color roles (dark) — named by role, not by hue. */
+  --pulse-color-bg: var(--pulse-color-neutral-950);
+  --pulse-color-fg: var(--pulse-color-neutral-50);
+  --pulse-color-muted: var(--pulse-color-neutral-400);
+  --pulse-color-fg-strong: var(--pulse-color-neutral-100);
+  --pulse-color-fg-emphasis: var(--pulse-color-neutral-200);
+  --pulse-color-fg-secondary: var(--pulse-color-neutral-300);
+  --pulse-color-fg-subtle: var(--pulse-color-neutral-500);
+  --pulse-color-fg-faint: var(--pulse-color-neutral-600);
+  --pulse-color-border: var(--pulse-color-neutral-800);
+  --pulse-color-surface-subtle: var(--pulse-color-neutral-900);
+  --pulse-color-surface-muted: var(--pulse-color-neutral-800);
+  --pulse-color-track: var(--pulse-color-neutral-700);
+  --pulse-color-surface-inverted: var(--pulse-color-neutral-100);
+  --pulse-color-surface-inverted-fg: var(--pulse-color-neutral-900);
+  --pulse-color-ring: var(--pulse-color-brand);
+  --pulse-color-brand: var(--pulse-color-brand-600);
+  --pulse-color-brand-fg: #ffffff;
+  --pulse-color-brand-glow: var(--pulse-color-brand-500);
+  --pulse-color-brand-hover: var(--pulse-color-brand-500);
+  --pulse-color-brand-active: var(--pulse-color-brand-400);
+  --pulse-color-brand-soft: var(--pulse-color-brand-950);
+  --pulse-color-brand-soft-fg: var(--pulse-color-brand-300);
+  --pulse-color-accent-cyan: var(--pulse-color-cyan-500);
+  --pulse-color-accent-pink: var(--pulse-color-pink-500);
+  --pulse-color-success: var(--pulse-color-green-500);
+  --pulse-color-warning: var(--pulse-color-amber-500);
+  --pulse-color-danger: var(--pulse-color-red-500);
+
+  /* Shadows (dark). */
+  --pulse-shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  --pulse-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --pulse-shadow-glow: 0 0 20px -5px rgba(29, 95, 208, 0.3);
+}

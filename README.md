@@ -12,7 +12,7 @@ set of `Pulse*` components built mobile-first.
 > `PulseTheme.dark()` are real Material 3 themes projecting the code-generated
 > token layer (`PulsePrimitives` / `PulseSemantics` / `PulseSpacing` /
 > `PulseFontSize` / `PulseShadows`), and the first 9 `Pulse*` components ship on
-> the violet baseline: `PulseButton`, `PulseEmptyState`, `PulseErrorState`,
+> the accessible blue baseline: `PulseButton`, `PulseEmptyState`, `PulseErrorState`,
 > `PulseLoadingState`, `PulseSectionCard`, `PulseTabBar`, `PulseBottomSheet`,
 > `PulseSnackBar`, `PulseProgressIndicator`. **`0.5.0` is the first release
 > published to [pub.dev](https://pub.dev/packages/pulse_theme)** — components are
@@ -30,7 +30,7 @@ Architecture of record: [ADR-018] (i-willink-crew) and
 
 ## Why PULSE (mobile-first)
 
-i-Willink ships both web and mobile. The web design system
+i-Willink ships both web and mobile. The existing web design system
 ([`willink-oss/willink-design-system`](https://github.com/willink-oss/willink-design-system),
 the `@willink-labs/*` npm packages — React + Tailwind preset) stays exactly as
 it is. PULSE is the **mobile-first** half of the same system: it is designed
@@ -39,16 +39,26 @@ for touch-first, app-shaped UI rather than ported down from desktop.
 Both halves consume **one** token source of truth, so a color or radius change
 is made once and both web and mobile inherit it.
 
+PULSE itself ships **two bindings** of that one design — `pulse_theme` for
+Flutter and [`@willink-labs/pulse`](web/) for anything that renders CSS
+(Next.js, Electron, WordPress, plain HTML). See
+[Using PULSE outside Flutter](#using-pulse-outside-flutter).
+
 ```
               @willink-labs/tokens  (DTCG JSON — single source of truth)
               primitive.json + semantic.json — published on npm
                         │
-            ┌───────────┴────────────┐
-            │                        │
-      (web, unchanged)         (mobile, PULSE)
-   @willink-labs/* React      pulse_theme (this repo)
-   + Tailwind preset          Dart classes are CODEGEN'd from the
-   (consumes tokens)          published DTCG JSON — never hand-mirrored
+        ┌───────────────┼───────────────────────────┐
+        │               │                           │
+  (web, unchanged)      │                    ── PULSE (this repo) ──
+ @willink-labs/* React  │            ┌──────────────┴──────────────┐
+ + Tailwind preset      │      pulse_theme (pub.dev)      @willink-labs/pulse (npm)
+ (consumes tokens)      │      Material 3 + 9 widgets     --pulse-* CSS variables
+                        │              │                           │
+                        │              └──── one codegen, ─────────┘
+                        │                    two bindings,
+                        │                proven equal by a test
+                        └── tokens change once; all of the above follow
 ```
 
 ### Token source of truth
@@ -105,7 +115,7 @@ so every slot you do not care about keeps its token value:
 ```dart
 final theme = PulseTheme.light(
   colorScheme: PulseTheme.lightColorScheme.copyWith(
-    primary: const Color(0xFF2E7BFF),
+    primary: const Color(0xFF0F766E),
   ),
 );
 ```
@@ -116,19 +126,19 @@ final theme = PulseTheme.light(
 > were already *built* from the old scheme, and Material reads those. The
 > result is a split app: `Pulse*` widgets resolve
 > `Theme.of(context).colorScheme` at build time and switch to your brand, while
-> a plain `TextButton` or `FilledButton` keeps painting DS violet. That is not
-> hypothetical — it is what makes a cancel button render violet inside a
-> blue-branded app. `PulseTheme.light(colorScheme: ...)` builds the component
+> a plain `TextButton` or `FilledButton` keeps painting DS blue. That is not
+> hypothetical — it is what makes a cancel button render blue inside a
+> teal-branded app. `PulseTheme.light(colorScheme: ...)` builds the component
 > themes from your scheme instead, so both halves agree.
 
 The non-Material extras (glow, gradients) live in a `PulseBrandTokens`
 extension rather than the `ColorScheme`, so re-brand them in the same call or a
-blue CTA keeps a violet glow:
+teal CTA keeps a blue glow:
 
 ```dart
 final theme = PulseTheme.light(
-  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
-  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTeal),
+  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandTeal),
 );
 ```
 
@@ -257,13 +267,67 @@ untouched.
 
 ---
 
+## Using PULSE outside Flutter
+
+The token layer is not Flutter-specific, and neither are PULSE's own decisions
+about it. [`@willink-labs/pulse`](web/) publishes them as CSS custom
+properties — no dependencies, no build step, no framework:
+
+```bash
+npm i @willink-labs/pulse
+```
+
+```ts
+// Next.js — app/layout.tsx
+import "@willink-labs/pulse/pulse.css";
+```
+
+```html
+<!-- Electron / WordPress / plain HTML -->
+<link rel="stylesheet" href="node_modules/@willink-labs/pulse/dist/pulse.css" />
+```
+
+```css
+.card {
+  background: var(--pulse-color-surface-subtle);
+  border-radius: var(--pulse-radius-surface);   /* the same 12px PulseRadius.surface */
+  padding: var(--pulse-space-md);
+}
+.card button {
+  min-height: var(--pulse-tap-target-min);      /* the same 48dp contract */
+  border-radius: var(--pulse-radius-control);
+}
+```
+
+Light/dark follows the OS by default and can be forced with
+`data-pulse-theme="dark"`; single-mode builds (`/light.css`, `/dark.css`) exist
+for apps with exactly one appearance. Full documentation, including the
+re-branding contract and its limits, is in [`web/README.md`](web/README.md).
+
+**What carries across, and what doesn't.** The tokens and PULSE's semantic layer
+are shared. The *components* are not: `PulseButton` and friends are Flutter
+widgets, and there is no React port — for web components, use
+`@willink-labs/react` (42 components), which reads the same token contract.
+Porting the nine `Pulse*` components to React is a separate decision, not a
+missing piece of this one.
+
+**Why not just `@willink-labs/css-tokens`?** That package is a flat projection
+of the raw token contract, and it stays the official WordPress path. It has no
+semantic radius roles and no tap-target contract, because those are PULSE's
+decisions rather than the contract's. Both can be loaded into one document —
+everything here is `--pulse-`-prefixed.
+
+---
+
 ## Relationship to the rest of the design system
 
 | Surface | Package(s) | Status |
 |---|---|---|
-| **Tokens (SSOT)** | `@willink-labs/tokens` (DTCG JSON, npm) | unchanged — the single source both sides read |
-| **Web** | `@willink-labs/react` / `@willink-labs/tailwind-preset` (React 42 comp) | unchanged — not renamed |
-| **Mobile (canonical)** | **`pulse_theme`** (this repo) | new — PULSE mobile-first DS |
+| **Tokens (SSOT)** | `@willink-labs/tokens` (DTCG JSON, npm) | unchanged — the single source every binding reads |
+| **Web (components)** | `@willink-labs/react` / `@willink-labs/tailwind-preset` (React 42 comp) | unchanged — not renamed |
+| **Web (raw tokens)** | `@willink-labs/css-tokens` | unchanged — flat CSS-variable projection, official WordPress path |
+| **Mobile (canonical)** | **`pulse_theme`** (this repo) | PULSE mobile-first DS |
+| **Web binding of PULSE** | **`@willink-labs/pulse`** (this repo, `web/`) | new — PULSE's semantic layer as `--pulse-*` CSS variables |
 | Mobile (legacy) | `willink_theme` (pub.dev) | **discontinued** — superseded by PULSE |
 
 ### Migration from `willink_theme`

@@ -301,7 +301,7 @@ final brand = Theme.of(context).extension<PulseBrandTokens>()!;
 | フィールド | 型 | 内容 |
 |---|---|---|
 | `brandGlow` | `Color` | グロー影のベース色 |
-| `brandGradient` | `LinearGradient` | ヒーロー用（brand600 → blue600 斜め）。**ライト / ダーク共通** |
+| `brandGradient` | `LinearGradient` | ヒーロー用（brand600 → brand700 斜め）。白文字は全域で AA 4.5:1 以上。**ライト / ダーク共通** |
 | `subtleGradient` | `LinearGradient` | 控えめな背景。ライト = white→brand50→sky50 / ダーク = neutral950→brand950→neutral900 |
 | `aiGradient` | `LinearGradient` | AI 系演出専用（cyan500 → brand500 → pink500）。**ライト / ダーク共通**。汎用には使わない |
 | `shadowSoft` | `List<BoxShadow>` | ライト = `PulseShadows.soft` / ダーク = `PulseShadows.softDark` |
@@ -675,26 +675,33 @@ const PulseProgressIndicator(semanticsLabel: 'アップロード中'); // 不定
 **`0.6.0` から、ファクトリに `colorScheme` を直接渡すのが正道**。`PulseTheme.lightColorScheme` を起点にすれば、上書きしないスロットはトークンの値を保つ。
 
 ```dart
-const brandBlue = Color(0xFF2E7BFF);
+const brandTealLight = Color(0xFF0F766E); // white 文字で 5.47:1
+const brandTealDark = Color(0xFF5EEAD4);  // neutral950 文字で 13.64:1
 
 MaterialApp(
   theme: PulseTheme.light(
-    colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+    colorScheme: PulseTheme.lightColorScheme.copyWith(
+      primary: brandTealLight,
+      onPrimary: Colors.white,
+    ),
   ),
   darkTheme: PulseTheme.dark(
-    colorScheme: PulseTheme.darkColorScheme.copyWith(primary: brandBlue),
+    colorScheme: PulseTheme.darkColorScheme.copyWith(
+      primary: brandTealDark,
+      onPrimary: PulsePrimitives.neutral950,
+    ),
   ),
   themeMode: ThemeMode.system,
   home: const HomePage(),
 );
 ```
 
-`PulseBrandTokens`（グラデーション / グロー）は `ColorScheme` とは別系統の `ThemeExtension` なので、**同じ呼び出しで一緒に差し替える**。忘れると「CTA は青・グローは紫」のちぐはぐになる。
+`PulseBrandTokens`（グラデーション / グロー）は `ColorScheme` とは別系統の `ThemeExtension` なので、**同じ呼び出しで一緒に差し替える**。忘れると「CTA はティール・グローは既定の青」のちぐはぐになる。
 
 ```dart
 PulseTheme.light(
-  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
-  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTealLight),
+  brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandTealLight),
 );
 ```
 
@@ -707,7 +714,7 @@ PulseTheme.light(
 | 色の読み方 | `Theme.of(context).colorScheme` を build 時に読む | 構築時に焼き込まれた component theme を読む |
 | 該当 | `Pulse*` コンポーネント（`PulseButton` など） | 素の `FilledButton` / `TextButton` / `Chip` / `TextField`、および内部で素の Material を使う `PulseEmptyState` の CTA・`PulseErrorState` の再試行 / コピーボタン |
 
-**これは実測で確定している**（`test/theme_contract_test.dart` の «`ThemeData.copyWith(colorScheme:)` does NOT restyle component themes»）。0.5.x の本ドキュメントは「未確認」と書いていたが、**実際に起きる**。青ブランドのアプリでキャンセルボタンだけ DS の紫で描かれるのがこの症状。
+**これは実測で確定している**（`test/theme_contract_test.dart` の «`ThemeData.copyWith(colorScheme:)` does NOT restyle component themes»）。0.5.x の本ドキュメントは「未確認」と書いていたが、**実際に起きる**。ティールブランドのアプリでキャンセルボタンだけ DS の青で描かれるのがこの症状。
 
 `PulseTheme.light(colorScheme: ...)` は component theme を渡された scheme から組み立て直すので、両側が一致する。
 
@@ -716,10 +723,10 @@ PulseTheme.light(
 
 ```diff
 -PulseTheme.light().copyWith(
--  colorScheme: ColorScheme.fromSeed(seedColor: brandBlue),
+-  colorScheme: ColorScheme.fromSeed(seedColor: brandTeal),
 -)
 +PulseTheme.light(
-+  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
++  colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTeal),
 +)
 ```
 
@@ -763,19 +770,17 @@ MaterialApp(
 | 見出しロール | `PulseSectionCard.title` / `PulseBottomSheet.title` が `Semantics(header: true)` | `test/harden_test.dart` D2 |
 | スピナーのラベル | `PulseLoadingState` が `semanticsLabel ?? message` を `CircularProgressIndicator.semanticsLabel` に渡す | `test/harden_test.dart` D2 |
 | 送信中ボタンの名前 | `PulseButton(isLoading: true)` は `loadingSemanticsLabel` 無しでもボタン名（`child` のテキスト）を失わない | `test/pulse_button_test.dart` — 「keeps an accessible name when loadingSemanticsLabel is null」 |
-| 塗りバリアントのコントラスト | `filled` / `danger` の (塗り, 文字) が light / dark とも WCAG AA 4.5:1 以上。実測: filled light 5.70 / danger light 4.83 / filled dark 5.70 / danger dark 5.36 | `test/a11y_contrast_test.dart` |
-| 文字拡大耐性 | `PulseButton` / `PulseLoadingState` / `PulseEmptyState` / `PulseErrorState` / `PulseSectionCard` が **360×640 の画面 × TextScaler 2.0× / 3.0×** でオーバーフローしない（`PulseEmptyState` / `PulseErrorState` は収まらない場合スクロールする） | `test/harden_test.dart` D4 |
+| 操作色のコントラスト | `filled` / `danger` の (塗り, 文字) と、`outline` / `ghost` / 選択タブの (primary, surface) が light / dark とも WCAG AA 4.5:1 以上。実測: filled light 5.17 / danger light 4.83 / filled dark 7.93 / danger dark 5.36、primary-on-surface light 5.17 / dark 7.93 | `test/a11y_contrast_test.dart` |
+| 文字拡大耐性 | `PulseButton` / `PulseLoadingState` / `PulseEmptyState` / `PulseErrorState` / `PulseSectionCard` / `PulseTabBar` / `PulseProgressIndicator` / `PulseBottomSheet` が **360×640 の画面 × TextScaler 2.0× / 3.0×** でオーバーフローしない（`PulseEmptyState` / `PulseErrorState` は収まらない場合スクロールする） | `test/harden_test.dart` D4 |
 | 進捗の読み上げ | `PulseProgressIndicator` は `semanticsLabel` を受け取り、determinate 時は Flutter が％も読む | `lib/src/components/pulse_progress_indicator.dart` |
 
 **未確認 / 保証範囲外**:
-`PulseTabBar` / `PulseSnackBar` / `PulseBottomSheet` / `PulseProgressIndicator` は上記の TextScaler 無オーバーフロー試験の対象に**含まれていない**（D4 のケース一覧が 5 コンポーネントのみ）。
+`PulseSnackBar` は上記の TextScaler 無オーバーフロー試験の対象に含まれていない。
 
-コントラストの自動検証は**塗りバリアントの (塗り, 文字) ペアだけ**に入っている（上表）。**面（surface）の上に載る文字色は対象外**で、既知の未達がある:
-
-- **ダークの `outline` / `ghost` のラベル**（`primary` = brand600 `#7C3AED` を `surface` = `#020617` の上に描く）は **3.54:1** で、通常サイズ文字の AA（4.5:1）に届かない。ライトは 5.70:1 で問題ない。ダークで `outline` / `ghost` を主要導線に使うなら、アプリ側で `PulseTheme.light(colorScheme: ...)` の `primary` を明るくするか `filled` を使うこと。
-- スナックバー / タブバー / 各種 muted テキストのコントラストは未測定。
-
-これらは 0.5.0 時点の既知の状態であり、直近の変更で悪化したものではない（`danger` のダークだけは 0.5.0 で導入と同時に修正済み）。
+コントラストの自動検証は、上表の主要な操作色ペアを対象にしている。ダークの
+`primary` は生成済みの青い `brand-400`、`onPrimary` は `neutral-950` を使い、
+塗りボタンと surface 上のラベルを同じ `ColorScheme` で両立させている。
+スナックバーの muted テキストなど、上表にない組み合わせは引き続き未測定。
 
 ### 7.2 アプリ側がやること
 
