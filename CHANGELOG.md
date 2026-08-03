@@ -2,14 +2,18 @@
 
 All notable changes to `pulse_theme` will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
-(`0.x`): the public API is not frozen until `1.0.0`, but versioning is
-otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
-progress", not "minor bumps may break".
+This project follows strict [SemVer 2.0](https://semver.org/). **The public API
+is frozen as of `1.0.0`** — what that covers, and what it deliberately does not,
+is defined in [doc/stability.md](doc/stability.md).
 
-## [Unreleased] — targeting 1.0.0-rc.2
+## [1.0.0] — 2026-08-03
 
-_Generated locally from the planned `@willink-labs/tokens` 2.0.0 contract._
+_Generated from `@willink-labs/tokens` 2.0.0._
+
+**The API freeze.** The public Dart surface is identical to `1.0.0-rc.1` —
+no symbol was added, renamed, or removed between them. What changed is the
+brand, which the token contract owns and versions separately, and the new web
+binding, which adds a package rather than altering this one.
 
 ### Added — PULSE outside Flutter (`@willink-labs/pulse`)
 
@@ -83,10 +87,12 @@ _Generated locally from the planned `@willink-labs/tokens` 2.0.0 contract._
   obviously different things; now that the brand is itself blue, that assertion
   is what stops the palette collapsing into a single hue.
 
-This visual change requires regenerated Linux CI goldens. The release cut also
-requires the upstream token package to be published at 2.0.0 before PULSE pins
-that version and regenerates through its normal published-contract gate —
-willink-design-system#202 is that release.
+Both prerequisites are met: `@willink-labs/tokens` 2.0.0 is published
+(willink-design-system#202), this package pins it, and regenerating from the
+published contract produces byte-identical output to what is committed here.
+The Linux CI goldens were regenerated on the runner and six of the eight
+changed — the two that did not are the neutral-only surfaces, which is a small
+confirmation that the recolor went exactly where it should have.
 
 ## [1.0.0-rc.1] — 2026-07-31
 

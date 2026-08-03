@@ -67,7 +67,7 @@ Dart / pub の caret は **メジャーが 0 のときだけ挙動が変わる**
 
 `pulse_theme: ^1.0.0` と書いておけば、破壊的変更が勝手に入ってくることはない（[doc/stability.md](stability.md) が何を凍結するかを定義している）。
 
-**リリース候補期間中**は caret が prerelease を解決しないので、正確に指定すること: `pulse_theme: 1.0.0-rc.1`
+1.0.0 が出るまでの**リリース候補期間中**は caret が prerelease を解決しなかったため正確な指定が必要だったが、1.0.0 が stable として公開された今は `^1.0.0` でよい。
 
 ### import
 
