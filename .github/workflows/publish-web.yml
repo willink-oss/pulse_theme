@@ -61,6 +61,28 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           scope: "@willink-labs"
 
+      # OIDC trusted publishing is a feature of the npm CLI, and Node 22 bundles
+      # npm 10, which does not have it. Without this the publish fails with a
+      # bare `E404 Not Found - PUT` — npm answers 404 rather than 403 for an
+      # unauthorised publish, so the error reads like "package missing" and sends
+      # you looking in the wrong place. (It did: the first release was diagnosed
+      # as the package not existing yet, which was true but not what was
+      # blocking it.)
+      #
+      # Asserted rather than assumed, because a silent regression here is
+      # another 404 hunt.
+      - name: Upgrade npm (trusted publishing needs >= 11.5.1)
+        run: |
+          set -euo pipefail
+          npm install -g npm@latest
+          VERSION="$(npm --version)"
+          echo "npm $VERSION"
+          MAJOR="${VERSION%%.*}"
+          if [ "$MAJOR" -lt 11 ]; then
+            echo "::error::npm $VERSION cannot use OIDC trusted publishing (needs >= 11.5.1). Refusing to attempt a publish that would fail as a misleading E404."
+            exit 1
+          fi
+
       # The tarball is generated output, so "did someone commit a stale
       # web/dist?" is a release-blocking question, not just a CI nicety.
       # css-codegen-gate already asks it on every PR; asking again here means a
