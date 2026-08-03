@@ -84,6 +84,42 @@ is disabled under `prefers-reduced-motion`. Everything is `pulse-`-prefixed, so
 it drops into a page already running DaisyUI, Bootstrap, or plain Tailwind
 without colliding.
 
+## Or use it through Tailwind
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+@import "@willink-labs/pulse/pulse.css";
+@import "@willink-labs/pulse/tailwind.css";
+```
+
+```tsx
+<button className="bg-brand text-brand-fg rounded-control px-md min-h-tap">
+  保存する
+</button>
+<div className="bg-surface-subtle rounded-surface p-lg shadow-soft">…</div>
+```
+
+The bridge uses `@theme inline`, which makes Tailwind emit
+`var(--pulse-color-brand)` into the utility instead of resolving it to a hex at
+build time. That is the point: the value stays a live reference, so
+`data-pulse-theme="dark"` and your own `:root` overrides still move it. A plain
+`@theme` would bake today's light value into `.bg-brand` and the utility would
+silently stop following the appearance.
+
+`rounded-control` / `rounded-surface` / `min-h-tap` are the reason to reach for
+this rather than hand-rolling a theme block: they say *what* is being rounded
+and *what* the target minimum is, rather than restating numbers.
+
+> **Do not import this alongside `@willink-labs/tailwind-preset`.** Both claim
+> `--color-brand`, so both produce `bg-brand`. It is not broken — the later
+> import wins, deterministically — but the middle of the ramp will not match,
+> because the preset derives its scale from one input via OKLCH `color-mix`
+> while these are literals: at step 500 that is `#2e7bff` (fit-ai's headline
+> colour) here versus `#4279d9` there. Step 600, the anchor, always agrees.
+> Use the preset if you are consuming `@willink-labs/react`, whose components
+> are styled against it; use this if PULSE is your system.
+
 ## Style with the variables directly
 
 Then style with the variables:
