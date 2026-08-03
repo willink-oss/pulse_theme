@@ -114,22 +114,20 @@ void main() {
   });
 
   group('PulseTabBar — dark theme (dark)', () {
-    testWidgets(
-      'labels/divider flip to dark roles; indicator stays brand-600',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(const PulseTabBar(tabs: threeTabs), theme: PulseTheme.dark()),
-        );
+    testWidgets('labels/divider use contrast-adjusted dark roles', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const PulseTabBar(tabs: threeTabs), theme: PulseTheme.dark()),
+      );
 
-        final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-        // brand is mode-invariant (ADR-0013) — same violet as light.
-        expect(tabBar.indicatorColor, equals(PulsePrimitives.brand600));
-        expect(tabBar.labelColor, equals(PulsePrimitives.brand600));
-        // muted → neutral-400, border → neutral-800 dark flips.
-        expect(tabBar.unselectedLabelColor, equals(PulsePrimitives.neutral400));
-        expect(tabBar.dividerColor, equals(PulsePrimitives.neutral800));
-      },
-    );
+      final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabBar.indicatorColor, equals(PulsePrimitives.brand400));
+      expect(tabBar.labelColor, equals(PulsePrimitives.brand400));
+      // muted → neutral-400, border → neutral-800 dark flips.
+      expect(tabBar.unselectedLabelColor, equals(PulsePrimitives.neutral400));
+      expect(tabBar.dividerColor, equals(PulsePrimitives.neutral800));
+    });
   });
 
   group('PulseTabBar — ColorScheme override', () {

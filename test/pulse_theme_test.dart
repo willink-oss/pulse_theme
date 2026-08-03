@@ -26,7 +26,7 @@ void main() {
       expect(a.colorScheme.primary, b.colorScheme.primary);
     });
 
-    group('ColorScheme is a projection of the semantic tokens', () {
+    group('ColorScheme projects semantic tokens with Material adapters', () {
       test('light slots map to PulseSemantics roles', () {
         final cs = PulseTheme.light().colorScheme;
         expect(cs.primary, PulseSemantics.brand);
@@ -45,8 +45,10 @@ void main() {
         expect(cs.surface, PulseSemanticsDark.bg); // neutral-950
         expect(cs.onSurface, PulseSemanticsDark.fg); // neutral-50
         expect(cs.outline, PulseSemanticsDark.border); // neutral-800
-        // Brand identity is mode-invariant.
-        expect(cs.primary, PulseSemantics.brand);
+        // Material uses primary for both fills and text. The lighter dark step
+        // keeps outline/ghost labels readable on neutral-950.
+        expect(cs.primary, PulsePrimitives.brand400);
+        expect(cs.onPrimary, PulseSemanticsDark.bg);
       });
     });
 
@@ -63,6 +65,10 @@ void main() {
         );
         // Brand glow shadow is the code-generated PulseShadows.glow.
         expect(PulseBrandTokens.pulse.shadowGlow, same(PulseShadows.glow));
+        expect(PulseBrandTokens.pulse.brandGradient.colors, const [
+          PulsePrimitives.brand600,
+          PulsePrimitives.brand700,
+        ]);
         // Soft shadow flips between modes (ADR-0013).
         expect(PulseBrandTokens.pulse.shadowSoft, same(PulseShadows.soft));
         expect(

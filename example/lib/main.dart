@@ -4,100 +4,32 @@
 // are done: `PulseTheme.light()` / `PulseTheme.dark()` are plain Material 3
 // `ThemeData`.
 //
-// Re-branding goes through the factory's own `colorScheme` argument, NOT
-// through `ThemeData.copyWith(colorScheme: ...)`. The app-bar swatch toggles it
-// live so the difference is visible rather than asserted — see [_brandBlue].
-
 import 'package:flutter/material.dart';
 import 'package:pulse_theme/pulse_theme.dart';
 
 void main() => runApp(const PulseExampleApp());
 
-/// A non-violet brand, to show the override actually reaching every surface.
-const _brandBlue = Color(0xFF2E7BFF);
-
 /// Root app: the only PULSE wiring a consumer app needs.
-class PulseExampleApp extends StatefulWidget {
+class PulseExampleApp extends StatelessWidget {
   const PulseExampleApp({super.key});
-
-  @override
-  State<PulseExampleApp> createState() => _PulseExampleAppState();
-}
-
-class _PulseExampleAppState extends State<PulseExampleApp> {
-  bool _rebranded = false;
-
-  /// Builds the theme for one mode.
-  ///
-  /// The brand override is passed **to the factory**, not applied afterwards
-  /// with `ThemeData.copyWith(colorScheme: ...)`. That distinction is the whole
-  /// point of the toggle: `copyWith` swaps the `colorScheme` field but leaves
-  /// the component themes already built from the old one, so plain Material
-  /// widgets — including the CTAs inside `PulseEmptyState` / `PulseErrorState`
-  /// on the other two tabs — would keep painting the violet baseline while the
-  /// `Pulse*` widgets changed. Flip the swatch and check those tabs.
-  ///
-  /// `brandTokens` rides along because glow and gradients live in a
-  /// `ThemeExtension`, not the `ColorScheme`; overriding only the scheme would
-  /// leave a blue button wearing a violet glow.
-  ThemeData _theme({required bool dark}) {
-    final base =
-        dark ? PulseTheme.darkColorScheme : PulseTheme.lightColorScheme;
-    final tokens = dark ? PulseBrandTokens.pulseDark : PulseBrandTokens.pulse;
-
-    // strings: コンポーネント自身が描く文言（現状は PulseErrorState）の既定。
-    // 無指定だと PulseStrings.en（英語）になるので、この日本語ギャラリーでは
-    // ja を渡している。呼び出し側で明示的に渡した引数の方が常に優先される。
-    if (!_rebranded) {
-      return dark
-          ? PulseTheme.dark(strings: PulseStrings.ja)
-          : PulseTheme.light(strings: PulseStrings.ja);
-    }
-    final scheme = base.copyWith(primary: _brandBlue);
-    final brand = tokens.copyWith(brandGlow: _brandBlue);
-    return dark
-        ? PulseTheme.dark(
-          colorScheme: scheme,
-          brandTokens: brand,
-          strings: PulseStrings.ja,
-        )
-        : PulseTheme.light(
-          colorScheme: scheme,
-          brandTokens: brand,
-          strings: PulseStrings.ja,
-        );
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PULSE — pulse_theme example',
       debugShowCheckedModeBanner: false,
-      theme: _theme(dark: false),
-      darkTheme: _theme(dark: true),
-      // OS の外観設定に追従（ライト / ダークを自動で切り替える）。
-      themeMode: ThemeMode.system,
-      home: GalleryPage(
-        rebranded: _rebranded,
-        onToggleBrand: () => setState(() => _rebranded = !_rebranded),
-      ),
+      theme: PulseTheme.light(strings: PulseStrings.ja),
+      darkTheme: PulseTheme.dark(strings: PulseStrings.ja),
+      // この視覚確認ギャラリは OS 設定に関係なくライトで固定。
+      themeMode: ThemeMode.light,
+      home: const GalleryPage(),
     );
   }
 }
 
 /// Tabbed gallery hosting the component / empty / error showcases.
 class GalleryPage extends StatelessWidget {
-  const GalleryPage({
-    required this.rebranded,
-    required this.onToggleBrand,
-    super.key,
-  });
-
-  /// Whether the blue brand override is currently applied.
-  final bool rebranded;
-
-  /// Flips the override. Wired to the app-bar swatch.
-  final VoidCallback onToggleBrand;
+  const GalleryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -108,16 +40,6 @@ class GalleryPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('PULSE Gallery'),
-          actions: [
-            IconButton(
-              onPressed: onToggleBrand,
-              tooltip: rebranded ? 'PULSE の既定色に戻す' : 'ブランド色を上書きする',
-              icon: Icon(
-                rebranded ? Icons.palette : Icons.palette_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ],
           bottom: const PulseTabBar(
             tabs: [Tab(text: 'コンポーネント'), Tab(text: '空状態'), Tab(text: 'エラー')],
           ),

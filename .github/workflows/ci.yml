@@ -132,6 +132,58 @@ jobs:
           fi
 
   # ---------------------------------------------------------------------------
+  # css-codegen-gate — the same drift check for the web binding.
+  #
+  # `tool/generate_css.mjs` emits web/dist/ (the @willink-labs/pulse npm
+  # package) from the SAME published contract token-codegen-gate uses. Kept as
+  # its own job rather than extra steps on that one so a red check names which
+  # binding drifted.
+  #
+  # Note what this gate can and cannot see: it proves the committed CSS matches
+  # the contract, exactly as its sibling proves the committed Dart does. Neither
+  # can prove the two bindings agree with EACH OTHER — both could drift the same
+  # way and stay green. That is test/web_parity_test.dart's job, and it runs in
+  # flutter-gate above.
+  # ---------------------------------------------------------------------------
+  css-codegen-gate:
+    name: css-codegen-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
+      - name: Install token contract (pinned @willink-labs/tokens)
+        run: npm --prefix tool ci
+
+      - name: Regenerate the web binding from the published DTCG contract
+        run: node tool/generate_css.mjs
+
+      - name: Fail on drift (committed CSS must match the SSOT)
+        run: |
+          if ! git diff --exit-code -- web/dist; then
+            echo "::error::web/dist is stale vs @willink-labs/tokens. Run \`npm --prefix tool ci && node tool/generate_css.mjs\` and commit."
+            exit 1
+          fi
+
+      # A generated file that git does not track is a file the drift check above
+      # cannot see: `git diff` reports nothing for an untracked path, so a new
+      # emitter output would ship to npm unreviewed and unverified.
+      - name: Fail on untracked generated output
+        run: |
+          set -euo pipefail
+          untracked="$(git ls-files --others --exclude-standard -- web/dist)"
+          if [ -n "$untracked" ]; then
+            echo "::error::The emitter produced files git is not tracking:"
+            echo "$untracked"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
   # package-score — the two quality claims the README makes about this package,
   # enforced before merge instead of observed after publish.
   #

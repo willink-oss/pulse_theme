@@ -153,11 +153,9 @@ void main() {
   });
 
   group('PulseButton — dark theme (dark)', () {
-    testWidgets('filled keeps mode-invariant brand-600 bg + white text', (
+    testWidgets('filled uses the contrast-adjusted dark brand pair', (
       tester,
     ) async {
-      // ADR-0013: brand identity does not flip — a filled button is the
-      // same violet on a neutral-950 surface.
       await tester.pumpWidget(
         wrap(
           PulseButton(onPressed: () {}, child: const Text('保存')),
@@ -169,8 +167,8 @@ void main() {
       final style = button.style!;
       final bg = style.backgroundColor!.resolve(<WidgetState>{});
       final fg = style.foregroundColor!.resolve(<WidgetState>{});
-      expect(bg, equals(PulsePrimitives.brand600));
-      expect(fg, equals(const Color(0xFFFFFFFF)));
+      expect(bg, equals(PulsePrimitives.brand400));
+      expect(fg, equals(PulsePrimitives.neutral950));
     });
 
     testWidgets('ghost overlay uses the dark brand-950 container', (

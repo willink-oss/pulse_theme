@@ -27,7 +27,7 @@ final class PulseBrandTokens extends ThemeExtension<PulseBrandTokens> {
   });
 
   /// Brand glow color (used as a shadow color base for primary buttons).
-  /// Mirrors the React DS `--shadow-glow` semantic token.
+  /// Mirrors the React DS `--color-brand-glow` semantic token.
   final Color brandGlow;
 
   /// Hero / primary surface gradient. Mirrors `bg-gradient-primary` from the
@@ -128,12 +128,13 @@ final class PulseBrandTokens extends ThemeExtension<PulseBrandTokens> {
     stops: [0.0, 0.5, 1.0],
   );
 
-  /// Hero gradient for the PULSE brand (brand-600 → blue-600 diagonal).
+  /// Hero gradient for the PULSE brand (brand-600 → brand-700 diagonal).
+  /// White foregrounds clear WCAG AA at every point (worst endpoint 5.17:1).
   /// Mode-invariant — shared by [pulse] and [pulseDark].
   static const LinearGradient _brandGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [PulsePrimitives.brand600, PulsePrimitives.blue600],
+    colors: [PulsePrimitives.brand600, PulsePrimitives.brand700],
     stops: [0.0, 1.0],
   );
 

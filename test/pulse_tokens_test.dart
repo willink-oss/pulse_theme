@@ -12,8 +12,16 @@ import 'package:pulse_theme/pulse_theme.dart';
 void main() {
   group('PulsePrimitives — color / radius / duration / easing', () {
     test('color hex → Color(0xFF..)', () {
-      expect(PulsePrimitives.brand600, const Color(0xFF7C3AED));
+      // The two fit-ai brand anchors, reproduced exactly by the ramp: 500 is
+      // fit-ai `brand.primary`, 600 is `brand.primaryDeep`. Pinned here because
+      // "the emitter ran" is not the same claim as "the emitter produced the
+      // brand" — a regenerated ramp that lost an anchor would otherwise be a
+      // silent, repo-wide recolor.
+      expect(PulsePrimitives.brand500, const Color(0xFF2E7BFF));
+      expect(PulsePrimitives.brand600, const Color(0xFF1D5FD0));
       expect(PulsePrimitives.neutral950, const Color(0xFF020617));
+      // `blue` is the generic scale and stays Tailwind's — it must NOT track
+      // the brand, or the palette loses the one blue that is not the brand.
       expect(PulsePrimitives.blue600, const Color(0xFF2563EB));
     });
 

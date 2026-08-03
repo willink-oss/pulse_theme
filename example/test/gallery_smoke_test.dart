@@ -16,7 +16,44 @@ Finder get _list => find.descendant(
   matching: find.byType(Scrollable),
 );
 
+double _contrastRatio(Color a, Color b) {
+  final aLuminance = a.computeLuminance();
+  final bLuminance = b.computeLuminance();
+  final lighter = aLuminance > bLuminance ? aLuminance : bLuminance;
+  final darker = aLuminance > bLuminance ? bLuminance : aLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 void main() {
+  testWidgets('starts with the accessible PULSE blue palette in light mode', (
+    tester,
+  ) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+    await tester.pumpWidget(const PulseExampleApp());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final theme = Theme.of(tester.element(find.byType(GalleryPage)));
+
+    expect(app.themeMode, ThemeMode.light);
+    expect(theme.brightness, Brightness.light);
+    expect(theme.colorScheme.primary, PulseSemantics.brand);
+    expect(
+      theme.extension<PulseBrandTokens>()!.brandGlow,
+      PulseSemantics.brandGlow,
+    );
+    expect(
+      _contrastRatio(theme.colorScheme.primary, theme.colorScheme.onPrimary),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(
+      _contrastRatio(theme.colorScheme.primary, theme.colorScheme.surface),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
   testWidgets('every tab renders its components', (tester) async {
     await tester.pumpWidget(const PulseExampleApp());
     await tester.pump(const Duration(milliseconds: 300));
@@ -203,48 +240,4 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pump(const Duration(seconds: 1));
   });
-
-  testWidgets(
-    'the brand toggle reaches raw Material widgets, not just Pulse*',
-    (tester) async {
-      await tester.pumpWidget(const PulseExampleApp());
-      await tester.pump(const Duration(milliseconds: 300));
-
-      Color primaryOf(WidgetTester t) =>
-          Theme.of(t.element(find.byType(GalleryPage))).colorScheme.primary;
-
-      /// What a plain FilledButton would paint — this is the half that
-      /// `ThemeData.copyWith(colorScheme:)` fails to move, and it is what the
-      /// empty/error tabs' CTAs actually use.
-      Color filledButtonBgOf(WidgetTester t) =>
-          Theme.of(
-            t.element(find.byType(GalleryPage)),
-          ).filledButtonTheme.style!.backgroundColor!.resolve({})!;
-
-      final violet = primaryOf(tester);
-      expect(
-        filledButtonBgOf(tester),
-        violet,
-        reason: 'baseline: the button theme agrees with the scheme',
-      );
-
-      await tester.tap(find.byIcon(Icons.palette_outlined));
-      await tester.pumpAndSettle();
-
-      final blue = primaryOf(tester);
-      expect(blue, isNot(violet), reason: 'the override did not apply');
-      expect(
-        filledButtonBgOf(tester),
-        blue,
-        reason:
-            'the component theme must follow the override too — this is '
-            'exactly what copyWith(colorScheme:) leaves behind',
-      );
-
-      // …and back.
-      await tester.tap(find.byIcon(Icons.palette));
-      await tester.pumpAndSettle();
-      expect(primaryOf(tester), violet);
-    },
-  );
 }

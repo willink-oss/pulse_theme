@@ -1,0 +1,186 @@
+name: Publish @willink-labs/pulse to npmjs.org
+
+# The web binding of PULSE. Triggered by the same `v*` tags that publish the
+# Dart package to pub.dev, because the two are generated from one token contract
+# in one commit — releasing them from one tag is what keeps the version on npm
+# and the version on pub.dev meaning the same thing.
+#
+# Kept in its own workflow rather than as a job in publish.yml so a failed npm
+# publish cannot abort a pub.dev release that already succeeded (and the other
+# way round). Both are idempotent, so a failed one is re-runnable on its own.
+#
+# ⚠️ One-time setup, and it is NOT done yet: npmjs.com must trust this
+# repo+workflow as an OIDC publisher for @willink-labs/pulse before the publish
+# step can authenticate. npm cannot configure a trusted publisher for a package
+# that does not exist, so — exactly as pub.dev required for pulse_theme 0.5.0 —
+# the FIRST version is published by hand from a workstation:
+#
+#   cd web && npm publish --access public
+#
+# and only then is this workflow wired up on npmjs.com (Settings → Trusted
+# publisher → GitHub Actions → willink-oss/pulse_theme, publish-web.yml).
+# Until that is done every step below still runs as a gate; only the final
+# publish fails to authenticate.
+#
+# `workflow_dispatch` is gate-only: npm's trusted publishing, like pub.dev's,
+# is only honoured for a run triggered by pushing a tag.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for the npm OIDC Trusted Publisher + provenance
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          scope: "@willink-labs"
+
+      # The tarball is generated output, so "did someone commit a stale
+      # web/dist?" is a release-blocking question, not just a CI nicety.
+      # css-codegen-gate already asks it on every PR; asking again here means a
+      # tag pushed to a branch that never saw CI cannot publish stale CSS.
+      - name: Install token contract (pinned @willink-labs/tokens)
+        run: npm --prefix tool ci
+
+      - name: Regenerate and fail on drift
+        run: |
+          set -euo pipefail
+          node tool/generate_css.mjs
+          if ! git diff --exit-code -- web/dist; then
+            echo "::error::web/dist is stale vs @willink-labs/tokens. Refusing to publish generated output that does not match the token contract."
+            exit 1
+          fi
+
+      - name: Verify tag/package.json agreement
+        id: version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./web/package.json').version")"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag/package mismatch: tag '$TAG_VERSION' vs web/package.json '$PKG_VERSION'. Refusing to publish."
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+      # Pre-releases must not become what `npm i @willink-labs/pulse` resolves
+      # to. Same channel mapping as willink-design-system's publish.yml
+      # (ADR-0019), so a consumer reads the two npm scopes the same way.
+      #
+      # SemVer 2.0.0: the pre-release segment is after '-' and BEFORE any '+'
+      # build metadata — strip build metadata first so a hyphen that is legal
+      # inside it (§10, e.g. 1.0.0+exp-sha-5) cannot misroute a stable release.
+      - name: Resolve release channel
+        id: channel
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          CORE="${VERSION%%+*}"
+          if [[ "$CORE" == *-* ]]; then
+            case "${CORE#*-}" in
+              beta*)  DIST_TAG="beta" ;;
+              rc*)    DIST_TAG="rc" ;;
+              alpha*) DIST_TAG="alpha" ;;
+              *)      DIST_TAG="next" ;;
+            esac
+            IS_PRERELEASE=1
+          else
+            DIST_TAG="latest"
+            IS_PRERELEASE=0
+          fi
+          if [ "$IS_PRERELEASE" = "1" ] && [ "$DIST_TAG" = "latest" ]; then
+            echo "::error::Refusing to publish pre-release '$VERSION' to the 'latest' dist-tag."
+            exit 1
+          fi
+          echo "dist_tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      # Two questions in one call, because both answers come from the same
+      # registry document:
+      #
+      #   1. Is this exact version already published? npm versions are permanent
+      #      and unrepublishable, so a re-pushed tag must skip, not die red.
+      #   2. Does the package exist at all? npm forces a `latest` dist-tag onto a
+      #      package with ZERO published versions even when `--tag rc` is given.
+      #      So a first publish that is a pre-release would silently make
+      #      `npm i @willink-labs/pulse` resolve to an rc. That is blocked here
+      #      rather than discovered by a consumer.
+      #
+      # Failure policy mirrors publish.yml's pub.dev check: an undetermined
+      # answer fails the job. We refuse to fail open (publish blind) and equally
+      # refuse to fail closed (skip silently, so a release tag ships nothing and
+      # still looks green).
+      - name: Check the registry
+        id: registry
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          PACKAGE="@willink-labs/pulse"
+
+          if HTTP_CODE="$(curl -sS \
+              --retry 3 --retry-delay 3 --retry-all-errors --max-time 30 \
+              -o npm-response.json -w '%{http_code}' \
+              "https://registry.npmjs.org/@willink-labs%2Fpulse")"; then
+            :
+          else
+            echo "::error::Could not reach the npm registry (curl transport failure). Not publishing and not silently skipping — re-run once the registry is reachable."
+            exit 1
+          fi
+
+          case "$HTTP_CODE" in
+            200)
+              if ! jq -e 'type == "object" and (.versions | type == "object")' npm-response.json >/dev/null 2>&1; then
+                echo "::error::The registry returned 200 but the body is not a packument with a versions object. Refusing to publish on an answer we cannot parse."
+                exit 1
+              fi
+              if jq -e --arg v "$VERSION" '.versions | has($v)' npm-response.json >/dev/null; then
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+                echo "::notice::${PACKAGE}@${VERSION} is already published — skipping. npm never accepts the same version twice."
+              else
+                echo "skip=false" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+            404)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              if [ "${{ steps.channel.outputs.is_prerelease }}" = "1" ]; then
+                echo "::error::First publish of ${PACKAGE} cannot be the pre-release '${VERSION}'. npm bootstraps 'latest' to the only published version regardless of --tag, so \`npm i ${PACKAGE}\` would resolve to a pre-release. Cut the first release as a stable version, or publish it by hand and fix the dist-tag deliberately."
+                exit 1
+              fi
+              echo "::notice::${PACKAGE} is not on npm yet — treating ${VERSION} as the first release."
+              ;;
+            *)
+              echo "::error::Unexpected HTTP ${HTTP_CODE} from the npm registry. Refusing to publish — a published version can never be replaced."
+              exit 1
+              ;;
+          esac
+
+      # `npm publish` from web/ rather than a workspace filter: the package has
+      # no dependencies and no workspace: references, so there is nothing for a
+      # package manager to rewrite, and the `files` allowlist in package.json
+      # already scopes the tarball to dist/ + README.md.
+      - name: Publish (OIDC Trusted Publisher, with provenance)
+        if: >-
+          github.event_name == 'push'
+          && startsWith(github.ref, 'refs/tags/')
+          && steps.registry.outputs.skip == 'false'
+        working-directory: web
+        run: npm publish --access public --provenance --tag "${{ steps.channel.outputs.dist_tag }}"
+
+      - name: Report a gate-only run
+        if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "::notice::Gate-only run (${{ github.event_name }} on ${{ github.ref }}). Codegen drift was checked; nothing was published. npm trusted publishing is only honoured for a tag push."

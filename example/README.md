@@ -36,13 +36,17 @@ flutter run
 
 ### 押さえておきたい点
 
-- **テーマ配線はこれだけ** — `MaterialApp` に `theme: PulseTheme.light()` /
-  `darkTheme: PulseTheme.dark()` / `themeMode: ThemeMode.system` を渡すだけ。
-  OS のライト / ダーク設定に自動で追従する。
-- **再ブランドはファクトリの `colorScheme` 引数** — AppBar のパレットアイコンで実際に切り替わる。
+- **視覚確認はライトモード固定** — `MaterialApp` は
+  `themeMode: ThemeMode.light` で起動し、OS の外観設定には左右されない。
+- **fit-ai の青が既定** — ブランドは fit-ai のトークン由来。fit-ai の
+  `brand.primary` (`#2E7BFF`) を `brand-500` に厳密保持し、操作色には
+  fit-ai 自身が持つ `brand.primaryDeep` (`#1D5FD0`) を `brand-600` として使う。
+  白文字は前者だと 3.89:1 で AA を割るが、後者なら 5.83:1 で満たす。
+- **再ブランドはファクトリの `colorScheme` 引数** — 別ブランドにする場合は
+  `PulseTheme.light(colorScheme: ...)` にカスタム scheme を渡す。
   `PulseTheme.light().copyWith(colorScheme: ...)` では**効かない**（component theme が構築時の
-  scheme から焼き込み済みで、素の Material ウィジェットはそちらを読むため）。空状態 / エラータブの
-  CTA は素の Material ボタンなので、その違いが目で見える。
+  scheme から焼き込み済みで、素の Material ウィジェットはそちらを読むため）。
+  このギャラリ自体は既定色だけを表示し、契約差は `theme_contract_test.dart` で固定している。
 - **`PulseTabBar` は `TabController` を自前で持たない**（Material の `TabBar` と同じ契約）。
   この例では `DefaultTabController` を祖先に置いている。
 - **`PulseBottomSheet.show<T>()`** は `Navigator.pop(context, value)` に渡した値で解決する

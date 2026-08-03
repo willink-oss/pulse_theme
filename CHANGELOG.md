@@ -7,6 +7,87 @@ This project follows strict [SemVer 2.0](https://semver.org/). It is pre-1.0
 otherwise strict SemVer per [ADR-018] — `0.x` here means "foundation in
 progress", not "minor bumps may break".
 
+## [Unreleased] — targeting 1.0.0-rc.2
+
+_Generated locally from the planned `@willink-labs/tokens` 2.0.0 contract._
+
+### Added — PULSE outside Flutter (`@willink-labs/pulse`)
+
+- **New npm package, published from this repo** (`web/`): PULSE's tokens and
+  semantic layer as `--pulse-*` CSS custom properties, with no dependencies and
+  no build step. Ships `pulse.css` (light + dark, OS preference plus an explicit
+  `data-pulse-theme` override that wins in both directions), single-mode
+  `pulse.light.css` / `pulse.dark.css` for apps with exactly one appearance, and
+  `tokens.js` / `.d.ts` / `.json` for code that needs resolved values. Consumers:
+  Next.js (`import "@willink-labs/pulse/pulse.css"`), Electron, WordPress, plain
+  HTML.
+- **`tool/generate_css.mjs`** — the web emitter. Reads the same input directory
+  and the same `PULSE_TOKENS_DIR` override as `generate_tokens.mjs`, so the two
+  bindings cannot be generated from different sources by accident, and carries
+  the same coverage guard (a new DTCG group must be emitted or explicitly
+  deferred — never silently skipped).
+- **What the CSS carries that `@willink-labs/css-tokens` does not**: the
+  semantic radius roles (`--pulse-radius-control` / `-surface` / `-sheet` /
+  `-pill` / `-inset`) and the mobile-first `--pulse-tap-target-min`. Those are
+  PULSE's own decisions, absent from the token contract, which is why PULSE has
+  to be what publishes them. Everything is `--pulse-`-prefixed, so both packages
+  can be loaded into one document.
+- **`test/web_parity_test.dart`** — proves the two bindings agree. It parses the
+  emitted CSS, resolves its `var()` chains the way a browser would, and asserts
+  every value equals its Dart constant, including the five radius roles that are
+  hand-written on both sides. A completeness assertion fails if the stylesheet
+  defines a property the test does not check, so a new token cannot slip past
+  the comparison by simply not being listed. Neither per-binding drift gate can
+  catch cross-binding divergence — both could drift the same way and stay green —
+  which is the gap this closes.
+- **CI `css-codegen-gate`** — regenerates `web/dist` from the published contract
+  and fails on drift, plus a check that the emitter produced no untracked files
+  (`git diff` reports nothing for an untracked path, so generated output outside
+  git would ship to npm unreviewed).
+- **`.github/workflows/publish-web.yml`** — npm publish on the same `v*` tag
+  that publishes to pub.dev, via OIDC Trusted Publisher with provenance. Routes
+  pre-releases off the `latest` dist-tag, and refuses a first publish that is a
+  pre-release, because npm bootstraps `latest` to the only published version
+  regardless of `--tag`.
+
+> **Not yet done, and it blocks the npm release:** npmjs.com cannot configure a
+> trusted publisher for a package that does not exist, so the first version of
+> `@willink-labs/pulse` must be published by hand — and, per the guard above,
+> must be a stable version rather than an rc.
+
+### Changed — the default brand is fit-ai blue
+
+- Replaced the violet `brand-50`–`brand-950` ramp with one built from **fit-ai's
+  own brand tokens**, reproduced exactly at the two steps fit-ai defines:
+  `brand-500` = `#2E7BFF` (fit-ai `brand.primary`) and `brand-600` = `#1D5FD0`
+  (fit-ai `brand.primaryDeep`). The other nine steps are generated along the
+  single OKLCH hue both anchors share (H = 260.6), so the ramp is one continuous
+  scale rather than two palettes stitched together. The generated shadow glow
+  uses `brand-600` at 30% alpha, matching the SSOT shadow token.
+- `brand-600` is the primary action rather than fit-ai's headline `#2E7BFF`
+  because white text on the latter reaches only **3.89:1** — below WCAG AA.
+  fit-ai itself ships `primary: #2E7BFF / onPrimary: white` and carries that
+  shortfall; PULSE uses the deeper anchor fit-ai already defines for the case.
+  White on `#1D5FD0` is **5.83:1**. fit-ai's headline colour keeps its identity
+  role at `brand-500`: glow, ring, dark-mode hover, and the `secondary` fill,
+  which pairs with dark ink at 5.18:1.
+- Changed the primary surface gradient to `brand-600` → `brand-700`; white
+  foregrounds clear 4.5:1 across the full gradient (5.83:1 / 7.79:1).
+- Adapted the dark Material scheme to `brand-400` (`#5F9DFF`) with
+  `neutral-950` ink. Filled controls and primary text on the dark surface both
+  clear WCAG AA (7.45:1).
+- Fixed the example gallery to `ThemeMode.light`; it now demonstrates the
+  package default directly instead of carrying a local palette override.
+- `PulsePrimitives.blue600` stays Tailwind's `#2563EB` and a test asserts it
+  differs from `brand600`. While the brand was violet, "brand" and "blue" were
+  obviously different things; now that the brand is itself blue, that assertion
+  is what stops the palette collapsing into a single hue.
+
+This visual change requires regenerated Linux CI goldens. The release cut also
+requires the upstream token package to be published at 2.0.0 before PULSE pins
+that version and regenerates through its normal published-contract gate —
+willink-design-system#202 is that release.
+
 ## [1.0.0-rc.1] — 2026-07-31
 
 _Generated from `@willink-labs/tokens` 1.9.0._

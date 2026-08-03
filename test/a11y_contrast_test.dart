@@ -1,12 +1,9 @@
 // WCAG AA contrast lock for the (accent, on-accent) pairs PULSE components
 // actually paint.
 //
-// Scope is deliberately narrow: a *solid* fill plus the text drawn on top of
-// it, i.e. exactly what `PulseButton(variant: filled)` renders in either tone. Those
-// are the pairs a token flip can silently break — dark `onError` did break,
-// which is why this file exists. Text-on-surface pairs (the `outline` / `ghost`
-// label, which is `primary` over `surface`) are NOT covered here; see
-// `doc/adoption.md` §7.1 for what is and is not guaranteed.
+// Solid-fill pairs and brand text on the page surface are both locked. The
+// latter covers outline/ghost button labels and the selected tab label — the
+// reason PULSE adapts dark primary to a lighter generated brand step.
 //
 // The button label is `FontWeight.w600` at 14 / 16 / 18 logical px
 // (`PulseButton._fontSize`). None of those reaches WCAG's 18.66px "large
@@ -52,9 +49,9 @@ void main() {
     });
   });
 
-  group('PulseButton solid variants meet WCAG AA (4.5:1)', () {
-    // tone `brand` reads (primary, onPrimary); tone `danger` reads (error, onError).
-    // See PulseButton._accent / ._foreground.
+  group('saturated ColorScheme fills meet WCAG AA (4.5:1)', () {
+    // PulseButton reads primary/onPrimary and error/onError. Secondary and
+    // tertiary are public Material slots, so lock those on-color pairs too.
     final pairs = <String, (Color, Color)>{
       'light filled  (primary/onPrimary)': (
         PulseTheme.light().colorScheme.primary,
@@ -64,6 +61,14 @@ void main() {
         PulseTheme.light().colorScheme.error,
         PulseTheme.light().colorScheme.onError,
       ),
+      'light secondary/onSecondary': (
+        PulseTheme.light().colorScheme.secondary,
+        PulseTheme.light().colorScheme.onSecondary,
+      ),
+      'light tertiary/onTertiary': (
+        PulseTheme.light().colorScheme.tertiary,
+        PulseTheme.light().colorScheme.onTertiary,
+      ),
       'dark  filled  (primary/onPrimary)': (
         PulseTheme.dark().colorScheme.primary,
         PulseTheme.dark().colorScheme.onPrimary,
@@ -71,6 +76,14 @@ void main() {
       'dark  danger  (error/onError)': (
         PulseTheme.dark().colorScheme.error,
         PulseTheme.dark().colorScheme.onError,
+      ),
+      'dark secondary/onSecondary': (
+        PulseTheme.dark().colorScheme.secondary,
+        PulseTheme.dark().colorScheme.onSecondary,
+      ),
+      'dark tertiary/onTertiary': (
+        PulseTheme.dark().colorScheme.tertiary,
+        PulseTheme.dark().colorScheme.onTertiary,
       ),
     };
 
@@ -88,6 +101,35 @@ void main() {
               'not apply.',
         );
       });
+    }
+  });
+
+  group('brand text on surfaces meets WCAG AA (4.5:1)', () {
+    final pairs = <String, (Color, Color)>{
+      'light primary/surface': (
+        PulseTheme.lightColorScheme.primary,
+        PulseTheme.lightColorScheme.surface,
+      ),
+      'dark primary/surface': (
+        PulseTheme.darkColorScheme.primary,
+        PulseTheme.darkColorScheme.surface,
+      ),
+    };
+
+    for (final entry in pairs.entries) {
+      test('${entry.key} >= 4.5:1', () {
+        final (ink, surface) = entry.value;
+        expect(contrastRatio(ink, surface), greaterThanOrEqualTo(4.5));
+      });
+    }
+  });
+
+  test('white text clears AA at both brand-gradient endpoints', () {
+    for (final endpoint in PulseBrandTokens.pulse.brandGradient.colors) {
+      expect(
+        contrastRatio(const Color(0xFFFFFFFF), endpoint),
+        greaterThanOrEqualTo(4.5),
+      );
     }
   });
 
@@ -122,16 +164,14 @@ void main() {
       });
     }
 
-    test('Material\'s inherited fallback would be invisible in dark', () {
-      // Guards the fix rather than only its outcome. Unset, `inversePrimary`
-      // falls back to `onPrimary` — white — and dark's inverse surface is the
-      // *light* ink, so the action label would land at ~1.05:1.
+    test('dark inversePrimary keeps a branded action color', () {
       expect(
-        contrastRatio(
-          PulseTheme.darkColorScheme.inverseSurface,
-          PulseTheme.darkColorScheme.onPrimary,
-        ),
-        lessThan(1.5),
+        PulseTheme.darkColorScheme.inversePrimary,
+        PulsePrimitives.brand600,
+      );
+      expect(
+        PulseTheme.darkColorScheme.inversePrimary,
+        isNot(PulseTheme.darkColorScheme.onPrimary),
       );
     });
   });

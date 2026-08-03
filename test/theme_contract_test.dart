@@ -100,7 +100,7 @@ void main() {
         });
       });
 
-      // The one that renders a DS-violet cancel button inside a re-branded app
+      // The one that renders a DS-blue cancel button inside a re-branded app
       // when the theme is built from the wrong scheme — see the re-brand group.
       test('textButtonTheme inks with primary', () {
         final s = theme.textButtonTheme.style!;
@@ -270,30 +270,30 @@ void main() {
   });
 
   group('re-branding', () {
-    const brandBlue = Color(0xFF2E7BFF);
+    const brandTeal = Color(0xFF0F766E);
 
     testWidgets('PulseTheme.light(colorScheme:) reaches raw Material widgets', (
       tester,
     ) async {
       final theme = PulseTheme.light(
-        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTeal),
       );
 
       // The component themes are built from the scheme that was handed in,
       // so a plain TextButton — the clubhouse cancel-button case — follows.
       expect(
         theme.textButtonTheme.style!.foregroundColor!.resolve({}),
-        brandBlue,
+        brandTeal,
       );
       expect(
         theme.filledButtonTheme.style!.backgroundColor!.resolve({}),
-        brandBlue,
+        brandTeal,
       );
       expect(
         (theme.inputDecorationTheme.focusedBorder! as OutlineInputBorder)
             .borderSide
             .color,
-        brandBlue,
+        brandTeal,
       );
 
       // …and it survives all the way to a rendered widget.
@@ -314,12 +314,12 @@ void main() {
           ),
         ),
       );
-      expect(rendered, brandBlue);
+      expect(rendered, brandTeal);
     });
 
     test('slots left alone keep their token values', () {
       final theme = PulseTheme.light(
-        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
+        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTeal),
       );
       expect(theme.colorScheme.error, PulseSemantics.danger);
       expect(theme.colorScheme.surface, PulseSemantics.bg);
@@ -328,10 +328,10 @@ void main() {
 
     test('brandTokens re-brands the non-Material extras in the same call', () {
       final theme = PulseTheme.light(
-        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandBlue),
-        brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandBlue),
+        colorScheme: PulseTheme.lightColorScheme.copyWith(primary: brandTeal),
+        brandTokens: PulseBrandTokens.pulse.copyWith(brandGlow: brandTeal),
       );
-      expect(theme.extension<PulseBrandTokens>()!.brandGlow, brandBlue);
+      expect(theme.extension<PulseBrandTokens>()!.brandGlow, brandTeal);
       // Not overridden, so it stays the preset.
       expect(
         theme.extension<PulseBrandTokens>()!.aiGradient,
@@ -341,11 +341,11 @@ void main() {
 
     test('dark() takes the same overrides', () {
       final theme = PulseTheme.dark(
-        colorScheme: PulseTheme.darkColorScheme.copyWith(primary: brandBlue),
+        colorScheme: PulseTheme.darkColorScheme.copyWith(primary: brandTeal),
       );
       expect(
         theme.textButtonTheme.style!.foregroundColor!.resolve({}),
-        brandBlue,
+        brandTeal,
       );
       expect(theme.colorScheme.brightness, Brightness.dark);
       expect(theme.colorScheme.surface, PulseSemanticsDark.bg);
@@ -360,16 +360,16 @@ void main() {
       () {
         final base = PulseTheme.light();
         final patched = base.copyWith(
-          colorScheme: base.colorScheme.copyWith(primary: brandBlue),
+          colorScheme: base.colorScheme.copyWith(primary: brandTeal),
         );
 
-        expect(patched.colorScheme.primary, brandBlue);
+        expect(patched.colorScheme.primary, brandTeal);
         expect(
           patched.textButtonTheme.style!.foregroundColor!.resolve({}),
           PulseSemantics.brand,
           reason:
               'component themes were built before the copyWith, so they still '
-              'carry the violet baseline — this is the bug PulseTheme.light('
+              'carry the blue baseline — this is the bug PulseTheme.light('
               'colorScheme:) exists to avoid',
         );
       },
