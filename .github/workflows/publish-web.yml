@@ -1,9 +1,24 @@
 name: Publish @willink-labs/pulse to npmjs.org
 
-# The web binding of PULSE. Triggered by the same `v*` tags that publish the
-# Dart package to pub.dev, because the two are generated from one token contract
-# in one commit — releasing them from one tag is what keeps the version on npm
-# and the version on pub.dev meaning the same thing.
+# The web binding of PULSE. Triggered by `web-v*` tags, which are deliberately
+# NOT the `v*` tags that publish the Dart package to pub.dev.
+#
+# The two bindings were briefly released from one tag, on the theory that a
+# shared version number makes "1.1.0" mean the same thing on both registries.
+# That trade is not worth its cost: the CSS changes far more often than the Dart
+# does, so a shared tag means publishing a pub.dev version whose Dart is
+# byte-identical to the last one. Every Flutter consumer then gets an upgrade
+# prompt for a release that cannot possibly affect them, and a changelog entry
+# that has to explain it changed nothing. A version number that can mean "no
+# change" has stopped carrying information.
+#
+# So they version independently — the same conclusion willink-design-system
+# reached for its own Flutter package (ADR-0011). `v1.2.0` is a pub.dev release;
+# `web-v1.4.0` is an npm release; neither implies the other, and the token
+# contract they share is versioned separately again, by its own repo.
+#
+# The two tag globs cannot collide: `v*` matches tags starting with `v`, and
+# `web-v1.1.0` starts with `w`.
 #
 # Kept in its own workflow rather than as a job in publish.yml so a failed npm
 # publish cannot abort a pub.dev release that already succeeded (and the other
@@ -27,7 +42,7 @@ name: Publish @willink-labs/pulse to npmjs.org
 
 on:
   push:
-    tags: ['v*']
+    tags: ['web-v*']
   workflow_dispatch:
 
 jobs:
@@ -67,12 +82,20 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${GITHUB_REF_NAME#web-v}"
           PKG_VERSION="$(node -p "require('./web/package.json').version")"
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
             echo "::error::Tag/package mismatch: tag '$TAG_VERSION' vs web/package.json '$PKG_VERSION'. Refusing to publish."
             exit 1
           fi
+          # Catches `git tag v1.1.0` when `web-v1.1.0` was meant: that tag fires
+          # publish.yml instead, and this workflow never runs — but if the glob
+          # is ever widened, a bare `v` prefix must not silently pass as a web
+          # release.
+          case "$GITHUB_REF_NAME" in
+            web-v*) ;;
+            *) echo "::error::'$GITHUB_REF_NAME' is not a web-v* tag. pub.dev releases use v*; this workflow publishes npm only."; exit 1 ;;
+          esac
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
 
       # Pre-releases must not become what `npm i @willink-labs/pulse` resolves

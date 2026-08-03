@@ -369,6 +369,21 @@ the `@willink-labs/*` npm group and of the legacy `willink_theme` package
 and earlier were repo-only cuts and never shipped to the registry, but stay in
 [CHANGELOG.md](CHANGELOG.md) as history).
 
+**PULSE's two bindings also version independently of each other**, and are cut
+from different tags:
+
+| binding | tag | registry | changelog |
+| --- | --- | --- | --- |
+| `pulse_theme` (Flutter) | `v1.2.0` | pub.dev | [CHANGELOG.md](CHANGELOG.md) |
+| `@willink-labs/pulse` (web) | `web-v1.4.0` | npm | [web/CHANGELOG.md](web/CHANGELOG.md) |
+
+A shared version number would read nicely, and it was briefly the plan — but the
+CSS moves far more often than the Dart does, so one tag means publishing pub.dev
+releases whose Dart is byte-identical to the last one. Every Flutter consumer
+would get an upgrade prompt for a release that cannot affect them. A version that
+can mean "nothing changed" has stopped carrying information, so the two are cut
+separately. Neither implies the other.
+
 **[doc/stability.md](doc/stability.md) is the contract**: what the `1.0.0`
 freeze will cover, what it deliberately will not, how enum additions and
 deprecations are handled, why every public class is `final`, and how
