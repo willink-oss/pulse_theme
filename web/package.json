@@ -1,6 +1,6 @@
 {
   "name": "@willink-labs/pulse",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "PULSE — i-Willink's design system as CSS custom properties. The web binding of the Flutter package pulse_theme, generated from the same DTCG token contract.",
   "license": "MIT",
   "type": "module",

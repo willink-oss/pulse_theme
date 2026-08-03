@@ -20,8 +20,9 @@ set of `Pulse*` components built mobile-first.
 > by golden / visual-regression tests in CI. `PulseButton` styles on two
 > independent axes — `variant` (`filled` / `outline` / `ghost`) × `tone`
 > (`brand` / `danger`) — plus a non-dimming `isLoading` state, and
-> `PulseSnackBar` covers `info` / `success` / `warning` / `error`. The public API
-> is not frozen until `1.0.0`.
+> `PulseSnackBar` covers `info` / `success` / `warning` / `error`. **The public
+> API is frozen as of `1.0.0`** — see [doc/stability.md](doc/stability.md) for
+> what that covers and what it deliberately does not.
 
 Architecture of record: [ADR-018] (i-willink-crew) and
 [`doc/adr/0001-pulse-mobile-first-architecture.md`](doc/adr/0001-pulse-mobile-first-architecture.md).
@@ -376,9 +377,9 @@ depending on anything not listed as covered.
 
 Two things worth knowing up front:
 
-- **The public API is not frozen until `1.0.0`**, and below 1.0 a *minor* bump
-  may break you (`0.6 → 0.7`). Pub's caret agrees: `^0.7.0` means
-  `>=0.7.0 <0.8.0`.
+- **The public API is frozen as of `1.0.0`.** A breaking change now requires a
+  major bump, and `^1.0.0` is safe. (Before 1.0 a *minor* bump could break you —
+  `0.6 → 0.7` — because pub's caret reads `^0.7.0` as `>=0.7.0 <0.8.0`.)
 - **Adding a value to a `Pulse*` enum ships in a minor release.** Do not write
   exhaustive `switch` expressions over them.
 
