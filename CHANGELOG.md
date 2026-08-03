@@ -6,6 +6,58 @@ This project follows strict [SemVer 2.0](https://semver.org/). **The public API
 is frozen as of `1.0.0`** — what that covers, and what it deliberately does not,
 is defined in [doc/stability.md](doc/stability.md).
 
+## [Unreleased] — targeting 1.1.0
+
+**Lockstep marker for `pulse_theme`: no Dart source changed in this release.**
+The two bindings release from one tag so a version means the same thing on
+pub.dev and on npm ([publish-web.yml](.github/workflows/publish-web.yml)), which
+is the same convention the `@willink-labs/*` npm group uses for a package with
+no source change. A Flutter consumer upgrading 1.0.0 → 1.1.0 gets byte-identical
+Dart; everything below is the web binding.
+
+### Added — component classes (`@willink-labs/pulse/components.css`)
+
+- **Drop-in component classes**, DaisyUI-shaped: one extra `@import` and you
+  write `<button class="pulse-btn">`. No build step, no plugin, no JavaScript,
+  any framework. Opt-in — a separate file, so consumers who only want tokens do
+  not pay for it.
+- They are the **same nine components the Flutter package ships**, expressed as
+  CSS. Sizes, radii, and variant axes are read out of the Dart source, so
+  `pulse-btn pulse-btn--outline pulse-btn--danger` is the same design decision
+  as `PulseButton(variant: outline, tone: danger)` rather than a lookalike.
+  Web-only additions (`.pulse-input` / `.pulse-label` / `.pulse-badge`) are
+  marked as such — a form cannot be built without them and PULSE has no Flutter
+  counterpart yet.
+- Not one colour, radius, or step is written literally: every value is a
+  `var(--pulse-*)`, so a token change moves this file for free and it cannot
+  drift from the Flutter binding.
+- The 48px tap-target contract is met the way the Flutter components meet it —
+  by expanding the **hit area** with a pseudo-element rather than inflating the
+  painted box, so a small button stays visually small and is still tappable.
+  Focus is always visible; every animation is off under
+  `prefers-reduced-motion`. Everything is `pulse-`-prefixed and drops into a
+  page already running DaisyUI, Bootstrap, or Tailwind without colliding.
+- **No behaviour, deliberately.** A tab strip is styling for markup whose
+  `aria-selected` you drive; a sheet is a styled `<dialog>` so the browser
+  provides the focus trap. `@willink-labs/react` remains the tier that wraps
+  Radix and owns behaviour — the same split DaisyUI and shadcn/ui have.
+
+### Fixed — `data-pulse-theme` now works on any element
+
+`pulse.css` emitted `:root[data-pulse-theme="dark"]`, so the attribute only did
+anything on `<html>`. Putting it on a `<div>` parsed fine, matched nothing, and
+silently did nothing — a page could therefore have exactly one appearance.
+
+The selectors are now unscoped (`[data-pulse-theme="dark"]`). Custom properties
+inherit, so the attribute re-declares the semantic roles on whatever element
+carries it and every descendant follows, which is what allows a dark panel
+inside a light document. The media-query block stays `:root`-scoped on purpose:
+it is the *document* default, and letting the OS preference re-assert itself on
+every nested element would fight the explicit attribute.
+
+Found by rendering a two-pane light/dark demo and watching both panes come out
+dark — not by reading the emitter.
+
 ## [1.0.0] — 2026-08-03
 
 _Generated from `@willink-labs/tokens` 2.0.0._

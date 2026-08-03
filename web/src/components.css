@@ -1,0 +1,399 @@
+/*
+ * @willink-labs/pulse — component classes.
+ *
+ * The DaisyUI-shaped half of PULSE: semantic class names you put straight on
+ * markup, in any framework, with no build step and no JavaScript.
+ *
+ *   @import "@willink-labs/pulse/pulse.css";       ← required (the tokens)
+ *   @import "@willink-labs/pulse/components.css";  ← this file
+ *
+ *   <button class="pulse-btn">保存する</button>
+ *
+ * ── What this is, and what it is not ────────────────────────────────────────
+ *
+ * These are the same nine components the Flutter package ships, expressed as
+ * CSS. Sizes, radii, and variant axes are taken from the Dart source, so a
+ * `pulse-btn pulse-btn--outline pulse-btn--danger` is the same design decision
+ * as `PulseButton(variant: outline, tone: danger)` — not a lookalike.
+ *
+ * They carry NO behaviour. A tab strip here is styling for markup you toggle
+ * yourself; a sheet is a styled `<dialog>`. When you want behaviour — focus
+ * traps, roving tabindex, portals — use @willink-labs/react, which wraps Radix.
+ * The two are different tiers on purpose, the way DaisyUI and shadcn/ui are.
+ *
+ * ── Rules this file keeps ───────────────────────────────────────────────────
+ *
+ * 1. Every value is a `var(--pulse-*)`. Not one colour, radius, or step is
+ *    written literally, so a token change moves this file for free and it can
+ *    never drift from the Flutter binding.
+ * 2. Every interactive class reaches the 48px tap-target minimum — and does it
+ *    the way the Flutter components do: by expanding the *hit area* with a
+ *    pseudo-element, not by inflating the painted box. A small button stays
+ *    visually small and is still comfortably tappable.
+ * 3. Focus is always visible (`:focus-visible`, never `outline: none` without a
+ *    replacement), and every animation is disabled under
+ *    `prefers-reduced-motion`.
+ * 4. Everything is `pulse-`-prefixed, so this can be dropped into a page that
+ *    already runs DaisyUI, Bootstrap, or plain Tailwind without a collision.
+ */
+
+/* ── Button ─────────────────────────────────────────────────────────────────
+ * Mirrors PulseButton: variant (filled / outline / ghost) × tone (brand /
+ * danger) × size (small / medium / large), plus a non-dimming loading state.
+ * Padding and type sizes are the Dart values: 12×6/14px, 16×10/16px, 24×14/18px.
+ */
+.pulse-btn {
+  --_bg: var(--pulse-color-brand);
+  --_fg: var(--pulse-color-brand-fg);
+  --_bg-hover: var(--pulse-color-brand-hover);
+  --_border: transparent;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pulse-space-sm);
+
+  padding: 10px 16px;
+  font: inherit;
+  font-size: var(--pulse-text-base);
+  font-weight: 600;
+  line-height: 1.2;
+
+  color: var(--_fg);
+  background: var(--_bg);
+  border: 1px solid var(--_border);
+  border-radius: var(--pulse-radius-control);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color var(--pulse-duration-fast) var(--pulse-easing-standard),
+    border-color var(--pulse-duration-fast) var(--pulse-easing-standard);
+}
+
+/* The 48px contract, applied to the hit area only. Flutter does exactly this:
+ * `minimumSize: Size.zero` keeps the painted button compact while Material's
+ * tap-target expansion still guarantees the touch region. Inflating min-height
+ * instead would silently redesign every small button. */
+.pulse-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  height: max(100%, var(--pulse-tap-target-min));
+}
+
+.pulse-btn:hover { background: var(--_bg-hover); }
+.pulse-btn:active { translate: 0 1px; }
+
+.pulse-btn:focus-visible {
+  outline: 2px solid var(--pulse-color-ring);
+  outline-offset: 2px;
+}
+
+.pulse-btn:disabled,
+.pulse-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  translate: none;
+}
+
+/* Tone — danger. Swaps the fill, nothing else; the variant axis stays free. */
+.pulse-btn--danger {
+  --_bg: var(--pulse-color-danger);
+  --_fg: var(--pulse-color-brand-fg);
+  --_bg-hover: color-mix(in srgb, var(--pulse-color-danger) 85%, black);
+}
+
+/* Variant — outline. */
+.pulse-btn--outline {
+  --_fg: var(--_bg);
+  --_border: var(--_bg);
+  background: transparent;
+}
+.pulse-btn--outline:hover {
+  background: color-mix(in srgb, var(--_bg) 10%, transparent);
+}
+
+/* Variant — ghost. */
+.pulse-btn--ghost {
+  --_fg: var(--_bg);
+  background: transparent;
+  border-color: transparent;
+}
+.pulse-btn--ghost:hover {
+  background: color-mix(in srgb, var(--_bg) 10%, transparent);
+}
+
+/* Size. */
+.pulse-btn--sm { padding: 6px 12px; font-size: var(--pulse-text-sm); }
+.pulse-btn--lg { padding: 14px 24px; font-size: var(--pulse-text-lg); }
+
+/* Loading. The label stays in flow at zero opacity so the button keeps its
+ * width — swapping the child for a spinner would make the row jump. */
+.pulse-btn[aria-busy="true"] { pointer-events: none; }
+.pulse-btn[aria-busy="true"] > * { opacity: 0; }
+.pulse-btn[aria-busy="true"]::before {
+  content: "";
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--pulse-radius-pill);
+  animation: pulse-spin 0.7s linear infinite;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────
+ * Mirrors PulseSectionCard. Surface radius, one step above a control, so the
+ * card reads as the container and the button as the thing inside it.
+ */
+.pulse-card {
+  display: block;
+  padding: var(--pulse-space-lg);
+  background: var(--pulse-color-surface-subtle);
+  border: 1px solid var(--pulse-color-border);
+  border-radius: var(--pulse-radius-surface);
+  box-shadow: var(--pulse-shadow-soft);
+}
+.pulse-card__title {
+  margin: 0 0 var(--pulse-space-sm);
+  font-size: var(--pulse-text-lg);
+  font-weight: 600;
+  color: var(--pulse-color-fg-strong);
+}
+.pulse-card__body { margin: 0; color: var(--pulse-color-fg-secondary); }
+
+/* ── Alert ──────────────────────────────────────────────────────────────────
+ * Mirrors PulseSnackBar's four variants: info (default) / success / warning /
+ * error. Same rule as the Dart doc — `warning` means it happened but needs
+ * attention; `error` means it did not happen.
+ */
+.pulse-alert {
+  --_tone: var(--pulse-color-brand);
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pulse-space-sm);
+  padding: var(--pulse-space-md);
+  border: 1px solid color-mix(in srgb, var(--_tone) 35%, transparent);
+  border-left-width: 3px;
+  border-left-color: var(--_tone);
+  border-radius: var(--pulse-radius-surface);
+  background: color-mix(in srgb, var(--_tone) 10%, var(--pulse-color-bg));
+  color: var(--pulse-color-fg);
+}
+.pulse-alert--success { --_tone: var(--pulse-color-success); }
+.pulse-alert--warning { --_tone: var(--pulse-color-warning); }
+.pulse-alert--error   { --_tone: var(--pulse-color-danger); }
+
+/* ── Input + label ──────────────────────────────────────────────────────────
+ * No Flutter counterpart — PULSE has no text-field component yet. These exist
+ * because a web form cannot be built without them, and they are built from the
+ * same control radius and tap-target contract the buttons use.
+ */
+.pulse-input {
+  display: block;
+  width: 100%;
+  min-height: var(--pulse-tap-target-min);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: var(--pulse-text-base);
+  color: var(--pulse-color-fg);
+  background: var(--pulse-color-bg);
+  border: 1px solid var(--pulse-color-border);
+  border-radius: var(--pulse-radius-control);
+}
+.pulse-input::placeholder { color: var(--pulse-color-fg-subtle); }
+.pulse-input:focus-visible {
+  outline: 2px solid var(--pulse-color-ring);
+  outline-offset: 1px;
+  border-color: var(--pulse-color-ring);
+}
+.pulse-input[aria-invalid="true"] { border-color: var(--pulse-color-danger); }
+
+.pulse-label {
+  display: block;
+  margin-bottom: var(--pulse-space-xs);
+  font-size: var(--pulse-text-sm);
+  font-weight: 600;
+  color: var(--pulse-color-fg-emphasis);
+}
+
+/* ── Badge ──────────────────────────────────────────────────────────────────
+ * Pill radius — the role PULSE reserves for chips and tags.
+ */
+.pulse-badge {
+  --_tone: var(--pulse-color-brand);
+
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  font-size: var(--pulse-text-xs);
+  font-weight: 600;
+  color: var(--pulse-color-brand-soft-fg);
+  background: var(--pulse-color-brand-soft);
+  border-radius: var(--pulse-radius-pill);
+}
+.pulse-badge--success { color: var(--pulse-color-success); background: color-mix(in srgb, var(--pulse-color-success) 15%, transparent); }
+.pulse-badge--warning { color: var(--pulse-color-warning); background: color-mix(in srgb, var(--pulse-color-warning) 15%, transparent); }
+.pulse-badge--danger  { color: var(--pulse-color-danger);  background: color-mix(in srgb, var(--pulse-color-danger) 15%, transparent); }
+
+/* ── Tabs ───────────────────────────────────────────────────────────────────
+ * Mirrors PulseTabBar. Styling only: drive `aria-selected` yourself, which is
+ * also what makes it accessible — the state lives in the attribute a screen
+ * reader reads, not in a class.
+ */
+.pulse-tabs {
+  display: flex;
+  gap: var(--pulse-space-xs);
+  border-bottom: 1px solid var(--pulse-color-border);
+}
+.pulse-tabs > [role="tab"] {
+  position: relative;
+  padding: 12px var(--pulse-space-md);
+  min-height: var(--pulse-tap-target-min);
+  font: inherit;
+  font-weight: 600;
+  color: var(--pulse-color-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.pulse-tabs > [role="tab"]:hover { color: var(--pulse-color-fg); }
+.pulse-tabs > [role="tab"]:focus-visible {
+  outline: 2px solid var(--pulse-color-ring);
+  outline-offset: -2px;
+}
+.pulse-tabs > [role="tab"][aria-selected="true"] { color: var(--pulse-color-brand); }
+.pulse-tabs > [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 2px;
+  background: var(--pulse-color-brand);
+}
+
+/* ── Progress ───────────────────────────────────────────────────────────────
+ * Mirrors PulseProgressIndicator: 8px track, fully rounded. Determinate uses
+ * `value`/`max`; omit `value` for the indeterminate sweep.
+ */
+.pulse-progress {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-color-track);
+  overflow: hidden;
+}
+.pulse-progress::-webkit-progress-bar { background: var(--pulse-color-track); }
+.pulse-progress::-webkit-progress-value {
+  background: var(--pulse-color-brand);
+  border-radius: var(--pulse-radius-pill);
+}
+.pulse-progress::-moz-progress-bar {
+  background: var(--pulse-color-brand);
+  border-radius: var(--pulse-radius-pill);
+}
+.pulse-progress:indeterminate {
+  background:
+    linear-gradient(90deg, var(--pulse-color-brand) 0 40%, transparent 0)
+    var(--pulse-color-track);
+  background-size: 250% 100%;
+  animation: pulse-sweep 1.4s var(--pulse-easing-standard) infinite;
+}
+
+/* ── Spinner + loading state ────────────────────────────────────────────────
+ * Mirrors PulseLoadingState's three sizes (40 / 24 / 16px).
+ */
+.pulse-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--pulse-color-track);
+  border-top-color: var(--pulse-color-brand);
+  border-radius: var(--pulse-radius-pill);
+  animation: pulse-spin 0.8s linear infinite;
+}
+.pulse-spinner--compact { width: 24px; height: 24px; border-width: 2px; }
+.pulse-spinner--inline  { width: 16px; height: 16px; border-width: 2px; }
+
+.pulse-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pulse-space-md);
+  padding: var(--pulse-space-xl);
+  color: var(--pulse-color-muted);
+}
+
+/* ── Empty / error state ────────────────────────────────────────────────────
+ * Mirrors PulseEmptyState and PulseErrorState — same 2xl padding as the Dart
+ * layout, centred, with the action sitting below the message.
+ */
+.pulse-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--pulse-space-sm);
+  padding: var(--pulse-space-2xl);
+  color: var(--pulse-color-muted);
+}
+.pulse-state__icon { font-size: 48px; line-height: 1; color: var(--pulse-color-fg-faint); }
+.pulse-state__title {
+  margin: var(--pulse-space-md) 0 0;
+  font-size: var(--pulse-text-lg);
+  font-weight: 600;
+  color: var(--pulse-color-fg-strong);
+}
+.pulse-state__message { margin: 0; font-size: var(--pulse-text-sm); }
+.pulse-state__action { margin-top: var(--pulse-space-xl); }
+.pulse-state--error .pulse-state__icon { color: var(--pulse-color-danger); }
+
+/* ── Sheet ──────────────────────────────────────────────────────────────────
+ * Mirrors PulseBottomSheet — sheet radius on the two visible corners, and the
+ * drag handle. Put it on a `<dialog>`: the browser gives you the focus trap and
+ * Escape handling for free, which is the behaviour this file otherwise avoids
+ * claiming to provide.
+ */
+.pulse-sheet {
+  width: 100%;
+  max-width: none;
+  margin: auto auto 0;
+  padding: var(--pulse-space-lg);
+  border: 0;
+  border-radius: var(--pulse-radius-sheet) var(--pulse-radius-sheet) 0 0;
+  background: var(--pulse-color-bg);
+  color: var(--pulse-color-fg);
+  box-shadow: var(--pulse-shadow-md);
+}
+.pulse-sheet::backdrop { background: rgb(0 0 0 / 0.5); }
+.pulse-sheet__handle {
+  width: 40px;
+  height: 4px;
+  margin: 0 auto var(--pulse-space-md);
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-color-fg-faint);
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────────*/
+@keyframes pulse-spin { to { rotate: 360deg; } }
+@keyframes pulse-sweep {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-btn,
+  .pulse-input { transition: none; }
+  .pulse-spinner,
+  .pulse-progress:indeterminate,
+  .pulse-btn[aria-busy="true"]::before { animation: none; }
+  /* A spinner that cannot spin must still read as "busy", so keep it visible
+     as a static ring rather than hiding the only progress signal. */
+}

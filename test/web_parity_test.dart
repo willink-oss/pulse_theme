@@ -348,14 +348,14 @@ void main() {
       final base = _CssRoot.parse(full, selector: ':root');
       final darkBlock = _CssRoot.parse(
         full,
-        selector: ':root[data-pulse-theme="dark"]',
+        selector: '[data-pulse-theme="dark"]',
         // The attribute block redeclares only what flips; the scales it
         // inherits from `:root` are carried over so var() chains resolve.
         inherit: base,
       );
       final lightBlock = _CssRoot.parse(
         full,
-        selector: ':root[data-pulse-theme="light"]',
+        selector: '[data-pulse-theme="light"]',
         inherit: base,
       );
 
