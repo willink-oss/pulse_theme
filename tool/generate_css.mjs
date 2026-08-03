@@ -399,6 +399,19 @@ function singleModeSheet(mode) {
 //     for a user who never touches it.
 // The attribute rules come last and are more specific, so an explicit choice
 // wins over the OS in both directions.
+//
+// The attribute selectors are deliberately NOT scoped to `:root`. Custom
+// properties inherit, so an unscoped `[data-pulse-theme="dark"]` re-declares the
+// semantic roles on whatever element carries it and every descendant picks them
+// up — which is what lets a page put a dark panel inside a light document, the
+// way DaisyUI's `data-theme` works. Scoping them to `:root` would allow exactly
+// one theme per document, and silently: the attribute on a `<div>` would parse,
+// match nothing, and do nothing. (Found by rendering a two-pane light/dark demo
+// and watching both panes come out dark.)
+//
+// The media-query block stays `:root`-scoped on purpose — it is the *document*
+// default, and letting the OS preference re-assert itself on every nested
+// element would fight the explicit attribute below it.
 function fullSheet() {
   const light = modeBlock("light");
   const dark = modeBlock("dark");
@@ -406,16 +419,18 @@ function fullSheet() {
     ...HEADER,
     "",
     "/* Light is the base; dark follows the OS unless the document opts out with",
-    " * data-pulse-theme=\"light\". An explicit data-pulse-theme always wins. */",
+    " * data-pulse-theme=\"light\". An explicit data-pulse-theme always wins, and",
+    " * works on any element — not just :root — so a subtree can carry its own",
+    " * appearance. */",
     ...wrap(":root", [...scaleBlock(), "", ...light]),
     "",
     "@media (prefers-color-scheme: dark) {",
     ...wrap('  :root:not([data-pulse-theme="light"])', dark.map((l) => (l ? `  ${l}` : l))),
     "}",
     "",
-    ...wrap(':root[data-pulse-theme="dark"]', dark),
+    ...wrap('[data-pulse-theme="dark"]', dark),
     "",
-    ...wrap(':root[data-pulse-theme="light"]', light),
+    ...wrap('[data-pulse-theme="light"]', light),
     "",
   ].join("\n");
 }

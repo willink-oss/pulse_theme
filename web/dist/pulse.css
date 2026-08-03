@@ -11,7 +11,9 @@
  */
 
 /* Light is the base; dark follows the OS unless the document opts out with
- * data-pulse-theme="light". An explicit data-pulse-theme always wins. */
+ * data-pulse-theme="light". An explicit data-pulse-theme always wins, and
+ * works on any element — not just :root — so a subtree can carry its own
+ * appearance. */
 :root {
   /* Color primitives — the raw scales. Prefer the semantic roles below. */
   --pulse-color-neutral-50: #f8fafc;
@@ -176,7 +178,7 @@
 }
 }
 
-:root[data-pulse-theme="dark"] {
+[data-pulse-theme="dark"] {
   /* Semantic color roles (dark) — named by role, not by hue. */
   --pulse-color-bg: var(--pulse-color-neutral-950);
   --pulse-color-fg: var(--pulse-color-neutral-50);
@@ -212,7 +214,7 @@
   --pulse-shadow-glow: 0 0 20px -5px rgba(29, 95, 208, 0.3);
 }
 
-:root[data-pulse-theme="light"] {
+[data-pulse-theme="light"] {
   /* Semantic color roles (light) — named by role, not by hue. */
   --pulse-color-bg: #ffffff;
   --pulse-color-fg: var(--pulse-color-neutral-900);

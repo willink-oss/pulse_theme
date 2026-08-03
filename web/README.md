@@ -26,6 +26,66 @@ import "@willink-labs/pulse/pulse.css";
 <link rel="stylesheet" href="node_modules/@willink-labs/pulse/dist/pulse.css" />
 ```
 
+## Or skip the CSS entirely
+
+If you just want components, add the second stylesheet and use class names — no
+build step, no plugin, no JavaScript, any framework:
+
+```ts
+import "@willink-labs/pulse/pulse.css";
+import "@willink-labs/pulse/components.css";
+```
+
+```tsx
+<button className="pulse-btn">保存する</button>
+<button className="pulse-btn pulse-btn--outline">下書き</button>
+<button className="pulse-btn pulse-btn--danger">削除</button>
+
+<div className="pulse-card">
+  <h3 className="pulse-card__title">セクションカード</h3>
+  <p className="pulse-card__body">…</p>
+</div>
+
+<div className="pulse-alert pulse-alert--success">保存しました</div>
+<input className="pulse-input" aria-invalid={!!error} />
+<span className="pulse-badge">NEW</span>
+```
+
+These are the **same nine components the Flutter package ships**, expressed as
+CSS — sizes, radii, and variant axes taken from the Dart source, so
+`pulse-btn pulse-btn--outline pulse-btn--danger` is the same design decision as
+`PulseButton(variant: outline, tone: danger)`.
+
+| class | mirrors |
+| --- | --- |
+| `.pulse-btn` `--outline` `--ghost` `--danger` `--sm` `--lg` | `PulseButton` (variant × tone × size, plus `aria-busy` loading) |
+| `.pulse-card` | `PulseSectionCard` |
+| `.pulse-alert` `--success` `--warning` `--error` | `PulseSnackBar` |
+| `.pulse-tabs` | `PulseTabBar` |
+| `.pulse-progress` | `PulseProgressIndicator` |
+| `.pulse-spinner` `--compact` `--inline` | `PulseLoadingState` |
+| `.pulse-state` `--error` | `PulseEmptyState` / `PulseErrorState` |
+| `.pulse-sheet` | `PulseBottomSheet` (put it on a `<dialog>`) |
+| `.pulse-input` `.pulse-label` `.pulse-badge` | web-only — no Flutter counterpart yet |
+
+**They carry no behaviour.** A tab strip is styling for markup whose
+`aria-selected` you drive; a sheet is a styled `<dialog>`, so the browser gives
+you the focus trap and Escape handling. When you need behaviour — roving
+tabindex, portals, controlled state — reach for
+[`@willink-labs/react`](https://www.npmjs.com/package/@willink-labs/react),
+which wraps Radix. The two are different tiers on purpose, the way DaisyUI and
+shadcn/ui are.
+
+Every interactive class meets the 48px tap-target minimum, and does it the way
+the Flutter components do — by expanding the *hit area* with a pseudo-element
+rather than inflating the painted box, so a small button stays visually small
+and is still comfortably tappable. Focus is always visible, and every animation
+is disabled under `prefers-reduced-motion`. Everything is `pulse-`-prefixed, so
+it drops into a page already running DaisyUI, Bootstrap, or plain Tailwind
+without colliding.
+
+## Style with the variables directly
+
 Then style with the variables:
 
 ```css
@@ -56,12 +116,19 @@ an attribute alone ignores a user who never opens your settings.
 | Follow the OS | Nothing — `pulse.css` already does |
 | Force dark, ignore OS | `<html data-pulse-theme="dark">` |
 | Force light, ignore OS | `<html data-pulse-theme="light">` |
+| One panel dark inside a light page | `<div data-pulse-theme="dark">` |
 | App is *only ever* dark | Import `@willink-labs/pulse/dark.css` instead |
 | App is *only ever* light | Import `@willink-labs/pulse/light.css` instead |
 
-The attribute always wins over the OS, in both directions. The single-mode
-builds carry no media query and no attribute rules at all — use them when the
-app has exactly one appearance, so it does not ship a theme it can never show.
+The attribute always wins over the OS, in both directions, and it works on **any
+element** — not just `<html>`. Custom properties inherit, so the attribute
+re-declares the semantic roles on whatever carries it and every descendant picks
+them up. That is what lets a marketing page put a dark hero inside a light
+document without a second stylesheet.
+
+The single-mode builds carry no media query and no attribute rules at all — use
+them when the app has exactly one appearance, so it does not ship a theme it can
+never show.
 
 ## Re-brand
 
